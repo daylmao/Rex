@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rex.Domain", "Rex.Domain\Rex.Domain.csproj", "{2992F86E-7C02-484C-8656-9A76C57A695D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{37B18598-0E4E-41E0-9885-297287C128DB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Domain", "Domain", "{56495204-1B31-4E76-9DAC-91D9149A20FD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{7E6540E2-7AB7-4B69-8DFB-AA15D5BFBAA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rex.Infrastructure.Persistence", "Rex.Infrastructure.Persistence\Rex.Infrastructure.Persistence.csproj", "{0C891B9F-0627-4565-B6BB-2746A5719E78}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2992F86E-7C02-484C-8656-9A76C57A695D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2992F86E-7C02-484C-8656-9A76C57A695D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2992F86E-7C02-484C-8656-9A76C57A695D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2992F86E-7C02-484C-8656-9A76C57A695D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C891B9F-0627-4565-B6BB-2746A5719E78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C891B9F-0627-4565-B6BB-2746A5719E78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C891B9F-0627-4565-B6BB-2746A5719E78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C891B9F-0627-4565-B6BB-2746A5719E78}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{56495204-1B31-4E76-9DAC-91D9149A20FD} = {37B18598-0E4E-41E0-9885-297287C128DB}
+		{2992F86E-7C02-484C-8656-9A76C57A695D} = {56495204-1B31-4E76-9DAC-91D9149A20FD}
+		{7E6540E2-7AB7-4B69-8DFB-AA15D5BFBAA8} = {37B18598-0E4E-41E0-9885-297287C128DB}
+		{0C891B9F-0627-4565-B6BB-2746A5719E78} = {7E6540E2-7AB7-4B69-8DFB-AA15D5BFBAA8}
+	EndGlobalSection
+EndGlobal
