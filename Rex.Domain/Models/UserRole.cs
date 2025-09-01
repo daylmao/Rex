@@ -1,8 +1,8 @@
-using Rex.Enum;
 
 namespace Rex.Models;
 
-public class UserRole: EntityBase
+public sealed class UserRole: EntityBase
 {
-    public Enum.UserRole Role { get; set; }
+    public string Role { get; set; }
+    public ICollection<User> Users { get; set; }
 }

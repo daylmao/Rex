@@ -2,7 +2,8 @@ using Rex.Enum;
 
 namespace Rex.Models;
 
-public class GroupRole: AuditableEntity
+public sealed class GroupRole: AuditableEntity
 {
-    public Enum.GroupRole Role { get; set; }
+    public string Role { get; set; }
+    public ICollection<UserGroup> UserGroups { get; set; }
 }

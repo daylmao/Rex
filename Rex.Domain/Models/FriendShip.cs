@@ -2,9 +2,12 @@ using Rex.Enum;
 
 namespace Rex.Models;
 
-public class FriendShip: AuditableEntity
+public sealed class FriendShip: AuditableEntity
 {
-    public Guid AddressesId { get; set; }
+    public Guid TargetUserId { get; set; }
     public Guid RequesterId { get; set; }
-    public FriendStatus Status { get; set; }
+    public string Status { get; set; }
+    
+    public User Requester { get; set; }
+    public User TargetUser { get; set; }
 }

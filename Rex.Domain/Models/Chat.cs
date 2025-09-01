@@ -2,7 +2,10 @@ using Rex.Enum;
 
 namespace Rex.Models;
 
-public class Chat: AuditableEntity
+public sealed class Chat: AuditableEntity
 {
-    public ChatType Type { get; set; }
+    public string Type { get; set; }
+    
+    public ICollection<UserChat> UserChats { get; set; }
+    public ICollection<Message> Messages { get; set; }
 }
