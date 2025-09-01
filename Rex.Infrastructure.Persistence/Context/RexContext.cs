@@ -32,8 +32,7 @@ public class RexContext: DbContext
     public DbSet<Notification> Notification { get; set; }
     
     #endregion
-
-
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -386,7 +385,7 @@ public class RexContext: DbContext
             .HasMany(c => c.UserGroups)
             .WithOne(c => c.GroupRole)
             .HasForeignKey(c => c.GroupRoleId)
-            .HasConstraintName("FkGroupUserGroup");
+            .HasConstraintName("FkGroupRoleUserGroup");
 
         modelBuilder.Entity<Post>()
             .HasMany(c => c.Comments)

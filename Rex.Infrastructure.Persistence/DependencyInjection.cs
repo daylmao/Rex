@@ -13,7 +13,7 @@ public static class DependencyInjection
 
         services.AddDbContext<RexContext>(postgres =>
         {
-            postgres.UseNpgsql(configuration.GetConnectionString("Rex"), 
+            postgres.UseNpgsql(configuration.GetConnectionString("RexBackend"), 
                 m => m.MigrationsAssembly("Rex.Infrastructure.Persistence"));
         });
 
