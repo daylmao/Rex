@@ -10,8 +10,8 @@ public sealed class Comment: AuditableEntity
     public bool Edited { get; set; } = false;
     
     public ICollection<Comment>? Replies { get; set; }
-    public User User { get; set; }
-    public Comment ParentComment { get; set; }
+    public User? User { get; set; }
+    public Comment? ParentComment { get; set; }
     public Post Post { get; set; }
 
 }

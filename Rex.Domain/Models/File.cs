@@ -9,5 +9,4 @@ public sealed class File: AuditableEntity
     public DateTime UploadedAt { get; set; }
     
     public ICollection<EntityFile>? EntityFiles { get; set; }
-    public User User { get; set; }
 }

@@ -7,8 +7,10 @@ public sealed class Challenge: AuditableEntity
     public Guid CreatorId { get; set; }
     public Guid GroupId { get; set; }
     public TimeSpan Duration { get; set; }
+    public string Status { get; set; }
     
     public ICollection<Post> Posts { get; set; }
+    public ICollection<UserChallenge>? UserChallenges { get; set; }
     public Group Group { get; set; }
     public User Creator { get; set; }
 

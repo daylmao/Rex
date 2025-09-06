@@ -1,4 +1,3 @@
-using Rex.Enum;
 
 namespace Rex.Models;
 
