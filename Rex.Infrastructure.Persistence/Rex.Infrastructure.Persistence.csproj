@@ -18,6 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Rex.Application\Rex.Application.csproj" />
       <ProjectReference Include="..\Rex.Domain\Rex.Domain.csproj" />
     </ItemGroup>
 
