@@ -449,6 +449,12 @@ public class RexContext: DbContext
             entity.Property(u => u.ConfirmedAccount)
                 .HasDefaultValue(false);
 
+            entity.Property(u => u.Birthday)
+                .HasColumnType("date");
+
+            entity.Property(u => u.LastLoginAt)
+                .HasColumnType("date");
+
             entity.Property(u => u.Status)
                 .IsRequired()
                 .HasMaxLength(50);
@@ -514,6 +520,9 @@ public class RexContext: DbContext
             entity.Property(f => f.Type)
                 .IsRequired()
                 .HasMaxLength(30);
+            
+            entity.Property(u => u.UploadedAt)
+                .HasColumnType("date");
 
         });
 
@@ -551,6 +560,9 @@ public class RexContext: DbContext
 
             entity.Property(c => c.Duration)
                 .IsRequired();
+
+            entity.Property(c => c.Status)
+                .HasMaxLength(50);
         });
 
         #endregion
@@ -588,11 +600,17 @@ public class RexContext: DbContext
             entity.Property(c => c.Type)
                 .IsRequired()
                 .HasMaxLength(30);
+            
+            entity.Property(c => c.Expiration)
+                .HasColumnType("date");
 
             entity.Property(c => c.Revoked)
                 .HasDefaultValue(false);
 
             entity.Property(c => c.RefreshCode)
+                .HasDefaultValue(false);
+            
+            entity.Property(c => c.Used)
                 .HasDefaultValue(false);
         });
 
@@ -608,7 +626,7 @@ public class RexContext: DbContext
             
             entity.Property(n => n.Title)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(125);
 
             entity.Property(n => n.Description)
                 .HasMaxLength(255);
@@ -652,6 +670,12 @@ public class RexContext: DbContext
             entity.Property(r => r.Revoked)
                 .HasDefaultValue(false);
             
+            entity.Property(r => r.Expiration)
+                .HasColumnType("date");
+            
+            entity.Property(r => r.Created)
+                .HasColumnType("date");
+            
         });
 
         #endregion
@@ -689,6 +713,15 @@ public class RexContext: DbContext
 
             entity.Property(ug => ug.GroupRoleId)
                 .IsRequired();
+            
+            entity.Property(ug => ug.RequestedAt)
+                .HasColumnType("date");
+            
+            entity.Property(ug => ug.CreatedAt)
+                .HasColumnType("date");
+
+            entity.Property(ug => ug.Status)
+                .HasMaxLength(50);
         });
 
         #endregion
@@ -764,6 +797,34 @@ public class RexContext: DbContext
                 .HasMaxLength(50);
         });
 
+        #endregion
+
+        #region Query Filters
+
+        modelBuilder.Entity<Chat>()
+            .HasQueryFilter(c => !c.Deleted);
+
+        modelBuilder.Entity<Comment>()
+            .HasQueryFilter(c => !c.Deleted);
+        
+        modelBuilder.Entity<Message>()
+            .HasQueryFilter(m => !m.Deleted);
+        
+        modelBuilder.Entity<Post>()
+            .HasQueryFilter(p => !p.Deleted);
+        
+        modelBuilder.Entity<Reaction>()
+            .HasQueryFilter(r => !r.Deleted);
+        
+        modelBuilder.Entity<User>()
+            .HasQueryFilter(u => !u.Deleted);
+        
+        modelBuilder.Entity<Challenge>()
+            .HasQueryFilter(c => !c.Deleted);
+        
+        modelBuilder.Entity<EntityFile>()
+            .HasQueryFilter(c => !c.Deleted);
+        
         #endregion
     }
 
