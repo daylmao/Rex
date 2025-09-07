@@ -606,9 +606,6 @@ public class RexContext: DbContext
 
             entity.Property(c => c.Revoked)
                 .HasDefaultValue(false);
-
-            entity.Property(c => c.RefreshCode)
-                .HasDefaultValue(false);
             
             entity.Property(c => c.Used)
                 .HasDefaultValue(false);
@@ -825,6 +822,24 @@ public class RexContext: DbContext
         modelBuilder.Entity<EntityFile>()
             .HasQueryFilter(c => !c.Deleted);
         
+        modelBuilder.Entity<FriendShip>()
+            .HasQueryFilter(f => !f.Deleted && !f.Requester.Deleted && !f.TargetUser.Deleted);
+        
+        modelBuilder.Entity<Notification>()
+            .HasQueryFilter(n => !n.Deleted && !n.User.Deleted);
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasQueryFilter(r => !r.Deleted && !r.User.Deleted);
+
+        modelBuilder.Entity<UserGroup>()
+            .HasQueryFilter(ug => !ug.Deleted && !ug.User.Deleted);
+
+        modelBuilder.Entity<UserChallenge>()
+            .HasQueryFilter(uc => !uc.Deleted && !uc.Challenge.Deleted);
+
+        modelBuilder.Entity<UserChat>()
+            .HasQueryFilter(uc => !uc.Deleted && !uc.Chat.Deleted);
+
         #endregion
     }
 
