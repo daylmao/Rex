@@ -18,8 +18,13 @@ public class CodeRepository(RexContext context): GenericRepository<Code>(context
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 
-    public async Task<bool> IsCodeValid(Code code, CancellationToken cancellationToken) =>
-        await ValidateAsync(c => c.Value == code.Value && c.Expiration > DateTime.UtcNow && !c.Used, cancellationToken);
+    public async Task<Code> GetCodeByValueAsync(string value, CancellationToken cancellationToken) =>
+        await context.Set<Code>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Value == value, cancellationToken);
+
+    public async Task<bool> IsCodeValidAsync(string code, CancellationToken cancellationToken) =>
+        await ValidateAsync(c => c.Value == code && c.Expiration > DateTime.UtcNow && !c.Used, cancellationToken);
 
     public async Task MarkCodeAsUsedAsync(string code, CancellationToken cancellationToken)
     {
@@ -33,7 +38,7 @@ public class CodeRepository(RexContext context): GenericRepository<Code>(context
         }
     }
 
-    public async Task<bool> IsCodeUsedAsync(Guid code, CancellationToken cancellationToken) =>
-         await ValidateAsync( c=> c.Id == code && c.Used, cancellationToken);
+    public async Task<bool> IsCodeUsedAsync(string code, CancellationToken cancellationToken) =>
+         await ValidateAsync( c=> c.Value == code && c.Used, cancellationToken);
     
 }
