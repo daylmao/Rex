@@ -31,7 +31,21 @@ services:
       - ${PGADMIN_PORTS}:80
     volumes:
       - PgAdmin:/var/lib/pgadmin
+      
+  Seq:
+    image: ${SEQ_IMAGE}
+    container_name: SEQ
+    restart: always
+    environment:
+      - ACCEPT_EULA=${SEQ_ACCEPT_EULA}
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_FIRSTRUN_ADMINPASSWORD}
+    ports:
+      - ${SEQ_PORT}:5341
+      - ${SEQ_PORT_UI}:80
+    volumes:
+      - Seq:/data
         
 volumes:
   PostgresDb:
   PgAdmin:
+  Seq:

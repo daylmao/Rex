@@ -1,6 +1,12 @@
 using Rex.Infrastructure.Persistence;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, LoggerConfiguration) =>
+{
+    LoggerConfiguration.ReadFrom.Configuration(context.Configuration);
+});
 
 // Add services to the container.
 
@@ -11,6 +17,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddPersistence(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseSerilogRequestLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
