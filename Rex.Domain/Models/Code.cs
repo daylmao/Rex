@@ -9,7 +9,6 @@ public sealed class Code: AuditableEntity
     public DateTime Expiration { get; set; }
     public string Type { get; set; }
     public bool Revoked { get; set; } = false;
-    public bool RefreshCode { get; set; } = false;
     public bool Used { get; set; } = false;
     
     public User User { get; set; }
