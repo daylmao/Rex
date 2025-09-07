@@ -1,6 +1,6 @@
 namespace Rex.Models;
 
-public sealed class RefreshToken: EntityBase
+public sealed class RefreshToken: AuditableEntity
 {
     public Guid UserId { get; set; }
     public string Value { get; set; }
