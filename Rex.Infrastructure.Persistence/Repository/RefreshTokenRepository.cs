@@ -16,10 +16,13 @@ public class RefreshTokenRepository(RexContext context): GenericRepository<Refre
     public async Task<RefreshToken> GetRefreshTokenByIdAsync(Guid tokenId, CancellationToken cancellationToken) =>
         await context.Set<RefreshToken>()
             .FirstOrDefaultAsync( t => t.Id == tokenId, cancellationToken );
-    
 
-    public async Task<bool> IsRefreshTokenValid(RefreshToken token, CancellationToken cancellationToken) =>
-        await ValidateAsync(t => t.Value == token.Value && t.Expiration > DateTime.UtcNow && !t.Used, cancellationToken);
+    public async Task<bool> IsRefreshTokenValidAsync(Guid userId, string receivedToken, CancellationToken cancellationToken)
+    {
+        var activeTokens = await GetActiveTokensByUserIdAsync(userId, cancellationToken);
+
+        return activeTokens.Any(t => BCrypt.Net.BCrypt.Verify(receivedToken, t.Value));
+    }
 
     public async Task MarkRefreshTokenAsUsedAsync(string token, CancellationToken cancellationToken)
     {
@@ -33,6 +36,15 @@ public class RefreshTokenRepository(RexContext context): GenericRepository<Refre
         }
     }
 
-    public async Task<bool> IsRefreshTokenUsedAsync(Guid tokenId, CancellationToken cancellationToken) =>
-        await ValidateAsync(t => t.Id == tokenId && t.Used, cancellationToken);
+    public async Task RevokeOldTokensAsync(Guid userId, Guid tokenId,
+        CancellationToken cancellationToken) =>
+        await context.Set<RefreshToken>()
+            .Where(c => c.Id != tokenId && !c.Used && c.Expiration > DateTime.UtcNow && c.UserId == userId)
+            .ExecuteUpdateAsync(c => c.SetProperty(u => u.Revoked, true), cancellationToken);
+            
+
+    public async Task<List<RefreshToken>> GetActiveTokensByUserIdAsync(Guid userId, CancellationToken cancellationToken) =>
+        await context.Set<RefreshToken>()
+            .Where(t => t.UserId == userId && !t.Used && !t.Revoked && t.Expiration > DateTime.UtcNow)
+            .ToListAsync(cancellationToken);
 }
