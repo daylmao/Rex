@@ -1,4 +1,3 @@
-using System.Net.Mail;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Rex.Application.DTOs;
@@ -6,7 +5,7 @@ using Rex.Application.Interfaces;
 using Rex.Configurations;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
-namespace Rex.Application.Services;
+namespace Rex.Infrastructure.Shared.Services;
 
 public class EmailService(IOptions<EmailConfiguration> emailOptions): IEmailService
 {

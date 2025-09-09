@@ -11,7 +11,7 @@ using Rex.Configurations;
 using Rex.Models;
 using UserRole = Rex.Enum.UserRole;
 
-namespace Rex.Application.Services;
+namespace Rex.Infrastructure.Shared.Services;
 
 public class AuthenticationService(
     IOptions<JWTConfiguration> jwtConfiguration,
