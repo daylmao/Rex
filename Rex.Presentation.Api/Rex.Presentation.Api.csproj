@@ -23,6 +23,11 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Rex.Infrastructure.Persistence\Rex.Infrastructure.Persistence.csproj" />
+      <ProjectReference Include="..\Rex.Infrastructure.Shared\Rex.Infrastructure.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Controllers\" />
     </ItemGroup>
 
 </Project>

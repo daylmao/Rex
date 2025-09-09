@@ -1,4 +1,6 @@
 using Rex.Infrastructure.Persistence;
+using Rex.Infrastructure.Shared;
+using Rex.Presentation.Api.ServicesExtension;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,7 +16,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddPersistenceLayer(builder.Configuration);
+builder.Services.AddSharedLayer(builder.Configuration);
+builder.Services.AddVersioning();
 
 var app = builder.Build();
 
