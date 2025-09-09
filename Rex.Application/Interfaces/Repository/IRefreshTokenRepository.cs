@@ -28,8 +28,8 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="token">The refresh token to validate.</param>
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>True if the token is valid; otherwise false.</returns>
-        Task<bool> IsRefreshTokenValid(RefreshToken token, CancellationToken cancellationToken);
-
+        Task<bool> IsRefreshTokenValidAsync(Guid userId, string receivedToken, CancellationToken cancellationToken);
+        
         /// <summary>
         /// Marks a refresh token as used.
         /// </summary>
@@ -43,6 +43,9 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="tokenId">The ID of the refresh token.</param>
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>True if the token has been used; otherwise false.</returns>
-        Task<bool> IsRefreshTokenUsedAsync(Guid tokenId, CancellationToken cancellationToken);
+        Task RevokeOldTokensAsync(Guid userId, Guid tokenId,
+            CancellationToken cancellationToken);
+
+        Task<List<RefreshToken>> GetActiveTokensByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     }
 }
