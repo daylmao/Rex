@@ -9,6 +9,7 @@ using Rex.Application.DTOs;
 using Rex.Application.Interfaces;
 using Rex.Application.Services;
 using Rex.Configurations;
+using Rex.Infrastructure.Shared.Services;
 
 namespace Rex.Infrastructure.Shared;
 
