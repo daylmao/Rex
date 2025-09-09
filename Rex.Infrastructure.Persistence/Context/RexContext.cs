@@ -670,9 +670,6 @@ public class RexContext: DbContext
             entity.Property(r => r.Expiration)
                 .HasColumnType("date");
             
-            entity.Property(r => r.Created)
-                .HasColumnType("date");
-            
         });
 
         #endregion

@@ -54,6 +54,11 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("FkGroupId");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -119,7 +124,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("Expiration")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<bool>("RefreshCode")
                         .ValueGeneratedOnAdd()
@@ -138,6 +143,11 @@ namespace Rex.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Used")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -278,20 +288,15 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<string>("Url")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id")
                         .HasName("PkFileId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("File", (string)null);
                 });
@@ -476,8 +481,8 @@ namespace Rex.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(125)
+                        .HasColumnType("character varying(125)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -594,10 +599,10 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnName("PkRefreshTokenId");
 
                     b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<DateTime>("Expiration")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<bool>("Revoked")
                         .ValueGeneratedOnAdd()
@@ -637,7 +642,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("Birthday")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<bool>("ConfirmedAccount")
                         .ValueGeneratedOnAdd()
@@ -671,7 +676,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.Property<DateTime?>("LastLoginAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -721,6 +726,43 @@ namespace Rex.Infrastructure.Persistence.Migrations
                     b.ToTable("User", (string)null);
                 });
 
+            modelBuilder.Entity("Rex.Models.UserChallenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChallengeId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserChallenge");
+                });
+
             modelBuilder.Entity("Rex.Models.UserChat", b =>
                 {
                     b.Property<Guid>("Id")
@@ -766,7 +808,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnName("PkUserGroupId");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<bool>("Deleted")
                         .HasColumnType("boolean");
@@ -781,6 +823,13 @@ namespace Rex.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("GroupRoleId")
                         .HasColumnType("uuid")
                         .HasColumnName("FkGroupRoleId");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -889,17 +938,6 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasConstraintName("FkFileEntityFile");
 
                     b.Navigation("File");
-                });
-
-            modelBuilder.Entity("Rex.Models.File", b =>
-                {
-                    b.HasOne("Rex.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Rex.Models.FriendShip", b =>
@@ -1017,6 +1055,25 @@ namespace Rex.Infrastructure.Persistence.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("Rex.Models.UserChallenge", b =>
+                {
+                    b.HasOne("Rex.Models.Challenge", "Challenge")
+                        .WithMany("UserChallenges")
+                        .HasForeignKey("ChallengeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Rex.Models.User", "User")
+                        .WithMany("UserChallenges")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Challenge");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Rex.Models.UserChat", b =>
                 {
                     b.HasOne("Rex.Models.Chat", "Chat")
@@ -1071,6 +1128,8 @@ namespace Rex.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Rex.Models.Challenge", b =>
                 {
                     b.Navigation("Posts");
+
+                    b.Navigation("UserChallenges");
                 });
 
             modelBuilder.Entity("Rex.Models.Chat", b =>
@@ -1126,6 +1185,8 @@ namespace Rex.Infrastructure.Persistence.Migrations
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("SentFriendRequests");
+
+                    b.Navigation("UserChallenges");
 
                     b.Navigation("UserChats");
 
