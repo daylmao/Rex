@@ -4,7 +4,7 @@ using Rex.Infrastructure.Persistence.Context;
 using Rex.Models;
 using UserRole = Rex.Enum.UserRole;
 
-namespace Rex.Application.Services;
+namespace Rex.Infrastructure.Persistence.Services;
 
 public class UserRoleService(RexContext context): IUserRoleService
 {
