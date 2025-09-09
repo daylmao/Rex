@@ -7,7 +7,7 @@ namespace Rex.Infrastructure.Persistence;
 
 public static class DependencyInjection
 {
-    public static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
+    public static void AddPersistenceLayer(this IServiceCollection services, IConfiguration configuration)
     {
         #region DbContext
 
