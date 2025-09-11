@@ -1,16 +1,16 @@
+using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Rex.Application.DTOs;
 using Rex.Application.Interfaces;
 using Rex.Configurations;
-using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 namespace Rex.Infrastructure.Shared.Services;
 
 public class EmailService(IOptions<EmailConfiguration> emailOptions): IEmailService
 {
-    private readonly EmailConfiguration _emailConfiguration = emailOptions.Value;
-    
+    private EmailConfiguration _emailConfiguration { get; } = emailOptions.Value;
+
     public async Task SendEmailAsync(EmailDto emailAnswer)
     {
         try
