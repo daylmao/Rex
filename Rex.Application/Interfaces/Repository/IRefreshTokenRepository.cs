@@ -43,7 +43,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="tokenId">The ID of the refresh token.</param>
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>True if the token has been used; otherwise false.</returns>
-        Task RevokeOldTokensAsync(Guid userId, Guid tokenId,
+        Task RevokeOldRefreshTokensAsync(Guid userId, Guid tokenId,
             CancellationToken cancellationToken);
 
         Task<List<RefreshToken>> GetActiveTokensByUserIdAsync(Guid userId, CancellationToken cancellationToken);

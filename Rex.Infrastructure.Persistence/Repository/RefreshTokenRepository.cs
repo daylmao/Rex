@@ -36,7 +36,7 @@ public class RefreshTokenRepository(RexContext context): GenericRepository<Refre
         }
     }
 
-    public async Task RevokeOldTokensAsync(Guid userId, Guid tokenId,
+    public async Task RevokeOldRefreshTokensAsync(Guid userId, Guid tokenId,
         CancellationToken cancellationToken) =>
         await context.Set<RefreshToken>()
             .Where(c => c.Id != tokenId && !c.Used && c.Expiration > DateTime.UtcNow && c.UserId == userId)
