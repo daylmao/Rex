@@ -12,5 +12,4 @@ public class EmailConfiguration
     
     public string? SmtpPass { get; set;}
     
-    public string? DisplayName { get; set;}
 }
