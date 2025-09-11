@@ -20,8 +20,9 @@ public static class DependencyInjection
 
         #region Configurations
 
-        services.Configure<EmailConfiguration>(configuration.GetSection("EmailConfigurations"));        
+        services.Configure<EmailConfiguration>(configuration.GetSection("EmailConfiguration"));        
         services.Configure<JWTConfiguration>(configuration.GetSection("JWTConfigurations"));
+        services.Configure<CloudinaryConfiguration>(configuration.GetSection("CloudinaryConfigurations"));
 
         #endregion
         
@@ -93,7 +94,9 @@ public static class DependencyInjection
             
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
-            
+        services.AddScoped<ICloudinaryService, CloudinaryService>();
+        
+
         #endregion
     }
 }
