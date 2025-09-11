@@ -84,7 +84,7 @@ public class AuthenticationService(
         };
 
         await refreshTokenRepository.CreateRefreshTokenAsync(refreshToken, cancellationToken);
-        await refreshTokenRepository.RevokeOldTokensAsync(user.Id, refreshToken.Id, cancellationToken);
+        await refreshTokenRepository.RevokeOldRefreshTokensAsync(user.Id, refreshToken.Id, cancellationToken);
 
         return tokenString;
     }
