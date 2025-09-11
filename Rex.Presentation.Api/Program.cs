@@ -1,3 +1,4 @@
+using Rex.Application;
 using Rex.Infrastructure.Persistence;
 using Rex.Infrastructure.Shared;
 using Rex.Presentation.Api.ServicesExtension;
@@ -18,6 +19,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddPersistenceLayer(builder.Configuration);
 builder.Services.AddSharedLayer(builder.Configuration);
+builder.Services.AddApplicationLayer(builder.Configuration);
 builder.Services.AddVersioning();
 
 var app = builder.Build();
@@ -33,6 +35,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,5 +1,30 @@
-﻿namespace Rex.Application;
+﻿using System.Reflection;
+using FluentValidation;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Rex.Application.Interfaces;
+using Rex.Application.Services;
 
-public class Class1
+namespace Rex.Application;
+
+public static class DependecyInjection
 {
+    public static void AddApplicationLayer(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddMediatR(config =>
+        {
+            config.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
+        });
+
+        services.AddProblemDetails();
+        
+        #region Services
+
+        services.AddScoped<ICodeService, CodeService>();
+
+        #endregion
+
+        services.AddHttpContextAccessor();
+    }
 }
