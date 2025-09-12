@@ -602,7 +602,7 @@ public class RexContext: DbContext
                 .HasMaxLength(30);
             
             entity.Property(c => c.Expiration)
-                .HasColumnType("date");
+                .HasColumnType("timestamptz");
 
             entity.Property(c => c.Revoked)
                 .HasDefaultValue(false);
