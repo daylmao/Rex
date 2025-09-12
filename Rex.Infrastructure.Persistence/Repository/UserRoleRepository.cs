@@ -6,5 +6,6 @@ namespace Rex.Infrastructure.Persistence.Repository;
 
 public class UserRoleRepository(RexContext context): GenericRepository<UserRole>(context), IUserRoleRepository
 {
-    
+    public async Task<bool> RoleExistsAsync(Guid roleId, CancellationToken cancellationToken) =>
+        await ValidateAsync(c => c.Id == roleId, cancellationToken);
 }
