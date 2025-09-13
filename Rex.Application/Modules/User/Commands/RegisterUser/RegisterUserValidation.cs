@@ -15,7 +15,8 @@ public class RegisterUserValidation: AbstractValidator<RegisterUserCommand>
             .NotEmpty().WithMessage("Lastname is required");
         
         RuleFor(n => n.Email)
-            .NotEmpty().WithMessage("Email is required");
+            .NotEmpty().WithMessage("Email is required")
+            .EmailAddress().WithMessage("Email is invalid");
 
         RuleFor(n => n.Password)
             .NotEmpty().WithMessage("Password is required")
