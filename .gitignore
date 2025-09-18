@@ -13,6 +13,7 @@
 *.userprefs
 .env
 /.idea
+.config
 appsettings.json
 # Mono auto generated files
 mono_crash.*
