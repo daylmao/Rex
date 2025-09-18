@@ -659,7 +659,7 @@ public class RexContext: DbContext
             
             entity.Property(r => r.Value)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasColumnType("text");
 
             entity.Property(r => r.Used)
                 .HasDefaultValue(false);
@@ -668,7 +668,7 @@ public class RexContext: DbContext
                 .HasDefaultValue(false);
             
             entity.Property(r => r.Expiration)
-                .HasColumnType("date");
+                .HasColumnType("timestamptz");
             
         });
 
