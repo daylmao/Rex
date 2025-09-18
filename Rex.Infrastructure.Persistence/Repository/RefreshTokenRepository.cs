@@ -21,7 +21,7 @@ public class RefreshTokenRepository(RexContext context): GenericRepository<Refre
     {
         var activeTokens = await GetActiveTokensByUserIdAsync(userId, cancellationToken);
 
-        return activeTokens.Any(t => BCrypt.Net.BCrypt.Verify(receivedToken, t.Value));
+        return activeTokens.Any(t => t.Value == receivedToken);
     }
 
     public async Task MarkRefreshTokenAsUsedAsync(string token, CancellationToken cancellationToken)
