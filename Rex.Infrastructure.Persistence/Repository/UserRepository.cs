@@ -13,8 +13,8 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
     public async Task<bool> ConfirmedAccountAsync(Guid id, CancellationToken cancellationToken) =>
         await ValidateAsync(u => u.Id == id && u.ConfirmedAccount == true, cancellationToken);
     
-    public async Task<bool> UserNameInUseAsync(string userName, Guid userId, CancellationToken cancellationToken) =>
-        await ValidateAsync(u => u.Id == userId && u.UserName == userName, cancellationToken);
+    public async Task<bool> UserNameInUseAsync(Guid userId, string userName, CancellationToken cancellationToken) =>
+        await ValidateAsync(u => u.Id != userId && u.UserName == userName, cancellationToken);
 
     public async Task<User> GetByEmailAsync(string email, CancellationToken cancellationToken) =>
         await context.Set<User>()
@@ -24,6 +24,9 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
     
     public async Task<bool> EmailInUseAsync(string email, Guid userId, CancellationToken cancellationToken) =>
         await ValidateAsync(u => u.Email == email && u.Id != userId, cancellationToken);
+
+    public async Task<bool> EmailInUseByYouAsync(Guid userId, string email, CancellationToken cancellationToken) =>
+        await ValidateAsync(u => u.Email == email && u.Id == userId, cancellationToken);
 
     public async Task UpdatePasswordAsync(User user, string newPassword, CancellationToken cancellationToken)
     {

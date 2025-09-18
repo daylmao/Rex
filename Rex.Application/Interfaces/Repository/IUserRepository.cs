@@ -23,7 +23,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="userId">The ID of the current user.</param>
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>True if the username is in use; otherwise false.</returns>
-        Task<bool> UserNameInUseAsync(string userName, Guid userId, CancellationToken cancellationToken);
+        Task<bool> UserNameInUseAsync(Guid userId, string userName, CancellationToken cancellationToken);
 
         /// <summary>
         /// Retrieves a user by their email address.
@@ -41,6 +41,8 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>True if the email is in use; otherwise false.</returns>
         Task<bool> EmailInUseAsync(string email, Guid userId, CancellationToken cancellationToken);
+        
+        Task<bool> EmailInUseByYouAsync(Guid userId, string email,  CancellationToken cancellationToken);
 
         /// <summary>
         /// Updates a user's password.
