@@ -72,7 +72,7 @@ public class CodeService(
     }
 
 
-    public async Task<Result> ConfirmAccountAsync(Guid userId, string code, CancellationToken cancellationToken)
+    public async Task<Result> ConfirmCodeAsync(Guid userId, string code, CancellationToken cancellationToken)
     {
         var user = await userRepository.GetByIdAsync(userId, cancellationToken);
         if (user is null)
@@ -106,13 +106,24 @@ public class CodeService(
             logger.LogWarning($"Code '{code}' is expired or invalid");
             return Result.Failure(Error.Failure("400", "Code is invalid or expired"));
         }
-    
-        await codeRepository.MarkCodeAsUsedAsync(code, cancellationToken);
-    
+
+        if (codeEntity.Type == CodeType.EmailConfirmation.ToString())
+        {
+            user.ConfirmedAccount = true;
+            await userRepository.UpdateAsync(user, cancellationToken);
+            
+            await codeRepository.MarkCodeAsUsedAsync(code, cancellationToken);
+            logger.LogInformation("User {UserId} successfully changed email", user.Id);
+            
+            return Result.Success();
+        }
+
         user.ConfirmedAccount = true;
         await userRepository.UpdateAsync(user, cancellationToken);
-    
-        logger.LogInformation($"User with ID {user.Id} has been successfully confirmed");
+        
+        await codeRepository.MarkCodeAsUsedAsync(code, cancellationToken);
+        
+        logger.LogInformation("User {UserId} account confirmed successfully", user.Id);
         return Result.Success();
     }
 
