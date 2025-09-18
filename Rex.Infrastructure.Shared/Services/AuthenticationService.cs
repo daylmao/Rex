@@ -73,13 +73,12 @@ public class AuthenticationService(
         );
 
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-        var hashedToken = BCrypt.Net.BCrypt.HashPassword(tokenString);
 
         var refreshToken = new RefreshToken
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
-            Value = hashedToken,
+            Value = tokenString,
             Expiration = expiration,
             CreatedAt = DateTime.UtcNow
         };
@@ -90,7 +89,7 @@ public class AuthenticationService(
         return tokenString;
     }
 
-    public async Task<ResultT<TokenAnswerDto>> RefreshTokenAsync(User user, string refreshToken, CancellationToken cancellationToken)
+    public async Task<ResultT<TokenAnswerDto>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
     {
         var handler = new JwtSecurityTokenHandler();
 
@@ -107,18 +106,19 @@ public class AuthenticationService(
         }, out SecurityToken token);
 
         var jwt = (JwtSecurityToken)token;
+        var tokenUserId = Guid.Parse(jwt.Subject);
 
         if (jwt.Claims.FirstOrDefault(c => c.Type == "type")?.Value != "refresh")
             return ResultT<TokenAnswerDto>.Failure(Error.Unauthorized("401", "The provided token is not a refresh token"));
 
-        var tokenValid = await refreshTokenRepository.IsRefreshTokenValidAsync(user.Id, refreshToken, cancellationToken);
+        var tokenValid = await refreshTokenRepository.IsRefreshTokenValidAsync(tokenUserId, refreshToken, cancellationToken);
 
         if (!tokenValid)
+        {
             return ResultT<TokenAnswerDto>.Failure(Error.Unauthorized("401", "Refresh token is invalid, used, revoked, or expired"));
-
-        var userId = jwt.Subject;
+        }
         
-        var userExist = await userRepository.GetByIdAsync(Guid.Parse(userId), cancellationToken);
+        var userExist = await userRepository.GetByIdAsync(tokenUserId, cancellationToken);
 
         if (userExist is null)
             return ResultT<TokenAnswerDto>.Failure(Error.NotFound("404", "User not found"));

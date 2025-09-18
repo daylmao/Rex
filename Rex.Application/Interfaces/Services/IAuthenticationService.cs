@@ -14,5 +14,5 @@ public interface IAuthenticationService
     /// </summary>
     Task<string> GenerateTokenAsync(User user, CancellationToken cancellationToken);
     Task<string> GenerateRefreshTokenAsync(User user, CancellationToken cancellationToken);
-    Task<ResultT<TokenAnswerDto>> RefreshTokenAsync(User user, string refreshToken, CancellationToken cancellationToken);
+    Task<ResultT<TokenAnswerDto>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
 }
