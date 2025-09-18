@@ -23,7 +23,7 @@ public interface ICodeService
     /// <summary>
     /// Confirms a user's account using a specific code.
     /// </summary>
-    Task<Result> ConfirmAccountAsync(Guid userId, string code, CancellationToken cancellationToken);
+    Task<Result> ConfirmCodeAsync(Guid userId, string code, CancellationToken cancellationToken);
     
     /// <summary>
     /// Checks whether the provided code is valid.

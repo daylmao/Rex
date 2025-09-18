@@ -13,6 +13,7 @@ public class RegisterUserCommandHandler(
     ICodeService codeService,
     IEmailService emailService,
     IUserRepository userRepository,
+    IUserRoleRepository roleRepository,
     ICloudinaryService cloudinaryService
     ): ICommandHandler<RegisterUserCommand, RegisterUserDto>
 {
@@ -30,6 +31,14 @@ public class RegisterUserCommandHandler(
         {
             logger.LogInformation("Username {UserName} already exists.", request.UserName);
             return ResultT<RegisterUserDto>.Failure(Error.Conflict("409", "The provided username is already taken."));
+        }
+        
+        var roleExists = await roleRepository.RoleExistsAsync(request.RolId, cancellationToken);
+        if (!roleExists)
+        {
+            logger.LogInformation("Register user attempt failed: role with ID {RoleId} does not exist.", request.RolId);
+            return ResultT<RegisterUserDto>.Failure(Error.NotFound("404", "Role was not found."));
+            
         }
 
         string profilePhotoUrl = "";

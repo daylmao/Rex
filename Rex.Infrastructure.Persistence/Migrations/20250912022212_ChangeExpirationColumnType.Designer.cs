@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rex.Infrastructure.Persistence.Context;
@@ -11,9 +12,11 @@ using Rex.Infrastructure.Persistence.Context;
 namespace Rex.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(RexContext))]
-    partial class RexContextModelSnapshot : ModelSnapshot
+    [Migration("20250912022212_ChangeExpirationColumnType")]
+    partial class ChangeExpirationColumnType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -603,7 +606,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("Expiration")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("date");
 
                     b.Property<bool>("Revoked")
                         .ValueGeneratedOnAdd()
@@ -624,7 +627,8 @@ namespace Rex.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Value")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("Id")
                         .HasName("PkRefreshTokenId");

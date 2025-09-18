@@ -2,6 +2,7 @@
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Rex.Application.Behavior;
 using Rex.Application.Interfaces;
 using Rex.Application.Services;
 
@@ -15,6 +16,7 @@ public static class DependecyInjection
         services.AddMediatR(config =>
         {
             config.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
+            config.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 
         services.AddProblemDetails();
