@@ -33,8 +33,10 @@ public class UpdatePasswordCommandHandler(
             return ResultT<AnswerDto>.Failure(Error.Failure("400", "Current password is incorrect."));
         }
         
-        user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-        await userRepository.UpdatePasswordAsync(user, request.NewPassword, cancellationToken);
+        
+        
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await userRepository.UpdatePasswordAsync(user, hashedPassword, cancellationToken);
 
         logger.LogInformation("Password updated successfully for user {UserId}.", request.UserId);
         
