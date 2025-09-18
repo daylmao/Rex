@@ -35,12 +35,12 @@ public class LoginCommandHandler(
             return ResultT<TokenAnswerDto>.Failure(Error.Failure("403", "User is banned."));
         }
 
-        var confirmedAccount = await userRepository.ConfirmedAccountAsync(user.Id, cancellationToken);
-        if (!confirmedAccount)
-        {
-            logger.LogWarning("Login attempt failed: account not confirmed for user {UserId}.", user.Id);
-            return ResultT<TokenAnswerDto>.Failure(Error.Failure("403", "Account not confirmed."));
-        }
+        // var confirmedAccount = await userRepository.ConfirmedAccountAsync(user.Id, cancellationToken);
+        // if (!confirmedAccount)
+        // {
+        //     logger.LogWarning("Login attempt failed: account not confirmed for user {UserId}.", user.Id);
+        //     return ResultT<TokenAnswerDto>.Failure(Error.Failure("403", "Account not confirmed."));
+        // }
     
         var verifiedPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
         if (!verifiedPassword)
@@ -48,7 +48,9 @@ public class LoginCommandHandler(
             logger.LogWarning("Login attempt failed: invalid password for user {UserId}.", user.Id);
             return ResultT<TokenAnswerDto>.Failure(Error.Failure("401", "Invalid password."));
         }
-    
+            
+        user.LastLoginAt = DateTime.UtcNow;
+        await userRepository.UpdateAsync(user, cancellationToken);
         var accessToken = await authenticationService.GenerateTokenAsync(user, cancellationToken);
         var refreshToken = await authenticationService.GenerateRefreshTokenAsync(user, cancellationToken);
     
