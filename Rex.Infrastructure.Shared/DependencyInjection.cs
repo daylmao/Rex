@@ -20,7 +20,7 @@ public static class DependencyInjection
 
         #region Configurations
 
-        services.Configure<EmailConfiguration>(configuration.GetSection("EmailConfiguration"));        
+        services.Configure<EmailConfiguration>(configuration.GetSection("EmailConfigurations"));        
         services.Configure<JWTConfiguration>(configuration.GetSection("JWTConfigurations"));
         services.Configure<CloudinaryConfiguration>(configuration.GetSection("CloudinaryConfigurations"));
 
