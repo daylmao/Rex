@@ -6,8 +6,8 @@ namespace Rex.Application.Modules.User.Commands.UpdateUserInformation;
 
 public record UpdateUserInformationCommand(
     Guid UserId,
-    IFormFile ProfilePhoto,
-    string Firstname,
-    string Lastname,
-    string Biography
+    IFormFile? ProfilePhoto,
+    string? Firstname,
+    string? Lastname,
+    string? Biography
     ): ICommand<ResponseDto>;

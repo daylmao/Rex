@@ -8,6 +8,7 @@ using Rex.Application.Modules.User.Commands.RegisterUser;
 using Rex.Application.Modules.User.Commands.ResendCode;
 using Rex.Application.Modules.User.Commands.UpdateEmail;
 using Rex.Application.Modules.User.Commands.UpdatePassword;
+using Rex.Application.Modules.User.Commands.UpdateUserInformation;
 using Rex.Application.Modules.User.Commands.UpdateUsername;
 using Rex.Application.Modules.User.Queries.GetUserDetails;
 
@@ -120,6 +121,25 @@ public class UsersController(
         {
             "404" => NotFound(result.Error),
             "409" => Conflict(result.Error),
+            _ => BadRequest(result.Error)
+        };
+    }
+
+    [HttpPut]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateUserInformation([FromForm] UpdateUserInformationCommand command, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(command, cancellationToken);
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return result.Error.Code switch
+        {
+            "404" => NotFound(result.Error),
             _ => BadRequest(result.Error)
         };
     }
