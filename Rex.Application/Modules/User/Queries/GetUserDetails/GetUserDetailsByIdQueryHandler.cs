@@ -23,16 +23,13 @@ public class GetUserDetailsByIdQueryHandler(
     
         var userCache = await cache.GetOrCreateAsync(
             $"get-user-details-{request.UserId.ToString().ToLower()}",
-            async () =>
-            {
-                var user = await userRepository.GetUserDetailsAsync(request.UserId, cancellationToken);
-                if (user is null)
-                {
-                    logger.LogWarning("No user found for UserId: {UserId}", request.UserId);
-                    throw new KeyNotFoundException($"User with ID {request.UserId} not found.");
-                }
-                return user;
-            }, logger ,cancellationToken:cancellationToken);
+            async() => await userRepository.GetUserDetailsAsync(request.UserId, cancellationToken), logger ,cancellationToken:cancellationToken);
+        
+        if (userCache is null)
+        {
+            logger.LogWarning("GetUserDetailsByIdQuery: user not found for UserId {UserId}", request.UserId);
+            return ResultT<UserProfileDto>.Failure(Error.NotFound("404", "User not found"));
+        }
 
         UserProfileDto userDto = new(
             userCache.FirstName,
