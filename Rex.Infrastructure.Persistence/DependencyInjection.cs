@@ -13,6 +13,15 @@ public static class DependencyInjection
 {
     public static void AddPersistenceLayer(this IServiceCollection services, IConfiguration configuration)
     {
+        #region Redis
+        
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration.GetConnectionString("Redis");
+        });
+        
+        #endregion
+        
         #region DbContext
 
         services.AddDbContext<RexContext>(postgres =>

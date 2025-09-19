@@ -44,6 +44,18 @@ services:
       - ${SEQ_PORT_UI}:80
     volumes:
       - Seq:/data
+      
+  Redis:
+    image: ${REDIS_IMAGE}
+    container_name: RedisDB
+    restart: always
+    ports:
+      - ${REDIS_PORTS}:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
         
 volumes:
   PostgresDb:
