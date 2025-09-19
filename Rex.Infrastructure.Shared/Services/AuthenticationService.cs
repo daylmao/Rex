@@ -89,7 +89,7 @@ public class AuthenticationService(
         return tokenString;
     }
 
-    public async Task<ResultT<TokenAnswerDto>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
+    public async Task<ResultT<TokenResponseDto>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
     {
         var handler = new JwtSecurityTokenHandler();
 
@@ -109,26 +109,26 @@ public class AuthenticationService(
         var tokenUserId = Guid.Parse(jwt.Subject);
 
         if (jwt.Claims.FirstOrDefault(c => c.Type == "type")?.Value != "refresh")
-            return ResultT<TokenAnswerDto>.Failure(Error.Unauthorized("401", "The provided token is not a refresh token"));
+            return ResultT<TokenResponseDto>.Failure(Error.Unauthorized("401", "The provided token is not a refresh token"));
 
         var tokenValid = await refreshTokenRepository.IsRefreshTokenValidAsync(tokenUserId, refreshToken, cancellationToken);
 
         if (!tokenValid)
         {
-            return ResultT<TokenAnswerDto>.Failure(Error.Unauthorized("401", "Refresh token is invalid, used, revoked, or expired"));
+            return ResultT<TokenResponseDto>.Failure(Error.Unauthorized("401", "Refresh token is invalid, used, revoked, or expired"));
         }
         
         var userExist = await userRepository.GetByIdAsync(tokenUserId, cancellationToken);
 
         if (userExist is null)
-            return ResultT<TokenAnswerDto>.Failure(Error.NotFound("404", "User not found"));
+            return ResultT<TokenResponseDto>.Failure(Error.NotFound("404", "User not found"));
             
         var newToken = await GenerateTokenAsync(userExist, cancellationToken);
         var newRefreshToken = await GenerateRefreshTokenAsync(userExist, cancellationToken);
 
         await refreshTokenRepository.MarkRefreshTokenAsUsedAsync(refreshToken, cancellationToken);
 
-        return ResultT<TokenAnswerDto>.Success(new TokenAnswerDto(
+        return ResultT<TokenResponseDto>.Success(new TokenResponseDto(
             AccessToken: newToken,
             RefreshToken: newRefreshToken
             ));

@@ -6,4 +6,4 @@ namespace Rex.Application.Modules.User.Commands.Login;
 public record LoginCommand(
     string Email,
     string Password
-    ): ICommand<TokenAnswerDto>;
+    ): ICommand<TokenResponseDto>;

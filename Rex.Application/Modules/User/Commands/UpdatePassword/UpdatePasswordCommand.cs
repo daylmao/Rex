@@ -7,4 +7,4 @@ public record UpdatePasswordCommand(
     Guid UserId,
     string CurrentPassword,
     string NewPassword
-    ): ICommand<AnswerDto>;
+    ): ICommand<ResponseDto>;

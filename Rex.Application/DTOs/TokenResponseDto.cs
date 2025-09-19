@@ -1,6 +1,6 @@
 namespace Rex.Application.DTOs;
 
-public record TokenAnswerDto(
+public record TokenResponseDto(
     string AccessToken,
     string RefreshToken
     );

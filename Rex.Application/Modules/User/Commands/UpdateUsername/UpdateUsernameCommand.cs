@@ -6,4 +6,4 @@ namespace Rex.Application.Modules.User.Commands.UpdateUsername;
 public record UpdateUsernameCommand(
     Guid UserId,
     string Username
-    ): ICommand<AnswerDto>;
+    ): ICommand<ResponseDto>;

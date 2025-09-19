@@ -120,11 +120,14 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
         
         return new PagedResult<User>(users, total, page, size);
     }
-        
 
-    public async Task<User> GetUserDetailsAsync(Guid id, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-    
+
+    public async Task<User> GetUserDetailsAsync(Guid id, CancellationToken cancellationToken) =>
+        await context.Set<User>()
+            .Where(c => c.Id == id)
+            .Include(u => u.UserGroups)
+            .Include(u => u.Reactions)
+            .Include(c => c.UserChallenges)
+            .FirstOrDefaultAsync(cancellationToken);
+
 }

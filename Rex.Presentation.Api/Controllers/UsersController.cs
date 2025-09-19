@@ -9,6 +9,7 @@ using Rex.Application.Modules.User.Commands.ResendCode;
 using Rex.Application.Modules.User.Commands.UpdateEmail;
 using Rex.Application.Modules.User.Commands.UpdatePassword;
 using Rex.Application.Modules.User.Commands.UpdateUsername;
+using Rex.Application.Modules.User.Queries.GetUserDetails;
 
 namespace Rex.Presentation.Api.Controllers;
 
@@ -31,10 +32,10 @@ public class UsersController(
             return Ok(result.Value);
         }
 
-        return result.Error.Code switch
+        return result.Error?.Code switch
         {
             "404" => NotFound(result.Error),
-            _ => BadRequest()
+            _ => BadRequest(result.Error)
         };
     }
     
@@ -119,6 +120,26 @@ public class UsersController(
         {
             "404" => NotFound(result.Error),
             "409" => Conflict(result.Error),
+            _ => BadRequest(result.Error)
+        };
+    }
+    
+    [HttpGet("me/{userId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetUserProfileById([FromRoute] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetUserDetailsByIdQuery(userId), cancellationToken);
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+        
+        return result.Error!.Code switch
+        {
+            "404" => NotFound(result.Error),
             _ => BadRequest(result.Error)
         };
     }

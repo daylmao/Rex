@@ -12,27 +12,27 @@ public class LoginCommandHandler(
     ILogger<LoginCommandHandler> logger,
     IUserRepository userRepository,
     IAuthenticationService authenticationService
-    ): ICommandHandler<LoginCommand, TokenAnswerDto>
+    ): ICommandHandler<LoginCommand, TokenResponseDto>
 {
-    public async Task<ResultT<TokenAnswerDto>> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<ResultT<TokenResponseDto>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         if (request is null)
         {
             logger.LogWarning("Login attempt with null request.");
-            return ResultT<TokenAnswerDto>.Failure(Error.Failure("400", "Request cannot be null."));
+            return ResultT<TokenResponseDto>.Failure(Error.Failure("400", "Request cannot be null."));
         }
     
         var user = await userRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (user is null)
         {
             logger.LogWarning("Login attempt failed: user not found with email {Email}.", request.Email);
-            return ResultT<TokenAnswerDto>.Failure(Error.Failure("404", "User not found."));
+            return ResultT<TokenResponseDto>.Failure(Error.Failure("404", "User not found."));
         }
 
         if (user.Status == UserStatus.Banned.ToString())
         {
             logger.LogWarning("Login attempt failed: user {UserId} is banned.", user.Id);
-            return ResultT<TokenAnswerDto>.Failure(Error.Failure("403", "User is banned."));
+            return ResultT<TokenResponseDto>.Failure(Error.Failure("403", "User is banned."));
         }
 
         // var confirmedAccount = await userRepository.ConfirmedAccountAsync(user.Id, cancellationToken);
@@ -46,7 +46,7 @@ public class LoginCommandHandler(
         if (!verifiedPassword)
         {
             logger.LogWarning("Login attempt failed: invalid password for user {UserId}.", user.Id);
-            return ResultT<TokenAnswerDto>.Failure(Error.Failure("401", "Invalid password."));
+            return ResultT<TokenResponseDto>.Failure(Error.Failure("401", "Invalid password."));
         }
             
         user.LastLoginAt = DateTime.UtcNow;
@@ -56,7 +56,7 @@ public class LoginCommandHandler(
     
         logger.LogInformation("User {UserId} logged in successfully.", user.Id);
     
-        return ResultT<TokenAnswerDto>.Success(new TokenAnswerDto(accessToken, refreshToken));
+        return ResultT<TokenResponseDto>.Success(new TokenResponseDto(accessToken, refreshToken));
     }
 
 }

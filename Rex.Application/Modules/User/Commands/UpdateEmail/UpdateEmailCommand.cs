@@ -7,4 +7,4 @@ public record UpdateEmailCommand(
     Guid UserId,
     string Email,
     string NewEmail
-    ): ICommand<AnswerDto>;
+    ): ICommand<ResponseDto>;
