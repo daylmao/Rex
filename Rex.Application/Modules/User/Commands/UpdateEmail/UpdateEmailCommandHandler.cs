@@ -37,7 +37,7 @@ public class UpdateEmailCommandHandler(
             return ResultT<AnswerDto>.Failure(Error.Failure("400", "Current email mismatch"));
         }
 
-        var emailExists = await userRepository.EmailExistAsync(request.NewEmail, cancellationToken);
+        var emailExists = await userRepository.EmailInUseAsync(request.NewEmail, request.UserId, cancellationToken);
         if (emailExists)
         {
             logger.LogWarning("New email {NewEmail} for user {UserId} is already in use", request.NewEmail, request.UserId);
