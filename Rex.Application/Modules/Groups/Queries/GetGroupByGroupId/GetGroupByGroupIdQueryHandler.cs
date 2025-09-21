@@ -7,14 +7,14 @@ using Rex.Enum;
 
 namespace Rex.Application.Modules.Groups.Queries.GetGroupById;
 
-public class GetGroupByIdQueryHandler(
-    ILogger<GetGroupByIdQueryHandler> logger,
+public class GetGroupByGroupIdQueryHandler(
+    ILogger<GetGroupByGroupIdQueryHandler> logger,
     IGroupRepository groupService,
     IUserGroupRepository userGroupRepository,
     IUserRepository userRepository
-) : IQueryHandler<GetGroupByIdQuery, GroupDetailsDto>
+) : IQueryHandler<GetGroupByGroupIdQuery, GroupDetailsDto>
 {
-    public async Task<ResultT<GroupDetailsDto>> Handle(GetGroupByIdQuery request, CancellationToken cancellationToken)
+    public async Task<ResultT<GroupDetailsDto>> Handle(GetGroupByGroupIdQuery request, CancellationToken cancellationToken)
     {
         if (request is null)
         {

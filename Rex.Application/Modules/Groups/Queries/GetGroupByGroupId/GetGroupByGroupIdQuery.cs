@@ -3,7 +3,7 @@ using Rex.Application.DTOs;
 
 namespace Rex.Application.Modules.Groups.Queries.GetGroupById;
 
-public record GetGroupByIdQuery(
+public record GetGroupByGroupIdQuery(
     Guid GroupId,
     Guid UserId
     ): IQuery<GroupDetailsDto>;
