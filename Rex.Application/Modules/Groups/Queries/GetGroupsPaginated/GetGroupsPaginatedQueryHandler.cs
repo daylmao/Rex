@@ -12,9 +12,10 @@ public class GetGroupsPaginatedQueryHandler(
     ILogger<GetGroupsPaginatedQueryHandler> logger,
     IGroupRepository groupRepository,
     IDistributedCache distributedCache
-    ) : IQueryHandler<GetGroupsPaginatedQuery, PagedResult<GroupDetailsDto>>
+) : IQueryHandler<GetGroupsPaginatedQuery, PagedResult<GroupDetailsDto>>
 {
-    public async Task<ResultT<PagedResult<GroupDetailsDto>>> Handle(GetGroupsPaginatedQuery request, CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<GroupDetailsDto>>> Handle(GetGroupsPaginatedQuery request,
+        CancellationToken cancellationToken)
     {
         if (request is null)
         {
@@ -31,15 +32,19 @@ public class GetGroupsPaginatedQueryHandler(
         }
 
         var groups = await distributedCache.GetOrCreateAsync(
-            $"get-groups-paginated-{request.UserId.ToString().ToLower()}",
-            async () => await groupRepository.GetGroupsPaginatedAsync(page: request.pageNumber, size: request.pageSize, cancellationToken),
+            $"get-groups-by-userid-{request.UserId}-{request.pageNumber}-{request.pageSize}",
+            async () => await groupRepository.GetGroupsPaginatedAsync(
+                request.UserId, 
+                page: request.pageNumber,
+                size: request.pageSize, 
+                cancellationToken),
             logger: logger,
             cancellationToken: cancellationToken
-            );
+        );
 
         var elements = groups.Items
             .Select(g => new GroupDetailsDto(
-               g.ProfilePhoto,
+                g.ProfilePhoto,
                 g.CoverPhoto,
                 g.Title,
                 g.Description,
@@ -61,8 +66,9 @@ public class GetGroupsPaginatedQueryHandler(
             actualPage: groups.ActualPage,
             pageSize: request.pageSize
         );
-        
-        logger.LogWarning("Successfully retrieved {Count} groups for user ID: {UserId}", elements.Count(), request.UserId);
+
+        logger.LogWarning("Successfully retrieved {Count} groups for user ID: {UserId}", elements.Count(),
+            request.UserId);
         return ResultT<PagedResult<GroupDetailsDto>>.Success(result);
     }
 }

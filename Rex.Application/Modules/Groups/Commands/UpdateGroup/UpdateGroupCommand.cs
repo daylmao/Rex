@@ -10,7 +10,7 @@ public record UpdateGroupCommand(
     Guid GroupId,
     IFormFile? ProfilePhoto,
     IFormFile? CoverPhoto,
-    string Title,
-    string Description,
-    GroupVisibility Visibility
+    string? Title,
+    string? Description,
+    GroupVisibility? Visibility
     ): ICommand<ResponseDto>;

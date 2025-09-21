@@ -31,7 +31,7 @@ public class GetGroupsByUserIdQueryHandler(
         }
 
         var result = await distributedCache.GetOrCreateAsync(
-            $"get-groups-by-userid-{request.UserId.ToString().ToLower()}",
+            $"get-groups-by-userid-{request.UserId.ToString()}-{request.pageNumber}-{request.pageSize}",
             async () => await groupRepository.GetGroupsByUserIdAsync(
                 request.UserId,
                 request.pageNumber,
@@ -44,13 +44,13 @@ public class GetGroupsByUserIdQueryHandler(
         var elements = result.Items
             .Select(c => new GroupDetailsDto
             (
-               ProfilePicture: c.ProfilePhoto,
-               CoverPicture: c.CoverPhoto ?? string.Empty,
-               Title: c.Title,
-               Description: c.Description,
-               Visibility: c.Visibility,
-               MemberCount: c.UserGroups.Count,
-               IsJoined: c.UserGroups.Any(ug => ug.UserId == request.UserId)
+                ProfilePicture: c.ProfilePhoto,
+                CoverPicture: c.CoverPhoto ?? string.Empty,
+                Title: c.Title,
+                Description: c.Description,
+                Visibility: c.Visibility,
+                MemberCount: c.UserGroups.Count,
+                IsJoined: c.UserGroups.Any(ug => ug.UserId == request.UserId)
             ));
 
         if (!elements.Any())

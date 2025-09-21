@@ -17,7 +17,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <returns>A paginated list of groups for the user.</returns>
         Task<PagedResult<Group>> GetGroupsByUserIdAsync(Guid userId, int page, int size, CancellationToken cancellationToken);
         
-        Task<PagedResult<Group>> GetGroupsPaginatedAsync(int page, int size, CancellationToken cancellationToken);
+        Task<PagedResult<Group>> GetGroupsPaginatedAsync(Guid userId, int page, int size, CancellationToken cancellationToken);
 
         /// <summary>
         /// Checks if a group exists by its ID.
