@@ -11,7 +11,8 @@ namespace Rex.Application.Modules.Groups.Queries.GetGroupsPaginated;
 public class GetGroupsPaginatedQueryHandler(
     ILogger<GetGroupsPaginatedQueryHandler> logger,
     IGroupRepository groupRepository,
-    IDistributedCache distributedCache
+    IDistributedCache distributedCache,
+    IUserRepository userRepository
 ) : IQueryHandler<GetGroupsPaginatedQuery, PagedResult<GroupDetailsDto>>
 {
     public async Task<ResultT<PagedResult<GroupDetailsDto>>> Handle(GetGroupsPaginatedQuery request,
@@ -24,11 +25,12 @@ public class GetGroupsPaginatedQueryHandler(
                 Error.Failure("400", "The request cannot be empty."));
         }
 
-        if (request.UserId == null)
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (user is null)
         {
-            logger.LogWarning("The request did not include a valid user ID.");
+            logger.LogWarning("User with ID: {UserId} not found.", request.UserId);
             return ResultT<PagedResult<GroupDetailsDto>>.Failure(
-                Error.Failure("400", "A valid user ID must be provided."));
+                Error.Failure("404", "User not found."));
         }
 
         var groups = await distributedCache.GetOrCreateAsync(

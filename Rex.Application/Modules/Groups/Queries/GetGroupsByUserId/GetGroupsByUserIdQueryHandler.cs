@@ -11,7 +11,8 @@ namespace Rex.Application.Modules.Groups.Queries.GetGroupsByUserId;
 public class GetGroupsByUserIdQueryHandler(
     ILogger<GetGroupsByUserIdQueryHandler> logger,
     IGroupRepository groupRepository,
-    IDistributedCache distributedCache
+    IDistributedCache distributedCache,
+    IUserRepository userRepository
     ) : IQueryHandler<GetGroupsByUserIdQuery, PagedResult<GroupDetailsDto>>
 {
     public async Task<ResultT<PagedResult<GroupDetailsDto>>> Handle(GetGroupsByUserIdQuery request, CancellationToken cancellationToken)
@@ -23,11 +24,12 @@ public class GetGroupsByUserIdQueryHandler(
                 Error.Failure("400", "The request cannot be empty."));
         }
 
-        if (request.UserId == null)
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (user is null)
         {
-            logger.LogError("The request did not include a valid user ID.");
+            logger.LogWarning("User with ID {UserId} not found.", request.UserId);
             return ResultT<PagedResult<GroupDetailsDto>>.Failure(
-                Error.Failure("400", "A valid user ID must be provided."));
+                Error.Failure("404", "User not found."));
         }
 
         var result = await distributedCache.GetOrCreateAsync(
