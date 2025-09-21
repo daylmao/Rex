@@ -345,6 +345,10 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("PkGroupId");
 
+                    b.Property<string>("CoverPhoto")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -358,6 +362,11 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ProfilePhoto")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("Title")
                         .IsRequired()
