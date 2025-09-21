@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddTransient<IUserChallengeRepository, UserChallengeRepository>();
         services.AddTransient<IUserChatRepository, UserChatRepository>();
         services.AddTransient<IUserGroupRepository, UserGroupRepository>();
+        services.AddTransient<IGroupRepository, GroupRepository>();
 
         #endregion
 
