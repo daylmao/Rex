@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Rex.Application.Modules.Groups.Queries.GetGroupsPaginated;
 using Rex.Application.Modules.User.Commands.ConfirmAccount;
 using Rex.Application.Modules.User.Commands.ConfirmEmailChange;
 using Rex.Application.Modules.User.Commands.Login;
@@ -158,6 +159,24 @@ public class UsersController(
         }
         
         return result.Error!.Code switch
+        {
+            "404" => NotFound(result.Error),
+            _ => BadRequest(result.Error)
+        };
+    }
+    
+    [HttpGet("/{userId}/groups/recommended")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetGroupsUserNotIn([FromRoute] Guid userId, [FromQuery] int pageNumber,
+        [FromQuery] int pageSize, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetGroupsPaginatedQuery(userId, pageNumber, pageSize), cancellationToken);
+        if (result.IsSuccess)
+            return Ok(result.Value);
+
+        return result.Error.Code switch
         {
             "404" => NotFound(result.Error),
             _ => BadRequest(result.Error)

@@ -2,7 +2,10 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rex.Application.Modules.Groups.Commands;
+using Rex.Application.Modules.Groups.Commands.UpdateGroup;
 using Rex.Application.Modules.Groups.Queries.GetGroupById;
+using Rex.Application.Modules.Groups.Queries.GetGroupsByUserId;
+using Rex.Application.Modules.Groups.Queries.GetGroupsPaginated;
 
 namespace Rex.Presentation.Api.Controllers;
 
@@ -24,14 +27,50 @@ public class GroupsController(IMediator mediator) : ControllerBase
         return BadRequest(result.Error);
     }
     
-    [HttpGet("{groupId}/users/{userId}")]
+    [HttpGet("{groupId}/membership/{userId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetGroupById([FromRoute] Guid userId, [FromRoute] Guid groupId,
+    public async Task<IActionResult> GetGroupById([FromRoute] Guid groupId, [FromRoute] Guid userId, 
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetGroupByIdQuery(groupId, userId), cancellationToken);
+        var result = await mediator.Send(new GetGroupByGroupIdQuery(groupId, userId), cancellationToken);
+        if (result.IsSuccess)
+            return Ok(result.Value);
+
+        return result.Error.Code switch
+        {
+            "404" => NotFound(result.Error),
+            _ => BadRequest(result.Error)
+        };
+    }
+    
+    [HttpGet("by-user/{userId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetGroupsByUserId([FromRoute] Guid userId, [FromQuery] int pageNumber,
+        int pageSize, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetGroupsByUserIdQuery(userId, pageNumber, pageSize), cancellationToken);
+        if (result.IsSuccess)
+            return Ok(result.Value);
+
+        return result.Error.Code switch
+        {
+            "404" => NotFound(result.Error),
+            _ => BadRequest(result.Error)
+        };
+    }
+    
+    
+    [HttpPut]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateGroupInformation([FromForm] UpdateGroupCommand command, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(command,cancellationToken);
         if (result.IsSuccess)
             return Ok(result.Value);
 
