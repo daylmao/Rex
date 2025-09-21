@@ -8,8 +8,9 @@ namespace Rex.Infrastructure.Persistence.Repository;
 
 public class UserGroupRepository(RexContext context): GenericRepository<UserGroup>(context), IUserGroupRepository
 {
-    public async Task<int> GetUserGroupCountAsync(Guid userId, RequestStatus status, CancellationToken cancellationToken) =>
-        await context.UserGroup
+    public async Task<int> GetUserGroupCountAsync(Guid userId, RequestStatus status,
+        CancellationToken cancellationToken) =>
+        await context.Set<UserGroup>()
             .AsNoTracking()
             .Where(ug => ug.UserId == userId && ug.Status == status.ToString())
             .CountAsync(cancellationToken);
@@ -17,7 +18,7 @@ public class UserGroupRepository(RexContext context): GenericRepository<UserGrou
     public async Task<bool> IsUserInGroupAsync(Guid userId, Guid groupId, RequestStatus? status, 
         CancellationToken cancellationToken)
     {
-        return await context.UserGroup
+        return await context.Set<UserGroup>()
             .AnyAsync(ug => ug.UserId == userId && ug.GroupId == groupId 
                                                 && ug.Status == status.ToString()
                                                , cancellationToken);
