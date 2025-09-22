@@ -1,7 +1,9 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs;
 using Rex.Application.Interfaces.Repository;
+using Rex.Application.Pagination;
 using Rex.Application.Utilities;
 using Rex.Enum;
 
@@ -9,9 +11,10 @@ namespace Rex.Application.Modules.Groups.Queries.GetGroupById;
 
 public class GetGroupByGroupIdQueryHandler(
     ILogger<GetGroupByGroupIdQueryHandler> logger,
-    IGroupRepository groupService,
+    IGroupRepository groupRepository,
     IUserGroupRepository userGroupRepository,
-    IUserRepository userRepository
+    IUserRepository userRepository,
+    IDistributedCache distributedCache
 ) : IQueryHandler<GetGroupByGroupIdQuery, GroupDetailsDto>
 {
     public async Task<ResultT<GroupDetailsDto>> Handle(GetGroupByGroupIdQuery request, CancellationToken cancellationToken)
@@ -31,14 +34,6 @@ public class GetGroupByGroupIdQueryHandler(
                 Error.NotFound("404", "We couldn't find the user making the request."));
         }
 
-        var group = await groupService.GetByIdAsync(request.GroupId, cancellationToken);
-        if (group is null)
-        {
-            logger.LogWarning("Could not find a group with ID {GroupId}.", request.GroupId);
-            return ResultT<GroupDetailsDto>.Failure(
-                Error.NotFound("404", "We couldn't find the group you're looking for."));
-        }
-
         var isUserBanned =
             await userGroupRepository.IsUserBannedAsync(request.UserId, request.GroupId, cancellationToken);
         
@@ -48,9 +43,6 @@ public class GetGroupByGroupIdQueryHandler(
             return ResultT<GroupDetailsDto>.Failure(
                 Error.Failure("403", "You can't access this group because you're banned."));
         }
-
-        var memberCount = await userGroupRepository.GetUserGroupCountAsync(request.GroupId, RequestStatus.Accepted,
-                cancellationToken);
 
         var isGroupPrivate = await userGroupRepository.IsGroupPrivateAsync(request.GroupId, cancellationToken);
         var isUserInGroup = await userGroupRepository.IsUserInGroupAsync(
@@ -63,17 +55,30 @@ public class GetGroupByGroupIdQueryHandler(
             return ResultT<GroupDetailsDto>.Failure(
                 Error.Failure("403", "This group is private, and you’re not a member."));
         }
-
         logger.LogInformation("Returning details for group {GroupId} to user {UserId}. Membership: {IsJoined}",
             request.GroupId, request.UserId, isUserInGroup);
 
+        var result = await distributedCache.GetOrCreateAsync(
+            $"get-group-by-id-{request.GroupId}-{request.UserId}",
+            async () => await groupRepository.GetGroupByIdAsync(request.GroupId, cancellationToken),
+            logger: logger,
+            cancellationToken: cancellationToken
+        );
+
+        if (result is null)
+        {
+            logger.LogWarning("Could not find group with ID {GroupId}.", request.GroupId);
+            return ResultT<GroupDetailsDto>.Failure(
+                Error.NotFound("404", "We couldn't find the group you're looking for."));
+        }
+        
         return ResultT<GroupDetailsDto>.Success(new GroupDetailsDto(
-            ProfilePicture: group.ProfilePhoto,
-            CoverPicture: group.CoverPhoto ?? string.Empty,
-            Title: group.Title,
-            Description: group.Description,
-            Visibility: group.Visibility,
-            MemberCount: memberCount,
+            ProfilePicture: result.ProfilePhoto,
+            CoverPicture: result.CoverPhoto ?? string.Empty,
+            Title: result.Title,
+            Description: result.Description,
+            Visibility: result.Visibility,
+            MemberCount: result.UserGroups.Count,
             IsJoined: isUserInGroup
         ));
     }
