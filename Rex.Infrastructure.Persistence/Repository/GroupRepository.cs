@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
+using Rex.Enum;
 using Rex.Infrastructure.Persistence.Context;
 using Group = Rex.Models.Group;
 using UserGroup = Rex.Models.UserGroup;
@@ -77,6 +78,26 @@ public class GroupRepository(RexContext context) : GenericRepository<Group>(cont
 
         return new PagedResult<Group>(result, total, page, size);
     }
+
+    public async Task<Group> GetGroupByIdAsync(Guid groupId, CancellationToken cancellationToken) =>
+        await context.Set<Group>()
+            .AsNoTracking()
+            .Where(c => c.Id == groupId)
+            .Select(c => new Group
+            {
+                Title = c.Title,
+                Description = c.Description,
+                Visibility = c.Visibility,
+                ProfilePhoto = c.ProfilePhoto,
+                CoverPhoto = c.CoverPhoto,
+                CreatedAt = c.CreatedAt,
+                UserGroups = c.UserGroups
+                    .Select(ug => new UserGroup
+                    {
+                        UserId = ug.UserId
+                    })
+                    .ToList()
+            }).FirstOrDefaultAsync(cancellationToken);
 
     public async Task<bool> GroupExistAsync(Guid groupId, CancellationToken cancellationToken) =>
         await ValidateAsync(c => c.Id == groupId, cancellationToken);
