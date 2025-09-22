@@ -165,7 +165,7 @@ public class UsersController(
         };
     }
     
-    [HttpGet("/{userId}/groups/recommended")]
+    [HttpGet("{userId}/groups/recommended")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
