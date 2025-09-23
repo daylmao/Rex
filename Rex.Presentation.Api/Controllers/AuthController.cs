@@ -48,7 +48,7 @@ public class AuthController(IMediator mediator, IAuthenticationService authentic
         };
     }
 
-    [HttpPost("login")]
+    [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
