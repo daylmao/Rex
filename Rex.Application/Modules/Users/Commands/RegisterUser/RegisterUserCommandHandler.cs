@@ -44,7 +44,7 @@ public class RegisterUserCommandHandler(
         string profilePhotoUrl = "";
         if (request.ProfilePhoto is not null)
         {
-            using var stream = request.ProfilePhoto.OpenReadStream();
+            await using var stream = request.ProfilePhoto.OpenReadStream();
             profilePhotoUrl = await cloudinaryService.UploadImageAsync(
                 stream,
                 request.ProfilePhoto.FileName,
@@ -56,7 +56,7 @@ public class RegisterUserCommandHandler(
         string coverPhotoUrl = "";
         if (request.CoverPhoto is not null)
         {
-            using var stream = request.CoverPhoto.OpenReadStream();
+            await using var stream = request.CoverPhoto.OpenReadStream();
             coverPhotoUrl = await cloudinaryService.UploadImageAsync(
                 stream,
                 request.CoverPhoto.FileName,
