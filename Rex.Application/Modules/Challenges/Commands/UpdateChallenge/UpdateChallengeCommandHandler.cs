@@ -29,7 +29,7 @@ public class UpdateChallengeCommandHandler(
         challenge.Title = request.Title;
         challenge.Description = request.Description;
         challenge.Duration = request.Duration;
-        challenge.Status = request.Status;
+        challenge.Status = request.Status.ToString();
         challenge.UpdatedAt = DateTime.UtcNow;
 
         await challengeRepository.UpdateAsync(challenge, cancellationToken);

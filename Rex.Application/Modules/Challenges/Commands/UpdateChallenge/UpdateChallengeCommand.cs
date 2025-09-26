@@ -1,5 +1,6 @@
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs;
+using Rex.Enum;
 
 namespace Rex.Application.Modules.Challenges.Commands.UpdateChallenge;
 
@@ -8,5 +9,5 @@ public record UpdateChallengeCommand(
     string Title,
     string Description,
     TimeSpan Duration,
-    string Status
+    ChallengeStatus Status
     ): ICommand<ResponseDto>;
