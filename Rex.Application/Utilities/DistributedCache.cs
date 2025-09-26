@@ -1,0 +1,45 @@
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+
+namespace Rex.Application.Utilities;
+
+public static class DistributedCache
+{
+    private static DistributedCacheEntryOptions CacheExpiration => new()
+    {
+        SlidingExpiration = TimeSpan.FromMinutes(1)
+    };
+
+    public static async Task<T> GetOrCreateAsync<T>(
+        this IDistributedCache cache,
+        string key,
+        Func<Task<T>> factory,
+        ILogger logger,
+        DistributedCacheEntryOptions options = null!,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var cachedData = await cache.GetStringAsync(key, cancellationToken);
+
+        if (!string.IsNullOrEmpty(cachedData))
+        {
+            logger.LogInformation("Cache hit for key '{Key}'", key);
+            return JsonSerializer.Deserialize<T>(cachedData)!;
+        }
+
+        logger.LogInformation("Cache miss for key '{Key}', fetching data...", key);
+        var data = await factory();
+
+        await cache.SetStringAsync(
+            key,
+            JsonSerializer.Serialize(data),
+            options ?? CacheExpiration,
+            cancellationToken
+        );
+
+        logger.LogInformation("Data cached for key '{Key}'", key);
+
+        return data;
+    }
+}

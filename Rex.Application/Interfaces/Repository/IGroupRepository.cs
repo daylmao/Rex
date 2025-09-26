@@ -1,4 +1,6 @@
+using Rex.Application.DTOs;
 using Rex.Application.Pagination;
+using Rex.Enum;
 using Rex.Models;
 
 namespace Rex.Application.Interfaces.Repository
@@ -14,22 +16,10 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="userId">The ID of the user.</param>
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>A paginated list of groups for the user.</returns>
-        Task<PagedResult<Group>> GetGroupsByUserIdAsync(Guid userId, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Checks if a group exists by its ID.
-        /// </summary>
-        /// <param name="groupId">The ID of the group.</param>
-        /// <param name="cancellationToken">Token to cancel the operation.</param>
-        /// <returns>True if the group exists; otherwise false.</returns>
-        Task<bool> GroupExistAsync(Guid groupId, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets the total number of groups associated with a specific user.
-        /// </summary>
-        /// <param name="userId">The ID of the user.</param>
-        /// <param name="cancellationToken">Token to cancel the operation.</param>
-        /// <returns>The total number of groups for the user.</returns>
-        Task<int> GetGroupCountByUserIdAsync(Guid userId, CancellationToken cancellationToken);
+        Task<PagedResult<Group>> GetGroupsByUserIdAsync(Guid userId, int page, int size, CancellationToken cancellationToken);
+        
+        Task<PagedResult<Group>> GetGroupsPaginatedAsync(Guid userId, int page, int size, CancellationToken cancellationToken);
+        Task<Group> GetGroupByIdAsync(Guid groupId, CancellationToken cancellationToken);
+        
     }
 }

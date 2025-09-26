@@ -57,13 +57,13 @@ public static class DependencyInjection
                     {
                         context.Response.StatusCode = 401;
                         context.Response.ContentType = "application/json";
-                        var result = JsonConvert.SerializeObject(new JWTAnswerDto(true, "The token has expired"));
+                        var result = JsonConvert.SerializeObject(new JWTResponseDto(true, "The token has expired"));
                         return context.Response.WriteAsync(result);
                     }
 
                     context.Response.StatusCode = 401;
                     context.Response.ContentType = "application/json";
-                    var generalResult = JsonConvert.SerializeObject(new JWTAnswerDto(true, "Invalid token or authentication error"));
+                    var generalResult = JsonConvert.SerializeObject(new JWTResponseDto(true, "Invalid token or authentication error"));
                     return context.Response.WriteAsync(generalResult);
                 },
                     
@@ -72,14 +72,14 @@ public static class DependencyInjection
                     c.HandleResponse();
                     c.Response.StatusCode = 401;
                     c.Response.ContentType = "application/json";
-                    var result = JsonConvert.SerializeObject(new JWTAnswerDto(true, "An unexpected authentication error occurred"));
+                    var result = JsonConvert.SerializeObject(new JWTResponseDto(true, "An unexpected authentication error occurred"));
                     return c.Response.WriteAsync(result);
                 },
                 OnForbidden = c =>
                 {
                     c.Response.StatusCode = 403;
                     c.Response.ContentType = "application/json";
-                    var result = JsonConvert.SerializeObject(new JWTAnswerDto(true,
+                    var result = JsonConvert.SerializeObject(new JWTResponseDto(true,
                         "You are not authorized to access this content"));
 
                     return c.Response.WriteAsync(result);

@@ -4,5 +4,6 @@ public enum RequestStatus
 {
     Pending,
     Accepted,
-    Rejected
+    Rejected,
+    Banned
 }

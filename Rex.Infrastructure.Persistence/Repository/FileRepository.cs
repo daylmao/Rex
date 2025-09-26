@@ -47,4 +47,10 @@ public class FileRepository(RexContext context): GenericRepository<File>(context
         
         return new PagedResult<File>(files, total, page, size);
     }
+
+    public async Task<File> GetFileByEntityAndTypeAsync(Guid targetId, TargetType targetType, CancellationToken cancellationToken) =>
+        await context.Set<File>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f => f.EntityFiles.Any(c => c.TargetId == targetId 
+                                                             && c.TargetType == targetType.ToString()), cancellationToken);
 }

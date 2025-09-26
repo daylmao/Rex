@@ -15,10 +15,74 @@ public class ChallengeRepository(RexContext context): GenericRepository<Challeng
         var total = await context.Set<Challenge>()
             .AsNoTracking()
             .Where(g => g.GroupId == groupId && g.Status == status.ToString())
+            .Select(g => new Challenge
+            {
+                Id = g.Id,
+                Title = g.Title,
+                Description = g.Description,
+                Status = g.Status,
+                CreatedAt = g.CreatedAt,
+                Duration = g.Duration,
+                Group = new Group
+                {
+                    Id = g.Group.Id,
+                    Title = g.Group.Title,
+                    ProfilePhoto = g.Group.ProfilePhoto,
+                    CoverPhoto = g.Group.CoverPhoto,
+                    Description = g.Group.Description,
+                    Visibility = g.Group.Visibility
+                },
+                UserChallenges = g.UserChallenges
+                    .Select(uc => new UserChallenge
+                    {
+                        Id = uc.Id,
+                        Status = uc.Status,
+                        User = new User
+                        {
+                            Id = uc.User.Id,
+                            ProfilePhoto = uc.User.ProfilePhoto
+                        }
+                    })
+                    .ToList()
+                    
+                
+            })
             .CountAsync(cancellationToken);
 
         var challenges = await context.Set<Challenge>()
             .Where(g => g.GroupId == groupId && g.Status == status.ToString())
+            .Select(g => new Challenge
+            {
+                Id = g.Id,
+                Title = g.Title,
+                Description = g.Description,
+                Status = g.Status,
+                CreatedAt = g.CreatedAt,
+                Duration = g.Duration,
+                Group = new Group
+                {
+                    Id = g.Group.Id,
+                    Title = g.Group.Title,
+                    ProfilePhoto = g.Group.ProfilePhoto,
+                    CoverPhoto = g.Group.CoverPhoto,
+                    Description = g.Group.Description,
+                    Visibility = g.Group.Visibility
+                },
+                UserChallenges = g.UserChallenges
+                    .Select(uc => new UserChallenge
+                    {
+                        Id = uc.Id,
+                        Status = uc.Status,
+                        User = new User
+                        {
+                            Id = uc.User.Id,
+                            ProfilePhoto = uc.User.ProfilePhoto
+                        }
+                    })
+                    .ToList()
+                    
+                
+            })
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * size)
             .Take(size)
@@ -51,12 +115,38 @@ public class ChallengeRepository(RexContext context): GenericRepository<Challeng
         UserChallengeStatus status,
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<Challenge>()
-            .Where(c => c.Status == status.ToString() && c.UserChallenges.Any(g => g.UserId == userId))
-            .CountAsync(cancellationToken);
-        
-        var challenges = await context.Set<Challenge>()
-            .Where(c => c.Status == status.ToString() && c.UserChallenges.Any(g => g.UserId == userId))
+        var query = context.Set<Challenge>()
+            .AsNoTracking()
+            .Where(c => c.UserChallenges.Any(c => c.UserId == userId && c.Status == status.ToString()));
+
+        var total = await query.CountAsync(cancellationToken);
+
+        var challenges = await query
+            .Select(c => new Challenge
+            {
+                Id = c.Id,
+                Title = c.Title,
+                Description = c.Description,
+                Status = c.Status,
+                CreatedAt = c.CreatedAt,
+                Duration = (c.CreatedAt + c.Duration) - DateTime.UtcNow,
+                Group = new Group
+                {
+                    Id = c.Group.Id,
+                    Title = c.Group.Title,
+                    ProfilePhoto = c.Group.ProfilePhoto
+                },
+                UserChallenges = c.UserChallenges
+                    .Select(uc => new UserChallenge
+                    {
+                        Status = uc.Status,
+                        UserId = uc.UserId,
+                        User = new User
+                        {
+                            ProfilePhoto = uc.User.ProfilePhoto
+                        }
+                    }).ToList()
+            })
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * size)
             .Take(size)

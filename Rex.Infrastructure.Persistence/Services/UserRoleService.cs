@@ -28,7 +28,7 @@ public class UserRoleService(RexContext context): IUserRoleService
         }
         
         if (roles.Count is 0)
-            roles.Add(UserRole.Member.ToString());
+            roles.Add(UserRole.User.ToString());
         
         return roles;
     }

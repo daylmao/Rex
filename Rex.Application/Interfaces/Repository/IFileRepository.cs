@@ -33,5 +33,8 @@ namespace Rex.Application.Interfaces.Repository
         /// <returns>A paginated list of files for the entity.</returns>
         Task<PagedResult<File>> GetFilesPaginatedByEntityAsync(Guid targetId, TargetType targetType, int page,
             int size, CancellationToken cancellationToken);
+        
+        Task<File> GetFileByEntityAndTypeAsync(Guid targetId, TargetType targetType, CancellationToken cancellationToken);
+
     }
 }

@@ -759,6 +759,13 @@ public class RexContext: DbContext
             entity.Property(g => g.Visibility)
                 .IsRequired()
                 .HasMaxLength(30);
+            
+            entity.Property(u => u.ProfilePhoto)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            entity.Property(u => u.CoverPhoto)
+                .HasMaxLength(255);
         });
 
         #endregion

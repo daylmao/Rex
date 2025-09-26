@@ -5,5 +5,6 @@ public enum TargetType
     Post,
     Comment,
     Message,
-    Challenge
+    Challenge,
+    Group
 }
