@@ -12,44 +12,13 @@ public class ChallengeRepository(RexContext context): GenericRepository<Challeng
     public async Task<PagedResult<Challenge>> GetChallengesPaginatedByGroupIdAndStatusAsync(Guid groupId, int page, int size, ChallengeStatus status,
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<Challenge>()
+        var query = context.Set<Challenge>()
             .AsNoTracking()
-            .Where(g => g.GroupId == groupId && g.Status == status.ToString())
-            .Select(g => new Challenge
-            {
-                Id = g.Id,
-                Title = g.Title,
-                Description = g.Description,
-                Status = g.Status,
-                CreatedAt = g.CreatedAt,
-                Duration = g.Duration,
-                Group = new Group
-                {
-                    Id = g.Group.Id,
-                    Title = g.Group.Title,
-                    ProfilePhoto = g.Group.ProfilePhoto,
-                    CoverPhoto = g.Group.CoverPhoto,
-                    Description = g.Group.Description,
-                    Visibility = g.Group.Visibility
-                },
-                UserChallenges = g.UserChallenges
-                    .Select(uc => new UserChallenge
-                    {
-                        Id = uc.Id,
-                        Status = uc.Status,
-                        User = new User
-                        {
-                            Id = uc.User.Id,
-                            ProfilePhoto = uc.User.ProfilePhoto
-                        }
-                    })
-                    .ToList()
-                    
-                
-            })
-            .CountAsync(cancellationToken);
+            .Where(g => g.GroupId == groupId && g.Status == status.ToString());
 
-        var challenges = await context.Set<Challenge>()
+        var total = await query.CountAsync(cancellationToken);
+
+        var challenges = await query
             .Where(g => g.GroupId == groupId && g.Status == status.ToString())
             .Select(g => new Challenge
             {
@@ -58,7 +27,7 @@ public class ChallengeRepository(RexContext context): GenericRepository<Challeng
                 Description = g.Description,
                 Status = g.Status,
                 CreatedAt = g.CreatedAt,
-                Duration = g.Duration,
+                Duration = (g.CreatedAt + g.Duration) - DateTime.UtcNow,
                 Group = new Group
                 {
                     Id = g.Group.Id,
@@ -95,12 +64,14 @@ public class ChallengeRepository(RexContext context): GenericRepository<Challeng
         Guid groupId, UserChallengeStatus status,
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<Challenge>()
+        var query = context.Set<Challenge>()
             .AsNoTracking()
             .Where(c => c.Status == status.ToString() && c.GroupId == groupId &&
-                        c.UserChallenges.Any(g => g.UserId == userId)).CountAsync(cancellationToken);
+                        c.UserChallenges.Any(g => g.UserId == userId));
         
-        var challenges = await context.Set<Challenge>()
+        var total = await query.CountAsync(cancellationToken);
+        
+        var challenges = await query
             .Where(c => c.Status == status.ToString() && c.GroupId == groupId &&
                         c.UserChallenges.Any(g => g.UserId == userId))
             .OrderByDescending(c => c.CreatedAt)

@@ -11,12 +11,13 @@ public class CommentRepository(RexContext context): GenericRepository<Comment>(c
     public async Task<PagedResult<Comment>> GetCommentsPaginatedByPostIdAsync(Guid postId, int page, int size, 
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<Comment>()
+        var query = context.Set<Comment>()
             .AsNoTracking()
-            .Where(c => c.PostId == postId)
-            .CountAsync(cancellationToken);
+            .Where(c => c.PostId == postId);
         
-        var comments = await context.Set<Comment>()
+        var total = await query.CountAsync(cancellationToken);
+        
+        var comments = await query
             .Where(c => c.PostId == postId)
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * size)
@@ -29,12 +30,13 @@ public class CommentRepository(RexContext context): GenericRepository<Comment>(c
     public async Task<PagedResult<Comment>> GetCommentsRepliedPaginatedByPostIdAsync(Guid postId, int page, int size,
         Guid parentCommentId, CancellationToken cancellationToken)
     {
-        var total = await context.Set<Comment>()
+        var query = context.Set<Comment>()
             .AsNoTracking()
-            .Where(c => c.PostId == postId && c.ParentCommentId == parentCommentId)
-            .CountAsync(cancellationToken);
+            .Where(c => c.PostId == postId && c.ParentCommentId == parentCommentId);
         
-        var comments = await context.Set<Comment>()
+        var total = await query.CountAsync(cancellationToken);
+        
+        var comments = await query
             .Where(c => c.PostId == postId && c.ParentCommentId == parentCommentId)
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * size)

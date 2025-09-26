@@ -38,7 +38,7 @@ public class UserGroupRepository(RexContext context) : GenericRepository<UserGro
     public async Task<PagedResult<UserGroup>> GetMembersAsync(Guid groupId, GroupRole? roleFilter, string? searchTerm,
         int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
-        var queryable = context.Set<UserGroup>()
+        var query = context.Set<UserGroup>()
             .AsNoTracking()
             .Select(c => new UserGroup
             {
@@ -61,20 +61,20 @@ public class UserGroupRepository(RexContext context) : GenericRepository<UserGro
                         c.Status == RequestStatus.Accepted.ToString());
 
         if (roleFilter.HasValue)
-            queryable = queryable.Where(c => c.GroupRole.Role == roleFilter.Value.ToString());
+            query = query.Where(c => c.GroupRole.Role == roleFilter.Value.ToString());
 
         if (!string.IsNullOrEmpty(searchTerm))
         {
-            queryable = queryable.Where(c =>
+            query = query.Where(c =>
                 EF.Functions.Like(c.User.UserName, $"%{searchTerm}%") ||
                 EF.Functions.Like(c.User.FirstName, $"%{searchTerm}%") ||
                 EF.Functions.Like(c.User.LastName, $"%{searchTerm}%") ||
                 EF.Functions.Like(c.User.FirstName + " " + c.User.LastName, $"%{searchTerm}%"));
         }
 
-        var count = await queryable.CountAsync(cancellationToken);
+        var count = await query.CountAsync(cancellationToken);
 
-        var items = await queryable
+        var items = await query
             .OrderByDescending(c => c.RequestedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)

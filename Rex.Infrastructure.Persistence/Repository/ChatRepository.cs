@@ -11,16 +11,18 @@ public class ChatRepository(RexContext context): GenericRepository<Chat>(context
     public async Task<PagedResult<Chat>> GetChatsWithLastMessageByUserIdAsync(Guid userId, int page, int size,
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<Chat>()
+        var query = context.Set<Chat>()
             .AsNoTracking()
-            .Where(u => u.UserChats.Any(g => g.UserId == userId))
-            .CountAsync(cancellationToken);
+            .Where(u => u.UserChats.Any(g => g.UserId == userId));
+
+        var total = await query.CountAsync(cancellationToken);
         
-        var chats = await context.Set<Chat>()
+        var chats = await query
             .Where(u => u.UserChats.Any(g => g.UserId == userId))
             .Include(m => m.UserChats)
                 .ThenInclude(c => c.Chat)
                     .ThenInclude(m => m.Messages)
+            .AsSplitQuery()
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * size)
             .Take(size)

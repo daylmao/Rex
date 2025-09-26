@@ -12,11 +12,12 @@ public class FrienshipRepository(RexContext context): GenericRepository<FriendSh
     public async Task<PagedResult<FriendShip>> GetFriendShipRequestsByUserIdAsync(Guid userId, int page, int size,
         RequestStatus status, CancellationToken cancellationToken)
     {
-       var total = await context.Set<FriendShip>()
-            .Where(f => f.TargetUserId == userId && f.Status == status.ToString())
-            .CountAsync(cancellationToken);
+        var query = context.Set<FriendShip>()
+            .Where(f => f.TargetUserId == userId && f.Status == status.ToString());
+        
+        var total = await query.CountAsync(cancellationToken);
        
-       var friendships = await context.Set<FriendShip>()
+       var friendships = await query
            .Where(f => f.TargetUserId == userId && f.Status == status.ToString())
            .OrderByDescending(c => c.CreatedAt)
            .Skip((page - 1) * size)
