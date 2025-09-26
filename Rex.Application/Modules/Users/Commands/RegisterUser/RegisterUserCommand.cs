@@ -14,6 +14,5 @@ public record RegisterUserCommand(
     IFormFile? CoverPhoto,
     string? Biography,
     string Gender,
-    DateTime Birthday,
-    Guid RolId
+    DateTime Birthday
     ): ICommand<RegisterUserDto>;

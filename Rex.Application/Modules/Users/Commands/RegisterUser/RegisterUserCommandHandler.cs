@@ -32,13 +32,12 @@ public class RegisterUserCommandHandler(
             logger.LogInformation("Username {UserName} already exists.", request.UserName);
             return ResultT<RegisterUserDto>.Failure(Error.Conflict("409", "The provided username is already taken."));
         }
-        
-        var roleExists = await roleRepository.RoleExistsAsync(request.RolId, cancellationToken);
-        if (!roleExists)
+
+        var roleExists = await roleRepository.GetRoleByNameAsync(UserRole.User.ToString(), cancellationToken);
+        if (roleExists is null)
         {
-            logger.LogInformation("Register user attempt failed: role with ID {RoleId} does not exist.", request.RolId);
-            return ResultT<RegisterUserDto>.Failure(Error.NotFound("404", "Role was not found."));
-            
+           logger.LogWarning("Role {Role} does not exist.", UserRole.User);
+           return ResultT<RegisterUserDto>.Failure(Error.Failure("400","The specified role does not exist."));
         }
 
         string profilePhotoUrl = "";
@@ -79,7 +78,7 @@ public class RegisterUserCommandHandler(
             Gender = request.Gender,
             Birthday = request.Birthday,
             Status = UserStatus.Active.ToString(),
-            RoleId = request.RolId,
+            RoleId = roleExists.Id,
             ConfirmedAccount = false,
         };
         
