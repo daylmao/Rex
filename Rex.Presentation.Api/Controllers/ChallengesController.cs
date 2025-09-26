@@ -55,7 +55,7 @@ public class ChallengesController(IMediator mediator) : ControllerBase
         };
     }
     
-    [HttpPost("{challengeId}/join")]
+    [HttpPost("{challengeId}/join/user/{userId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -76,7 +76,7 @@ public class ChallengesController(IMediator mediator) : ControllerBase
         };
     }
     
-    [HttpPut("{challengeId}")]
+    [HttpPut]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
