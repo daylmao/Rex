@@ -13,45 +13,48 @@ public class ResendCodeCommandHandler(
     IUserRepository userRepository,
     IEmailService emailService,
     ICodeService codeService
-    ): ICommandHandler<ResendCodeCommand, string>
+) : ICommandHandler<ResendCodeCommand, ResponseDto>
 {
-    public async Task<ResultT<string>> Handle(ResendCodeCommand request, CancellationToken cancellationToken)
+    public async Task<ResultT<ResponseDto>> Handle(ResendCodeCommand request, CancellationToken cancellationToken)
     {
         if (request is null)
         {
-            logger.LogWarning("Resend code attempt with null request.");
-            return ResultT<string>.Failure(Error.Failure("400", "Request cannot be null."));
+            logger.LogWarning("Received empty request to resend code.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400",
+                "Oops! We didn't get any information to resend the code."));
         }
-    
+
         var user = await userRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (user is null)
         {
-            logger.LogWarning("Resend code attempt failed: user not found with email {Email}.", request.Email);
-            return ResultT<string>.Failure(Error.NotFound("404", "User not found."));
+            logger.LogWarning("User not found when trying to resend code.");
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404",
+                "Hmm, we couldn't find an account with that email."));
         }
-    
+
         var accountConfirmed = await userRepository.ConfirmedAccountAsync(user.Id, cancellationToken);
         if (accountConfirmed)
         {
-            logger.LogInformation("Resend code attempt aborted: account already confirmed for user {UserId}.", user.Id);
-            return ResultT<string>.Failure(Error.Conflict("409", "Account already confirmed."));
+            logger.LogInformation("Account already confirmed. No need to resend code.");
+            return ResultT<ResponseDto>.Failure(Error.Conflict("409",
+                "Your account is already confirmed. No need to resend the code."));
         }
 
         var code = await codeService.CreateCodeAsync(user.Id, CodeType.ConfirmAccount, cancellationToken);
         if (!code.IsSuccess)
         {
-            logger.LogWarning("Failed to create confirmation code for user {UserId}. Error: {Error}", user.Id, code.Error);
-            return ResultT<string>.Failure(code.Error!);
+            logger.LogWarning("Failed to create confirmation code.");
+            return ResultT<ResponseDto>.Failure(code.Error!);
         }
-    
-        await emailService.SendEmailAsync(new EmailDto( 
-            request.Email, 
-            EmailTemplate.ConfirmAccountTemplate(user.FirstName, user.LastName, code.Value), 
-            "Confirm Account" ));
-    
-        logger.LogInformation("Confirmation email sent to {Email}.", request.Email);
 
-        return ResultT<string>.Success("Confirmation code sent successfully.");
+        await emailService.SendEmailAsync(new EmailDto(
+            request.Email,
+            EmailTemplate.ConfirmAccountTemplate(user.FirstName, user.LastName, code.Value),
+            "Confirm Your Account"
+        ));
+
+        logger.LogInformation("Confirmation email sent.");
+        return ResultT<ResponseDto>.Success(
+            new ResponseDto("Great! We've sent a new confirmation code to your email."));
     }
-
 }

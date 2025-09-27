@@ -24,22 +24,24 @@ public class CreateChallengeCommandHandler(
     {
         if (request is null)
         {
-            logger.LogWarning("CreateChallengeCommand was empty. No data was provided to create the challenge.");
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Invalid request"));
+            logger.LogWarning("Received empty request for creating a challenge.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400",
+                "Oops! We couldn't process your request. Please provide the challenge details."));
         }
 
         var group = await groupRepository.GetGroupByIdAsync(request.GroupId, cancellationToken);
         if (group is null)
         {
-            logger.LogWarning("No group found with id {GroupId}.", request.GroupId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("404", "Group not found"));
+            logger.LogWarning("No group found with the provided GroupId.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("404", "We couldn't find the group you selected."));
         }
 
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            logger.LogWarning("No user found with id {UserId}.", request.UserId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("404", "User not found"));
+            logger.LogWarning("No user found with the provided UserId.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("404",
+                "We couldn't find your account. Please check your details."));
         }
 
         Challenge challenge = new()
@@ -54,8 +56,8 @@ public class CreateChallengeCommandHandler(
         };
 
         await challengeRepository.CreateAsync(challenge, cancellationToken);
-        logger.LogInformation("Challenge '{ChallengeTitle}' was saved in the repository.", request.Title);
-        
+        logger.LogInformation("Challenge '{ChallengeTitle}' saved successfully.", request.Title);
+
         string coverPhoto = string.Empty;
         if (request.CoverPhoto != null)
         {
@@ -65,9 +67,8 @@ public class CreateChallengeCommandHandler(
                 request.CoverPhoto.FileName,
                 cancellationToken
             );
-            logger.LogInformation("Cover photo for challenge '{ChallengeTitle}' uploaded successfully.", request.Title);
+            logger.LogInformation("Cover photo uploaded successfully for challenge '{ChallengeTitle}'.", request.Title);
         }
-        
 
         File file = new()
         {
@@ -78,7 +79,7 @@ public class CreateChallengeCommandHandler(
         };
 
         await fileRepository.CreateAsync(file, cancellationToken);
-        logger.LogInformation("File for challenge '{ChallengeTitle}' was registered successfully.", request.Title);
+        logger.LogInformation("File registered successfully for challenge '{ChallengeTitle}'.", request.Title);
 
         EntityFile entityFile = new()
         {
@@ -89,9 +90,9 @@ public class CreateChallengeCommandHandler(
         };
 
         await entityFileRepository.CreateAsync(entityFile, cancellationToken);
-        logger.LogInformation("Cover photo was linked to challenge '{ChallengeTitle}' successfully.", request.Title);
+        logger.LogInformation("Cover photo linked successfully to challenge '{ChallengeTitle}'.", request.Title);
 
-        logger.LogInformation("Challenge '{ChallengeTitle}' was created successfully.", request.Title);
-        return ResultT<ResponseDto>.Success(new ResponseDto("Challenge created successfully"));
+        logger.LogInformation("Challenge '{ChallengeTitle}' created successfully.", request.Title);
+        return ResultT<ResponseDto>.Success(new ResponseDto("Your challenge has been created successfully!"));
     }
 }

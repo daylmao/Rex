@@ -11,30 +11,32 @@ public class ConfirmAccountCommandHandler(
     ILogger<ConfirmAccountCommandHandler> logger,
     IUserRepository userRepository,
     ICodeService codeService
-): ICommandHandler<ConfirmAccountCommand, ResponseDto>
+) : ICommandHandler<ConfirmAccountCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(ConfirmAccountCommand request, CancellationToken cancellationToken)
     {
         if (request is null)
         {
-            logger.LogInformation("ConfirmAccountCommand received is null");
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Request cannot be null"));
+            logger.LogInformation("Received empty confirm account request.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400",
+                "Oops! No information was provided to confirm your account."));
         }
-        
+
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            logger.LogInformation("User with ID {UserId} not found", request.UserId);
-            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "User not found"));
+            logger.LogInformation("User not found for account confirmation.");
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "Hmm, we couldn't find your account."));
         }
-        
+
         var confirmUser = await codeService.ConfirmCodeAsync(user.Id, request.Code, cancellationToken);
         if (!confirmUser.IsSuccess)
         {
-            logger.LogInformation("Failed to confirm account for user {UserId}: {Error}", user.Id, confirmUser.Error.Description);
+            logger.LogInformation("Failed to confirm account: {Error}", confirmUser.Error.Description);
             return ResultT<ResponseDto>.Failure(confirmUser.Error);
-        } 
-        logger.LogInformation("Account confirmed successfully for user {UserId}", user.Id);
-            return ResultT<ResponseDto>.Success(new ResponseDto("Account confirmed successfully"));
+        }
+
+        logger.LogInformation("Account confirmed successfully.");
+        return ResultT<ResponseDto>.Success(new ResponseDto("Great! Your account has been confirmed successfully."));
     }
 }

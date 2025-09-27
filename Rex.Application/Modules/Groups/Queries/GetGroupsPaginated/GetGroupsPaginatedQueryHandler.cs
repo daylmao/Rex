@@ -20,25 +20,25 @@ public class GetGroupsPaginatedQueryHandler(
     {
         if (request is null)
         {
-            logger.LogWarning("Request to get paginated groups is null.");
+            logger.LogWarning("GetGroupsPaginatedQuery: Request is null.");
             return ResultT<PagedResult<GroupDetailsDto>>.Failure(
-                Error.Failure("400", "The request cannot be empty."));
+                Error.Failure("400", "Oops! No data provided to fetch groups."));
         }
 
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            logger.LogWarning("User with ID: {UserId} not found.", request.UserId);
+            logger.LogWarning("GetGroupsPaginatedQuery: User with ID {UserId} not found.", request.UserId);
             return ResultT<PagedResult<GroupDetailsDto>>.Failure(
-                Error.Failure("404", "User not found."));
+                Error.Failure("404", "We couldn’t find your account."));
         }
 
         var groups = await distributedCache.GetOrCreateAsync(
             $"get-groups-by-userid-{request.UserId}-{request.pageNumber}-{request.pageSize}",
             async () => await groupRepository.GetGroupsPaginatedAsync(
-                request.UserId, 
+                request.UserId,
                 page: request.pageNumber,
-                size: request.pageSize, 
+                size: request.pageSize,
                 cancellationToken),
             logger: logger,
             cancellationToken: cancellationToken
@@ -47,7 +47,7 @@ public class GetGroupsPaginatedQueryHandler(
         var elements = groups.Items
             .Select(g => new GroupDetailsDto(
                 g.ProfilePhoto,
-                g.CoverPhoto,
+                g.CoverPhoto ?? string.Empty,
                 g.Title,
                 g.Description,
                 g.Visibility,
@@ -57,20 +57,21 @@ public class GetGroupsPaginatedQueryHandler(
 
         if (!elements.Any())
         {
-            logger.LogWarning("No groups found for user ID: {UserId}", request.UserId);
+            logger.LogWarning("GetGroupsPaginatedQuery: No groups found for user ID {UserId}.", request.UserId);
             return ResultT<PagedResult<GroupDetailsDto>>.Failure(
-                Error.Failure("404", "No groups found."));
+                Error.Failure("404", "It looks like you haven’t joined any groups yet."));
         }
 
         var result = new PagedResult<GroupDetailsDto>(
-            items: elements,
+            items: elements.ToList(),
             totalItems: groups.TotalItems,
             actualPage: groups.ActualPage,
             pageSize: request.pageSize
         );
 
-        logger.LogWarning("Successfully retrieved {Count} groups for user ID: {UserId}", elements.Count(),
-            request.UserId);
+        logger.LogInformation("GetGroupsPaginatedQuery: Successfully retrieved {Count} groups for user ID {UserId}.",
+            elements.Count(), request.UserId);
+
         return ResultT<PagedResult<GroupDetailsDto>>.Success(result);
     }
 }

@@ -19,50 +19,57 @@ public class UpdateEmailCommandHandler(
     {
         if (request is null)
         {
-            logger.LogWarning("UpdateEmailCommand request is null");
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Request cannot be null"));
+            logger.LogWarning("Received empty request to update email.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400",
+                "Oops! We didn't get the information needed to update your email."));
         }
 
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            logger.LogWarning("User with ID {UserId} not found for email update", request.UserId);
-            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "User not found"));
+            logger.LogWarning("User not found for email update.");
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "Hmm, we couldn't find your account."));
         }
 
-        var isEmailInUseByYou = await userRepository.EmailInUseByYouAsync(request.UserId, request.Email, cancellationToken);
+        var isEmailInUseByYou =
+            await userRepository.EmailInUseByYouAsync(request.UserId, request.Email, cancellationToken);
         if (!isEmailInUseByYou)
         {
-            logger.LogWarning("User {UserId} attempted to change email from {Email}, but it's not their current email", request.UserId, request.Email);
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Current email mismatch"));
+            logger.LogWarning("Current email mismatch.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400",
+                "The current email you provided doesn't match our records."));
         }
 
         var emailExists = await userRepository.EmailInUseAsync(request.NewEmail, request.UserId, cancellationToken);
         if (emailExists)
         {
-            logger.LogWarning("New email {NewEmail} for user {UserId} is already in use", request.NewEmail, request.UserId);
-            return ResultT<ResponseDto>.Failure(Error.Conflict("409", "Email already in use"));
+            logger.LogWarning("New email already in use.");
+            return ResultT<ResponseDto>.Failure(Error.Conflict("409", "Oops! That new email is already being used."));
         }
 
-        var codeResult = await codeService.CreateCodeAsync(request.UserId, CodeType.EmailConfirmation, cancellationToken);
+        var codeResult =
+            await codeService.CreateCodeAsync(request.UserId, CodeType.EmailConfirmation, cancellationToken);
         if (!codeResult.IsSuccess)
         {
-            logger.LogWarning("Failed to create confirmation code for user {UserId}", request.UserId);
-            return ResultT<ResponseDto>.Failure(codeResult.Error ?? Error.Failure("400", "Could not create code"));
+            logger.LogWarning("Failed to create confirmation code.");
+            return ResultT<ResponseDto>.Failure(codeResult.Error ??
+                                                Error.Failure("400", 
+                                                    "Something went wrong while generating the confirmation code."));
         }
 
         user.Email = request.NewEmail;
         user.ConfirmedAccount = false;
+
         await emailService.SendEmailAsync(new EmailDto(
             user.Email,
             EmailTemplate.ConfirmEmailChangeTemplate(user.FirstName, user.Email, request.NewEmail, codeResult.Value),
-            "Email Change Confirmation"
+            "Confirm Your New Email"
         ));
 
         await userRepository.UpdateAsync(user, cancellationToken);
-        
-        logger.LogInformation("Confirmation email sent for user {UserId} to {NewEmail}", request.UserId, request.NewEmail);
-        return ResultT<ResponseDto>.Success(new ResponseDto("Confirmation email sent successfully"));
-    }
 
+        logger.LogInformation("Confirmation email sent for new email.");
+        return ResultT<ResponseDto>.Success(
+            new ResponseDto("Great! A confirmation email has been sent to your new address."));
+    }
 }

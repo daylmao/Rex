@@ -15,25 +15,29 @@ public class GetChallengesByStatusQueryHandler(
     IGroupRepository groupRepository,
     IFileRepository fileRepository,
     IDistributedCache distributedCache
-    ): IQueryHandler<GetChallengesByStatusQuery, PagedResult<ChallengeGroupDetailsDto>>
+) : IQueryHandler<GetChallengesByStatusQuery, PagedResult<ChallengeGroupDetailsDto>>
 {
-    public async Task<ResultT<PagedResult<ChallengeGroupDetailsDto>>> Handle(GetChallengesByStatusQuery request, CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<ChallengeGroupDetailsDto>>> Handle(GetChallengesByStatusQuery request,
+        CancellationToken cancellationToken)
     {
         if (request is null)
         {
-            logger.LogWarning("Request is null. Cannot process GetChallengesByStatus query.");
-            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.Failure("400", "The request cannot be empty."));
+            logger.LogWarning("Received empty request for challenges by status.");
+            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.Failure("400",
+                "Oops! The request cannot be empty."));
         }
-        
+
         var group = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
         if (group is null)
         {
-            logger.LogWarning("Group with ID {GroupId} was not found.", request.GroupId);
-            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.NotFound("404", $"Group with ID {request.GroupId} does not exist."));
+            logger.LogWarning("Group not found for retrieving challenges.");
+            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.NotFound("404",
+                "Hmm, we couldn't find the specified group."));
         }
 
-        logger.LogInformation("Fetching challenges for GroupId {GroupId} with Status {Status}. Page {PageNumber}, PageSize {PageSize}.",
-            request.GroupId, request.Status, request.PageNumber, request.PageSize);
+        logger.LogInformation(
+            "Fetching challenges for group with status {Status}. Page {PageNumber}, PageSize {PageSize}.",
+            request.Status, request.PageNumber, request.PageSize);
 
         var result = await distributedCache.GetOrCreateAsync(
             $"get-challenges-by-status-{request.GroupId}-{request.Status}-{request.PageNumber}-{request.PageSize}",
@@ -50,11 +54,13 @@ public class GetChallengesByStatusQueryHandler(
 
         if (result is null)
         {
-            logger.LogWarning("No challenges found for GroupId {GroupId} with Status {Status}.", request.GroupId, request.Status);
-            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.NotFound("404", "No challenges available for the specified criteria."));
+            logger.LogWarning("No challenges found for the requested group and status.");
+            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.NotFound("404",
+                "No challenges available for the selected criteria."));
         }
-        
-        var file = await fileRepository.GetFileByEntityAndTypeAsync(request.GroupId, TargetType.Challenge, cancellationToken);
+
+        var file = await fileRepository.GetFileByEntityAndTypeAsync(request.GroupId, TargetType.Challenge,
+            cancellationToken);
 
         var elements = result.Items
             .Select(c => new ChallengeGroupDetailsDto(
@@ -73,18 +79,19 @@ public class GetChallengesByStatusQueryHandler(
 
         if (!elements.Any())
         {
-            logger.LogWarning("Challenges were retrieved but no detailed data is available for GroupId {GroupId} with Status {Status}.", request.GroupId, request.Status);
-            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.NotFound("404", "Challenges were found but no detailed information could be retrieved."));
+            logger.LogWarning("Challenges retrieved but no detailed data is available.");
+            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.NotFound("404",
+                "Challenges were found, but no detailed information is available."));
         }
-        
+
         var pagedResult = new PagedResult<ChallengeGroupDetailsDto>(
             elements,
             result.TotalItems,
             result.ActualPage,
             result.TotalPages
         );
-        
-        logger.LogInformation("Successfully retrieved {Count} challenges for GroupId {GroupId} with Status {Status}.", elements.Count(), request.GroupId, request.Status);
+
+        logger.LogInformation("Challenges retrieved successfully.");
         return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Success(pagedResult);
     }
 }

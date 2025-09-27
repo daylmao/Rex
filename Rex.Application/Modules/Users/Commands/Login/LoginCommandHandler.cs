@@ -12,51 +12,48 @@ public class LoginCommandHandler(
     ILogger<LoginCommandHandler> logger,
     IUserRepository userRepository,
     IAuthenticationService authenticationService
-    ): ICommandHandler<LoginCommand, TokenResponseDto>
+) : ICommandHandler<LoginCommand, TokenResponseDto>
 {
     public async Task<ResultT<TokenResponseDto>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         if (request is null)
         {
-            logger.LogWarning("Login attempt with null request.");
-            return ResultT<TokenResponseDto>.Failure(Error.Failure("400", "Request cannot be null."));
+            logger.LogWarning("Received empty login request.");
+            return ResultT<TokenResponseDto>.Failure(Error.Failure("400",
+                "Oops! Looks like you didn't enter any login info."));
         }
-    
+
         var user = await userRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (user is null)
         {
-            logger.LogWarning("Login attempt failed: user not found with email {Email}.", request.Email);
-            return ResultT<TokenResponseDto>.Failure(Error.Failure("404", "User not found."));
+            logger.LogWarning("User with email {Email} not found.", request.Email);
+            return ResultT<TokenResponseDto>.Failure(Error.Failure("404",
+                "Hmm, we couldn't find an account with that email."));
         }
 
         if (user.Status == UserStatus.Banned.ToString())
         {
-            logger.LogWarning("Login attempt failed: user {UserId} is banned.", user.Id);
-            return ResultT<TokenResponseDto>.Failure(Error.Failure("403", "User is banned."));
+            logger.LogWarning("User {UserId} is banned.", user.Id);
+            return ResultT<TokenResponseDto>.Failure(Error.Failure("403",
+                "Your account has been blocked. Please reach out to support for help."));
         }
 
-        // var confirmedAccount = await userRepository.ConfirmedAccountAsync(user.Id, cancellationToken);
-        // if (!confirmedAccount)
-        // {
-        //     logger.LogWarning("Login attempt failed: account not confirmed for user {UserId}.", user.Id);
-        //     return ResultT<TokenAnswerDto>.Failure(Error.Failure("403", "Account not confirmed."));
-        // }
-    
         var verifiedPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
         if (!verifiedPassword)
         {
-            logger.LogWarning("Login attempt failed: invalid password for user {UserId}.", user.Id);
-            return ResultT<TokenResponseDto>.Failure(Error.Failure("401", "Invalid password."));
+            logger.LogWarning("Invalid password for user {UserId}.", user.Id);
+            return ResultT<TokenResponseDto>.Failure(Error.Failure("401",
+                "Oops! That password doesn't look right. Try again."));
         }
-            
+
         user.LastLoginAt = DateTime.UtcNow;
         await userRepository.UpdateAsync(user, cancellationToken);
+
         var accessToken = await authenticationService.GenerateTokenAsync(user, cancellationToken);
         var refreshToken = await authenticationService.GenerateRefreshTokenAsync(user, cancellationToken);
-    
+
         logger.LogInformation("User {UserId} logged in successfully.", user.Id);
-    
+
         return ResultT<TokenResponseDto>.Success(new TokenResponseDto(accessToken, refreshToken));
     }
-
 }

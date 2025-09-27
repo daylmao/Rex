@@ -15,31 +15,29 @@ public class UpdatePasswordCommandHandler(
     {
         if (request is null)
         {
-            logger.LogWarning("UpdatePasswordCommand request was null.");
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Invalid request."));
+            logger.LogWarning("Received empty request to update password.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Oops! We didn't get the information needed to update your password."));
         }
-        
+
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            logger.LogWarning("User with ID {UserId} not found.", request.UserId);
-            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "User not found."));
+            logger.LogWarning("User not found for password update.");
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "Hmm, we couldn't find your account."));
         }
-        
+
         var passwordCheck = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.Password);
         if (!passwordCheck)
         {
-            logger.LogInformation("Password verification failed for user {UserId}.", request.UserId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Current password is incorrect."));
+            logger.LogInformation("Current password is incorrect.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Oops! The current password you entered is incorrect."));
         }
-        
-        
-        
+
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         await userRepository.UpdatePasswordAsync(user, hashedPassword, cancellationToken);
 
-        logger.LogInformation("Password updated successfully for user {UserId}.", request.UserId);
-        
-        return ResultT<ResponseDto>.Success(new ResponseDto("Password updated successfully."));
+        logger.LogInformation("Password updated successfully.");
+        return ResultT<ResponseDto>.Success(new ResponseDto("Great! Your password has been updated successfully."));
     }
+
 }

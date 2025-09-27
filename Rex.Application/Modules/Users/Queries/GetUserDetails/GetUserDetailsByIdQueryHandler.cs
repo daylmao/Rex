@@ -11,24 +11,29 @@ public class GetUserDetailsByIdQueryHandler(
     ILogger<GetUserDetailsByIdQueryHandler> logger,
     IUserRepository userRepository,
     IDistributedCache cache
-    ): IQueryHandler<GetUserDetailsByIdQuery, UserProfileDto>
+) : IQueryHandler<GetUserDetailsByIdQuery, UserProfileDto>
 {
-    public async Task<ResultT<UserProfileDto>> Handle(GetUserDetailsByIdQuery request, CancellationToken cancellationToken)
+    public async Task<ResultT<UserProfileDto>> Handle(GetUserDetailsByIdQuery request,
+        CancellationToken cancellationToken)
     {
         if (request is null)
         {
-            logger.LogWarning("GetUserDetailsByIdQuery request is null.");
-            return ResultT<UserProfileDto>.Failure(Error.Failure("400", "Request cannot be null."));
+            logger.LogWarning("Received empty request for user details.");
+            return ResultT<UserProfileDto>.Failure(Error.Failure("400",
+                "Oops! We didn't get the information needed to fetch your profile."));
         }
-    
+
         var userCache = await cache.GetOrCreateAsync(
             $"get-user-details-{request.UserId.ToString().ToLower()}",
-            async() => await userRepository.GetUserDetailsAsync(request.UserId, cancellationToken), logger ,cancellationToken:cancellationToken);
-        
+            async () => await userRepository.GetUserDetailsAsync(request.UserId, cancellationToken),
+            logger,
+            cancellationToken: cancellationToken
+        );
+
         if (userCache is null)
         {
-            logger.LogWarning("GetUserDetailsByIdQuery: user not found for UserId {UserId}", request.UserId);
-            return ResultT<UserProfileDto>.Failure(Error.NotFound("404", "User not found"));
+            logger.LogWarning("User not found when retrieving details.");
+            return ResultT<UserProfileDto>.Failure(Error.NotFound("404", "Hmm, we couldn't find your profile."));
         }
 
         UserProfileDto userDto = new(
@@ -47,9 +52,8 @@ public class GetUserDetailsByIdQueryHandler(
             userCache.Reactions?.Count ?? 0,
             userCache.UserChallenges?.Count ?? 0
         );
-    
-        logger.LogInformation("User details retrieved successfully for UserId {UserId}.", request.UserId);
+
+        logger.LogInformation("User details retrieved successfully.");
         return ResultT<UserProfileDto>.Success(userDto);
     }
-
 }
