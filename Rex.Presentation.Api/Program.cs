@@ -1,3 +1,4 @@
+using Microsoft.OpenApi;
 using Rex.Application;
 using Rex.Infrastructure.Persistence;
 using Rex.Infrastructure.Shared;
@@ -13,13 +14,15 @@ builder.Host.UseSerilog((context, LoggerConfiguration) =>
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddFilters();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddPersistenceLayer(builder.Configuration);
-builder.Services.AddSharedLayer(builder.Configuration);
 builder.Services.AddApplicationLayer(builder.Configuration);
+builder.Services.AddSharedLayer(builder.Configuration);
+builder.Services.AddSwaggerExtension();
 builder.Services.AddVersioning();
 
 var app = builder.Build();
@@ -29,8 +32,13 @@ app.UseSerilogRequestLogging();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger(options => options.OpenApiVersion =
+        OpenApiSpecVersion.OpenApi2_0);
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("./v1/swagger.json", "Rex v1");
+        c.RoutePrefix = "swagger";
+    });
 }
 
 app.UseHttpsRedirection();
