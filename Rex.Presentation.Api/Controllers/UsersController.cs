@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Rex.Application.DTOs;
 using Rex.Application.Modules.Groups.Queries.GetGroupsPaginated;
 using Rex.Application.Modules.User.Commands.ConfirmAccount;
 using Rex.Application.Modules.User.Commands.ConfirmEmailChange;
@@ -12,6 +13,9 @@ using Rex.Application.Modules.User.Commands.UpdatePassword;
 using Rex.Application.Modules.User.Commands.UpdateUserInformation;
 using Rex.Application.Modules.User.Commands.UpdateUsername;
 using Rex.Application.Modules.User.Queries.GetUserDetails;
+using Rex.Application.Pagination;
+using Rex.Application.Utilities;
+using Swashbuckle.AspNetCore.Annotations; // <-- needed
 
 namespace Rex.Presentation.Api.Controllers;
 
@@ -23,163 +27,115 @@ public class UsersController(
     : ControllerBase
 {
     [HttpPut("password")]
+    [SwaggerOperation(
+        Summary = "Update user password",
+        Description = "Updates the password of an existing user"
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordCommand command, CancellationToken cancellationToken)
+    public async Task<ResultT<ResponseDto>> UpdatePassword([FromBody] UpdatePasswordCommand command,
+        CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(command, cancellationToken);
-        if (result.IsSuccess)
-        {
-            return Ok(result.Value);
-        }
-
-        return result.Error?.Code switch
-        {
-            "404" => NotFound(result.Error),
-            _ => BadRequest(result.Error)
-        };
+        return await mediator.Send(command, cancellationToken);
     }
-    
+
     [HttpPost]
+    [SwaggerOperation(
+        Summary = "Register a new user",
+        Description = "Registers a new user with the provided information"
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> RegisterUserAsync([FromForm] RegisterUserCommand command, CancellationToken cancellationToken)
+    public async Task<ResultT<RegisterUserDto>> RegisterUserAsync([FromForm] RegisterUserCommand command,
+        CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(command, cancellationToken);
-        if (result.IsSuccess)
-        {
-            return Ok(result.Value);
-        }
-
-        return result.Error!.Code switch
-        {
-            "409" => Conflict(result.Error),
-            "404" => NotFound(result.Error),
-            _ => BadRequest()
-        };
+        return await mediator.Send(command, cancellationToken);
     }
 
     [HttpPut("confirm-email-change")]
+    [SwaggerOperation(Summary = "Confirm email change",
+        Description = "Confirms a pending email change request for the user")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ConfirmEmailAsync([FromBody] ConfirmEmailChangeCommand command,
+    public async Task<ResultT<ResponseDto>> ConfirmEmailAsync([FromBody] ConfirmEmailChangeCommand command,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(command, cancellationToken);
-        if (result.IsSuccess)
-        {
-            return Ok(result.Value);
-        }
-        
-        return result.Error!.Code switch
-        {
-            "404" => NotFound(result.Error),
-            _ => BadRequest(result.Error)
-        };
+        return await mediator.Send(command, cancellationToken);
     }
-    
+
     [HttpPut("change-email")]
+    [SwaggerOperation(
+        Summary = "Update user email",
+        Description = "Updates the email of an existing user"
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> UpdateEmailAsync([FromBody] UpdateEmailCommand command,
+    public async Task<ResultT<ResponseDto>> UpdateEmailAsync([FromBody] UpdateEmailCommand command,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(command, cancellationToken);
-        if (result.IsSuccess)
-        {
-            return Ok(result.Value);
-        }
-        
-        return result.Error!.Code switch
-        {
-            "404" => NotFound(result.Error),
-            "409" => Conflict(result.Error),
-            _ => BadRequest(result.Error)
-        };
+        return await mediator.Send(command, cancellationToken);
     }
-    
+
     [HttpPatch("username")]
+    [SwaggerOperation(
+        Summary = "Update username",
+        Description = "Updates the username of an existing user"
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> UpdateUsernameAsync([FromBody] UpdateUsernameCommand command,
+    public async Task<ResultT<ResponseDto>> UpdateUsernameAsync([FromBody] UpdateUsernameCommand command,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(command, cancellationToken);
-        if (result.IsSuccess)
-        {
-            return Ok(result.Value);
-        }
-        
-        return result.Error!.Code switch
-        {
-            "404" => NotFound(result.Error),
-            "409" => Conflict(result.Error),
-            _ => BadRequest(result.Error)
-        };
+        return await mediator.Send(command, cancellationToken);
     }
 
     [HttpPut]
+    [SwaggerOperation(
+        Summary = "Update user information",
+        Description = "Updates general information of an existing user"
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateUserInformation([FromForm] UpdateUserInformationCommand command, CancellationToken cancellationToken)
-    {
-        var result = await mediator.Send(command, cancellationToken);
-        if (result.IsSuccess)
-        {
-            return Ok(result.Value);
-        }
-
-        return result.Error.Code switch
-        {
-            "404" => NotFound(result.Error),
-            _ => BadRequest(result.Error)
-        };
-    }
-    
-    [HttpGet("me/{userId}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetUserProfileById([FromRoute] Guid userId,
+    public async Task<ResultT<ResponseDto>> UpdateUserInformation([FromForm] UpdateUserInformationCommand command,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetUserDetailsByIdQuery(userId), cancellationToken);
-        if (result.IsSuccess)
-        {
-            return Ok(result.Value);
-        }
-        
-        return result.Error!.Code switch
-        {
-            "404" => NotFound(result.Error),
-            _ => BadRequest(result.Error)
-        };
+        return await mediator.Send(command, cancellationToken);
     }
-    
-    [HttpGet("{userId}/groups/recommended")]
+
+    [HttpGet("me/{userId}")]
+    [SwaggerOperation(
+        Summary = "Get user profile by ID",
+        Description = "Returns profile information of a specific user by ID"
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetGroupsUserNotIn([FromRoute] Guid userId, [FromQuery] int pageNumber,
+    public async Task<ResultT<UserProfileDto>> GetUserProfileById([FromRoute] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return await mediator.Send(new GetUserDetailsByIdQuery(userId), cancellationToken);
+    }
+
+    [HttpGet("{userId}/groups/recommended")]
+    [SwaggerOperation(
+        Summary = "Get recommended groups for user",
+        Description = "Returns paginated list of groups the user is not a member of")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ResultT<PagedResult<GroupDetailsDto>>> GetGroupsUserNotIn([FromRoute] Guid userId,
+        [FromQuery] int pageNumber,
         [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetGroupsPaginatedQuery(userId, pageNumber, pageSize), cancellationToken);
-        if (result.IsSuccess)
-            return Ok(result.Value);
-
-        return result.Error.Code switch
-        {
-            "404" => NotFound(result.Error),
-            _ => BadRequest(result.Error)
-        };
+        return await mediator.Send(new GetGroupsPaginatedQuery(userId, pageNumber, pageSize), cancellationToken);
     }
 }
