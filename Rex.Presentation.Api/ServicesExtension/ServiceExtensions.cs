@@ -20,7 +20,8 @@ public static class ServiceExtensions
             {
                 Version = "v1",
                 Title = "Rex",
-                Description = "",
+                Description =
+                    "Rex is a community-driven platform for self-taught individuals to stay motivated through challenges, share their progress in posts, and engage with others through reactions.",
                 Contact = new OpenApiContact
                 {
                     Name = "Dayron Bello",
@@ -33,11 +34,9 @@ public static class ServiceExtensions
 
     public static void AddFilters(this IMvcBuilder builder)
     {
-        builder.AddMvcOptions(options =>
-        {
-            options.Filters.Add<ResultFilter>();
-        });
+        builder.AddMvcOptions(options => { options.Filters.Add<ResultFilter>(); });
     }
+
     public static void AddVersioning(this IServiceCollection services)
     {
         services.AddApiVersioning(options =>
