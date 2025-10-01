@@ -32,7 +32,7 @@ public class UserGroupRepository(RexContext context) : GenericRepository<UserGro
 
     public async Task<bool> IsUserBannedAsync(Guid userId, Guid groupId, CancellationToken cancellationToken) =>
         await ValidateAsync(
-            ug => ug.UserId == userId && ug.GroupId == groupId && ug.Status == RequestStatus.Banned.ToString(),
+            ug => ug.UserId == userId && ug.GroupId == groupId && ug.Status == UserStatus.Banned.ToString(),
             cancellationToken);
 
     public async Task<PagedResult<UserGroup>> GetMembersAsync(Guid groupId, GroupRole? roleFilter, string? searchTerm,

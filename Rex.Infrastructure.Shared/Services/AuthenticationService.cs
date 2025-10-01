@@ -59,7 +59,7 @@ public class AuthenticationService(
             new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfiguration.Key));
+        var key = new SymmetricSecurityKey(Convert.FromBase64String(_jwtConfiguration.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var expiration = DateTime.UtcNow.AddDays(7);
@@ -101,7 +101,7 @@ public class AuthenticationService(
             ValidAudience = _jwtConfiguration.Audience,
             ValidateLifetime = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfiguration.Key!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(_jwtConfiguration.Key!)),
             ClockSkew = TimeSpan.Zero
         }, out SecurityToken token);
 
