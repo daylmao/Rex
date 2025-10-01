@@ -38,6 +38,13 @@ public class LoginCommandHandler(
                 "Your account has been blocked. Please reach out to support for help."));
         }
 
+        if (user.Deleted)
+        {
+            logger.LogWarning("User {UserId} account is deactivated.", user.Id);
+            return ResultT<TokenResponseDto>.Failure(Error.Failure("403",
+                "Your account is deactivated. Please contact support to reactivate your account."));
+        }
+
         var verifiedPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
         if (!verifiedPassword)
         {
