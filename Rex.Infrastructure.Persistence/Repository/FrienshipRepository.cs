@@ -30,4 +30,12 @@ public class FrienshipRepository(RexContext context): GenericRepository<FriendSh
     public async Task<bool> FriendShipExistAsync(Guid requesterId, Guid targetUserId,
         CancellationToken cancellationToken) =>
         await ValidateAsync(f => f.RequesterId == requesterId && f.TargetUserId == targetUserId, cancellationToken);
+
+    public async Task<FriendShip> GetFriendShipBetweenUsersAsync(Guid RequesterId, Guid TargetUserId,
+        CancellationToken cancellationToken) =>
+        await context.Set<FriendShip>()
+            .Where(c => c.RequesterId == RequesterId && c.TargetUserId == TargetUserId &&
+                        c.Status == RequestStatus.Pending.ToString())
+            .FirstOrDefaultAsync(cancellationToken);
+    
 }
