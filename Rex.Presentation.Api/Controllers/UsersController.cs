@@ -13,6 +13,7 @@ using Rex.Application.Modules.User.Commands.UpdatePassword;
 using Rex.Application.Modules.User.Commands.UpdateUserInformation;
 using Rex.Application.Modules.User.Commands.UpdateUsername;
 using Rex.Application.Modules.User.Queries.GetUserDetails;
+using Rex.Application.Modules.Users.Commands.InactiveAccount;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
 using Swashbuckle.AspNetCore.Annotations; // <-- needed
@@ -137,5 +138,19 @@ public class UsersController(
         [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
         return await mediator.Send(new GetGroupsPaginatedQuery(userId, pageNumber, pageSize), cancellationToken);
+    }
+    
+    [HttpDelete("{userId}/deactivate")]
+    [SwaggerOperation(
+        Summary = "Deactivate user account",
+        Description = "Deactivates the user account with the specified ID")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ResultT<ResponseDto>> InactivateAccountAsync([FromRoute] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return await mediator.Send(new InactiveAccountCommand(userId), cancellationToken);
     }
 }
