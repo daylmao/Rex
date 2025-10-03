@@ -450,7 +450,7 @@ public class RexContext: DbContext
                 .HasDefaultValue(false);
 
             entity.Property(u => u.Birthday)
-                .HasColumnType("timestamptz");
+                .HasColumnType("date");
 
             entity.Property(u => u.LastLoginAt)
                 .HasColumnType("timestamptz");
