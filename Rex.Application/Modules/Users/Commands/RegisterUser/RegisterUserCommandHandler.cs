@@ -72,7 +72,7 @@ public class RegisterUserCommandHandler(
             ProfilePhoto = profilePhotoUrl,
             CoverPhoto = coverPhotoUrl,
             Biography = request.Biography,
-            Gender = request.Gender,
+            Gender = request.Gender.ToString(),
             Birthday = request.Birthday,
             Status = UserStatus.Active.ToString(),
             RoleId = roleExists.Id,

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs;
+using Rex.Enum;
 
 namespace Rex.Application.Modules.User.Commands.RegisterUser;
 
@@ -13,6 +14,6 @@ public record RegisterUserCommand(
     IFormFile ProfilePhoto,
     IFormFile? CoverPhoto,
     string? Biography,
-    string Gender,
+    Gender Gender,
     DateTime Birthday
     ): ICommand<RegisterUserDto>;
