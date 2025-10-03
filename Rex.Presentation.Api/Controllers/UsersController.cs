@@ -13,7 +13,9 @@ using Rex.Application.Modules.User.Commands.UpdatePassword;
 using Rex.Application.Modules.User.Commands.UpdateUserInformation;
 using Rex.Application.Modules.User.Commands.UpdateUsername;
 using Rex.Application.Modules.User.Queries.GetUserDetails;
+using Rex.Application.Modules.Users.Commands.ConfirmPasswordChangeByEmail;
 using Rex.Application.Modules.Users.Commands.InactiveAccount;
+using Rex.Application.Modules.Users.Commands.UpdatePasswordByEmail;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
 using Swashbuckle.AspNetCore.Annotations; // <-- needed
@@ -153,4 +155,36 @@ public class UsersController(
     {
         return await mediator.Send(new InactiveAccountCommand(userId), cancellationToken);
     }
+    
+    [HttpPost("password/reset/request")]
+    [SwaggerOperation(
+        Summary = "Request password reset",
+        Description = "Sends a reset code to the user's email address to allow resetting the password"
+    )]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ResultT<ResponseDto>> RequestPasswordResetAsync(
+        [FromBody] UpdatePasswordByEmailCommand command,
+        CancellationToken cancellationToken)
+    {
+        return await mediator.Send(command, cancellationToken);
+    }
+
+    [HttpPut("password/reset/confirm")]
+    [SwaggerOperation(
+        Summary = "Confirm password reset",
+        Description = "Confirms the reset code and updates the user's password"
+    )]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<ResultT<ResponseDto>> ConfirmPasswordResetAsync(
+        [FromBody] ConfirmPasswordChangeByEmailCommand command,
+        CancellationToken cancellationToken)
+    {
+        return await mediator.Send(command, cancellationToken);
+    }
+
 }
