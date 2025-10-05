@@ -32,9 +32,9 @@ public class AuthenticationService(
         };
 
         var roles = await userRoleService.GetUserRolesAsync(user.Id, cancellationToken);
-        claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+        claims.AddRange(roles.Select(r => new Claim("role", r)));
 
-        var keyBytes = Convert.FromBase64String(_jwtConfiguration.Key!);
+        var keyBytes = Encoding.UTF8.GetBytes(_jwtConfiguration.Key!);
         var key = new SymmetricSecurityKey(keyBytes);
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -53,13 +53,13 @@ public class AuthenticationService(
     {
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim("type", "refresh"),
             new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
         };
 
-        var key = new SymmetricSecurityKey(Convert.FromBase64String(_jwtConfiguration.Key));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfiguration.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var expiration = DateTime.UtcNow.AddDays(7);
@@ -101,7 +101,7 @@ public class AuthenticationService(
             ValidAudience = _jwtConfiguration.Audience,
             ValidateLifetime = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(_jwtConfiguration.Key!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfiguration.Key!)),
             ClockSkew = TimeSpan.Zero
         }, out SecurityToken token);
 

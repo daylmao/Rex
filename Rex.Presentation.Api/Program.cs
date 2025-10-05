@@ -2,6 +2,7 @@ using Microsoft.OpenApi;
 using Rex.Application;
 using Rex.Infrastructure.Persistence;
 using Rex.Infrastructure.Shared;
+using Rex.Infrastructure.Shared.Services.SignalR.Hubs;
 using Rex.Presentation.Api.ServicesExtension;
 using Serilog;
 
@@ -12,10 +13,7 @@ builder.Host.UseSerilog((context, LoggerConfiguration) =>
     LoggerConfiguration.ReadFrom.Configuration(context.Configuration);
 });
 
-// Add services to the container.
-
 builder.Services.AddControllers().AddFilters();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -25,15 +23,26 @@ builder.Services.AddSharedLayer(builder.Configuration);
 builder.Services.AddSwaggerExtension();
 builder.Services.AddVersioning();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:5500", "http://127.0.0.1:5500", "https://localhost:5500")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
+
+app.UseExceptionHandling();
 
 app.UseSerilogRequestLogging();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger(options => options.OpenApiVersion =
-        OpenApiSpecVersion.OpenApi2_0);
+    app.UseSwagger(options => options.OpenApiVersion = OpenApiSpecVersion.OpenApi2_0);
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("./v1/swagger.json", "Rex v1");
@@ -41,12 +50,17 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
-app.UseExceptionHandling();
+
+app.UseWebSockets();
+
+app.UseRouting(); 
+
+app.UseCors("CorsPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();
