@@ -448,11 +448,17 @@ public class RexContext: DbContext
 
             entity.Property(u => u.ConfirmedAccount)
                 .HasDefaultValue(false);
+            
+            entity.Property(u => u.IsActive)
+                .HasDefaultValue(false);
 
             entity.Property(u => u.Birthday)
                 .HasColumnType("date");
 
             entity.Property(u => u.LastLoginAt)
+                .HasColumnType("timestamptz");
+            
+            entity.Property(u => u.LastConnection)
                 .HasColumnType("timestamptz");
 
             entity.Property(u => u.Status)
@@ -578,6 +584,9 @@ public class RexContext: DbContext
             entity.Property(c => c.Type)
                 .IsRequired()
                 .HasMaxLength(30);
+            
+            entity.Property(a => a.Name)
+                .HasMaxLength(100);
         });
 
         #endregion
