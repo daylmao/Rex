@@ -11,7 +11,8 @@ public class MessageRepository(RexContext context): GenericRepository<Message>(c
     public async Task<PagedResult<Message>> GetMessagesByChatIdAsync(Guid chatId, int page, int size, CancellationToken cancellationToken)
     {
         var query = context.Set<Message>()
-            .Where(c => c.ChatId == chatId);
+            .Where(c => c.ChatId == chatId)
+            .Include(c => c.Sender);
 
         var total = await query.CountAsync(cancellationToken);
         

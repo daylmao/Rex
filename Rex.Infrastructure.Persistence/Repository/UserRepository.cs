@@ -152,4 +152,11 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
             })
             .FirstOrDefaultAsync(cancellationToken);
 
+    public async Task UpdateLastTimeConnectionAsync(Guid userId, bool isActive , CancellationToken cancellationToken) =>
+        await context.Set<User>()
+            .Where(uc => uc.Id == userId)
+            .ExecuteUpdateAsync(s => s.SetProperty(uc => uc.LastConnection, DateTime.UtcNow)
+                .SetProperty(uc => uc.IsActive, isActive), cancellationToken);
+    
+
 }
