@@ -106,7 +106,6 @@ public static class DependencyInjection
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IChatConnectionService, ChatConnectionService>();
-        services.AddScoped<IChatMessageService, ChatMessageService>();
         services.AddScoped<IChatNotifier, ChatNotifier>();
 
         #endregion
