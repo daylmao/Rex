@@ -2,7 +2,6 @@ using Microsoft.OpenApi;
 using Rex.Application;
 using Rex.Infrastructure.Persistence;
 using Rex.Infrastructure.Shared;
-using Rex.Infrastructure.Shared.Services.SignalR.Hubs;
 using Rex.Presentation.Api.ServicesExtension;
 using Serilog;
 
@@ -27,7 +26,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:5500", "http://127.0.0.1:5500", "https://localhost:5500")
+        policy.WithOrigins("http://localhost:5500","http://localhost:5501", "http://127.0.0.1:5501", "http://127.0.0.1:5500", "https://localhost:5500")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();

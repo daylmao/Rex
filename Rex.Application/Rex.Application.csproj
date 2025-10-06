@@ -25,7 +25,6 @@
 
     <ItemGroup>
       <Folder Include="Modules\Friendships\Queries\" />
-      <Folder Include="Modules\Messages\Commands\" />
       <Folder Include="Modules\Posts\Queries\" />
       <Folder Include="Modules\Reactions\Queries\" />
     </ItemGroup>

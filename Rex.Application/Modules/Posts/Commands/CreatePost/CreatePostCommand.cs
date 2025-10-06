@@ -10,5 +10,5 @@ public record CreatePostCommand(
     Guid? ChallengeId,
     string Title,
     string Description,
-    List<IFormFile> Files
+    List<IFormFile>? Files = null
 ) : ICommand<ResponseDto>;
