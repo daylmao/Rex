@@ -14,7 +14,7 @@ public class CreatePrivateChatCommandHandler(
     IChatRepository chatRepository,
     IUserRepository userRepository,
     IChatNotifier chatNotifier
-) : ICommandHandler<CreatePrivateChatCommand, ResponseDto>
+    ) : ICommandHandler<CreatePrivateChatCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(CreatePrivateChatCommand request, CancellationToken cancellationToken)
     {
@@ -54,8 +54,12 @@ public class CreatePrivateChatCommandHandler(
         logger.LogInformation("Associated users {UserId} and {SecondUserId} with chat ID {ChatId}",
             request.UserId, request.SecondUserId, chat.Id);
         
-        await chatNotifier.NotifyChatCreatedAsync(new[] { request.UserId, request.SecondUserId }, chat, cancellationToken);
-
+        await chatNotifier.NotifyChatCreatedAsync(
+            new[] { request.UserId, request.SecondUserId },
+            chat,
+            cancellationToken
+        );
+        
         return ResultT<ResponseDto>.Success(new ResponseDto("Chat created successfully!"));
     }
 }

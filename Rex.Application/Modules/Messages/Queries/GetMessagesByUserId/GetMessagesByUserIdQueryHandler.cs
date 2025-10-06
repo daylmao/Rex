@@ -10,9 +10,7 @@ namespace Rex.Application.Modules.Messages.Queries.GetMessagesByUserId;
 
 public class GetMessagesByUserIdQueryHandler(
     ILogger<GetMessagesByUserIdQueryHandler> logger,
-    IMessageRepository messageRepository,
-    IChatRepository chatRepository,
-    IDistributedCache distributedCache
+    IMessageRepository messageRepository
 ) : IQueryHandler<GetMessagesByUserIdQuery, PagedResult<MessageDto>>
 {
     public async Task<ResultT<PagedResult<MessageDto>>> Handle(GetMessagesByUserIdQuery request,
@@ -24,12 +22,8 @@ public class GetMessagesByUserIdQueryHandler(
             return ResultT<PagedResult<MessageDto>>.Failure(Error.Failure("400", ""));
         }
 
-        var result = await distributedCache.GetOrCreateAsync(
-            $"getmessagesbychatid-{request.ChatId}-{request.PageNumber}-{request.PageSize}",
-            async () => await messageRepository.GetMessagesByChatIdAsync(request.ChatId, request.PageNumber,
-                request.PageSize, cancellationToken),
-            logger,
-            cancellationToken: cancellationToken
+        var result =await messageRepository.GetMessagesByChatIdAsync(request.ChatId, request.PageNumber,
+                request.PageSize, cancellationToken
         );
 
         var messagesDto = result.Items.Select(m => new MessageDto(

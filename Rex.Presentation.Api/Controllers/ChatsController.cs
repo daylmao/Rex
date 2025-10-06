@@ -14,12 +14,6 @@ namespace Rex.Presentation.Api.Controllers;
 [Route("api/v{version:apiVersion}/[controller]")]
 public class ChatsController(IMediator mediator) : ControllerBase
 {
-    [HttpPost("private")]
-    public async Task<ResultT<ResponseDto>> CreatePrivateChat([FromBody] CreatePrivateChatCommand command,
-        CancellationToken cancellationToken)
-    {
-        return await mediator.Send(command, cancellationToken);
-    }
 
     [HttpGet("user/{userId}")]
     public async Task<ResultT<PagedResult<ChatLastMessageDto>>> GetChatsByUserId(

@@ -13,7 +13,7 @@ namespace Rex.Presentation.Api.Controllers;
 [Route("api/v{version:apiVersion}/[controller]")]
 public class MessagesController(IMediator mediator) : ControllerBase
 {
-    [HttpGet("chat/{chatId}")]
+    [HttpGet("chats/{chatId}")]
     public async Task<ResultT<PagedResult<MessageDto>>> GetMessageByChatIdAsync([FromRoute] Guid chatId, [FromQuery] int pageNumber,
         [FromQuery] int pageSize, CancellationToken cancellationToken)
     {

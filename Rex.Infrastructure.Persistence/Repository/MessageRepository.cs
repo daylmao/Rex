@@ -18,7 +18,7 @@ public class MessageRepository(RexContext context): GenericRepository<Message>(c
         
         var messages = await query
             .Where(c => c.ChatId == chatId)
-            .OrderByDescending(c => c.CreatedAt)
+            .OrderBy(c => c.CreatedAt)
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync(cancellationToken);

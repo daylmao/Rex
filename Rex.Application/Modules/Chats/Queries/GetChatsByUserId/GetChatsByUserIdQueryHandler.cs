@@ -34,13 +34,8 @@ public class GetChatsByUserIdQueryHandler(
                 Error.Failure("404", "The user could not be found."));
         }
 
-        var result = await cache.GetOrCreateAsync(
-            $"getchatsbyuserid-{request.UserId}-{request.PageNumber}-{request.PageSize}",
-            async () => await chatRepository.GetChatsWithLastMessageByUserIdAsync(
-                request.UserId, request.PageNumber, request.PageSize, cancellationToken),
-            logger,
-            cancellationToken: cancellationToken
-        );
+        var result = await chatRepository.GetChatsWithLastMessageByUserIdAsync(
+                request.UserId, request.PageNumber, request.PageSize, cancellationToken) ;
 
         var chatDtos = result.Items.Select(chat =>
         {
