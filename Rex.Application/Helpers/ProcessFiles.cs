@@ -19,15 +19,20 @@ public static class ProcessFiles
         IFileRepository fileRepository,
         IEntityFileRepository entityFileRepository,
         ICloudinaryService cloudinaryService,
+        TargetType targetType,
         CancellationToken cancellationToken)
     {
         var tasks = files.Select(async file =>
         {
             await using var stream = file.OpenReadStream();
 
-            FileType? fileType = file.ContentType.StartsWith("image/") ? FileType.Image
-                : file.ContentType.StartsWith("video/") ? FileType.Video
-                : null;
+            FileType? fileType = file.ContentType switch
+            {
+                var s when s.StartsWith("image/") => FileType.Image,
+                var s when s.StartsWith("video/") => FileType.Video,
+                "application/pdf" => FileType.Archive,
+                _ => null
+            };
 
             if (fileType is null)
             {
@@ -35,9 +40,13 @@ public static class ProcessFiles
                 return false; 
             }
 
-            string url = fileType == FileType.Image
-                ? await cloudinaryService.UploadImageAsync(stream, file.FileName, cancellationToken)
-                : await cloudinaryService.UploadVideoAsync(stream, file.FileName, cancellationToken);
+            string url = fileType switch
+            {
+                FileType.Image   => await cloudinaryService.UploadImageAsync(stream, file.FileName, cancellationToken),
+                FileType.Video   => await cloudinaryService.UploadVideoAsync(stream, file.FileName, cancellationToken),
+                FileType.Archive => await cloudinaryService.UploadArchiveAsync(stream, file.FileName, cancellationToken)
+                
+            };
 
             var newFile = new Models.File
             {
@@ -53,7 +62,7 @@ public static class ProcessFiles
                 Id = Guid.NewGuid(),
                 FileId = newFile.Id,
                 TargetId = entityId,
-                TargetType = TargetType.Post.ToString()
+                TargetType = targetType.ToString()
             };
             await entityFileRepository.CreateAsync(entityFile, cancellationToken);
 

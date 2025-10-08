@@ -94,7 +94,7 @@ public class CreatePostCommandHandler(
         if (request.Files.Count > 0 || request.Files is not null)
         {
             var filesResult = await ProcessFiles.ProcessFilesAsync(logger, request.Files, post.Id, fileRepository,
-                entityFileRepository, cloudinaryService, cancellationToken);
+                entityFileRepository, cloudinaryService, TargetType.Post, cancellationToken);
             
             if (!filesResult.IsSuccess)
                 return filesResult;

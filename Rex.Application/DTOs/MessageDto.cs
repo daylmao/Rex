@@ -6,5 +6,6 @@ public record MessageDto(
     string Name,
     string ProfilePicture,
     string Description,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? ImageUrl = null
 );
