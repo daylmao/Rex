@@ -11,12 +11,13 @@ public class NotificationRepository(RexContext context): GenericRepository<Notif
     public async Task<PagedResult<Notification>> GetNotificationsByUserIdAsync(Guid userId, int page, int size,
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<Notification>()
+        var query = context.Set<Notification>()
             .AsNoTracking()
-            .Where(n => n.UserId == userId)
-            .CountAsync(cancellationToken);
+            .Where(n => n.UserId == userId);
+
+        var total = await query.CountAsync(cancellationToken);
         
-        var notifications = await context.Set<Notification>()
+        var notifications = await query
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .Skip((page - 1) * size)

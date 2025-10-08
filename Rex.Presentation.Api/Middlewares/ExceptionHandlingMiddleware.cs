@@ -1,11 +1,10 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Rex.Presentation.Api.Middlewares;
 
-public class ExceptionHandlingMiddleware(
-    RequestDelegate next, 
-    ILogger<ExceptionHandlingMiddleware> logger)
+public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)
     {
@@ -16,46 +15,57 @@ public class ExceptionHandlingMiddleware(
         {
             await next(context);
         }
-        catch (ValidationException e)
+        catch (Exception ex)
         {
-            logger.LogError(e, e.Message);
+            await HandleErrorAsync(context, ex, trackerId);
+        }
+    }
 
-            var problemDetails = new ProblemDetails
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Validation Errors",
-                Detail = "You have one or more validation errors",
-                Type = "ValidationFailure",
-                Instance = context.Request.Path
-            };
+    private async Task HandleErrorAsync(HttpContext context, Exception ex, string trackerId)
+    {
+        if (context.Response.HasStarted)
+        {
+            logger.LogWarning("Cannot handle error - response already started. Tracker: {TrackerId}", trackerId);
+            return;
+        }
 
-            problemDetails.Extensions["errors"] = e.Errors
+        var (statusCode, title) = GetErrorDetails(ex);
+
+        logger.LogError(ex, "Error {StatusCode}: {Message} | Tracker: {TrackerId}", statusCode, ex.Message, trackerId);
+
+        var problemDetails = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = title,
+            Detail = ex.Message,
+            Instance = context.Request.Path,
+            Extensions = { ["trackerId"] = trackerId }
+        };
+
+        if (ex is ValidationException validationEx)
+        {
+            problemDetails.Extensions["errors"] = validationEx.Errors
                 .GroupBy(e => e.PropertyName)
                 .ToDictionary(
                     g => g.Key,
                     g => g.Select(e => e.ErrorMessage).ToArray()
                 );
-
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsJsonAsync(problemDetails);
-
         }
-        catch (Exception ex)
+
+        context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(problemDetails);
+    }
+
+    private static (int statusCode, string title) GetErrorDetails(Exception ex)
+    {
+        return ex switch
         {
-            logger.LogError(ex, ex.Message);
-
-            var problemDetails = new ProblemDetails()
-            {
-                Title = "Internal Server Error",
-                Status = StatusCodes.Status500InternalServerError,
-                Detail = ex.Message,
-                Instance = context.Request.Path
-            };
-            
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsJsonAsync(problemDetails);
-        }
+            ValidationException => (400, "Validation Error"),
+            SecurityTokenExpiredException => (401, "Token Expired"),
+            SecurityTokenException => (401, "Invalid Token"),
+            UnauthorizedAccessException => (403, "Access Denied"),
+            _ => (500, "Internal Server Error")
+        };
     }
 }

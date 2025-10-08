@@ -29,5 +29,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>True if the friendship exists; otherwise false.</returns>
         Task<bool> FriendShipExistAsync(Guid requesterId, Guid targetUserId, CancellationToken cancellationToken);
+        
+        Task<FriendShip> GetFriendShipBetweenUsersAsync(Guid RequesterId, Guid TargetUserId, CancellationToken cancellationToken);
     }
 }

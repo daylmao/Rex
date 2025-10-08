@@ -17,6 +17,8 @@ public sealed class User : AuditableEntity
     public DateTime? LastLoginAt { get; set; }
     public bool ConfirmedAccount { get; set; } = false;
     public string Status { get; set; }
+    public DateTime LastConnection { get; set; }
+    public bool IsActive { get; set; }
     public Guid? RoleId { get; set; }
     
     public UserRole Role { get; set; }

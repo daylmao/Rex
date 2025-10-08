@@ -16,28 +16,31 @@ public class UpdateUsernameCommandHandler(
     {
         if (request is null)
         {
-            logger.LogWarning("UpdateUsernameCommand request was null.");
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Invalid request."));
+            logger.LogWarning("Received empty request to update username.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400",
+                "Oops! We didn't get the information needed to update your username."));
         }
-        
+
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            logger.LogWarning("User with ID {UserId} not found.", request.UserId);
-            return ResultT<ResponseDto>.Failure(Error.NotFound("404", $"User with ID {request.UserId} not found."));
+            logger.LogWarning("User not found for username update.");
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "Hmm, we couldn't find your account."));
         }
-        
-        var usernameInUse = await userRepository.UserNameInUseAsync(request.UserId, request.Username, cancellationToken);
+
+        var usernameInUse =
+            await userRepository.UserNameInUseAsync(request.UserId, request.Username, cancellationToken);
         if (usernameInUse)
         {
             logger.LogWarning("Username '{Username}' is already in use.", request.Username);
-            return ResultT<ResponseDto>.Failure(Error.Conflict("409", $"Username '{request.Username}' is already in use."));
+            return ResultT<ResponseDto>.Failure(Error.Conflict("409",
+                "Oops! This username is already taken. Try another one."));
         }
-        
+
         user.UserName = request.Username;
         await userRepository.UpdateAsync(user, cancellationToken);
-        
-        logger.LogInformation("Username for user {UserId} updated successfully to '{Username}'.", request.UserId, request.Username);
-        return ResultT<ResponseDto>.Success(new ResponseDto("Username updated successfully."));
+
+        logger.LogInformation("Username updated successfully.");
+        return ResultT<ResponseDto>.Success(new ResponseDto("Great! Your username has been updated successfully."));
     }
 }

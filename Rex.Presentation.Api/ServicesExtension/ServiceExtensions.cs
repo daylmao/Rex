@@ -1,5 +1,7 @@
 using Asp.Versioning;
+using Microsoft.OpenApi.Models;
 using Rex.Presentation.Api.Middlewares;
+using Trivo.Presentation.API.Filters;
 
 namespace Rex.Presentation.Api.ServicesExtension;
 
@@ -9,6 +11,32 @@ public static class ServiceExtensions
     {
         app.UseMiddleware<ExceptionHandlingMiddleware>();
     }
+
+    public static void AddSwaggerExtension(this IServiceCollection services)
+    {
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Version = "v1",
+                Title = "Rex",
+                Description =
+                    "Rex is a community-driven platform for self-taught individuals to stay motivated through challenges, share their progress in posts, and engage with others through reactions.",
+                Contact = new OpenApiContact
+                {
+                    Name = "Dayron Bello",
+                    Email = "dayronbp06@gmail.com"
+                }
+            });
+            options.EnableAnnotations();
+        });
+    }
+
+    public static void AddFilters(this IMvcBuilder builder)
+    {
+        builder.AddMvcOptions(options => { options.Filters.Add<ResultFilter>(); });
+    }
+
     public static void AddVersioning(this IServiceCollection services)
     {
         services.AddApiVersioning(options =>

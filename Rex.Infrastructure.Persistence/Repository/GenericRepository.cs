@@ -2,10 +2,11 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Rex.Application.Interfaces.Repository;
 using Rex.Infrastructure.Persistence.Context;
+using Rex.Models;
 
 namespace Rex.Infrastructure.Persistence.Repository;
 
-public class GenericRepository<TEntity>(RexContext context): IGenericRepository<TEntity> where TEntity : class
+public class GenericRepository<TEntity>(RexContext context): IGenericRepository<TEntity> where TEntity : AuditableEntity
 {
     public async Task<TEntity> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         await context.Set<TEntity>().FindAsync(id, cancellationToken);
@@ -19,8 +20,13 @@ public class GenericRepository<TEntity>(RexContext context): IGenericRepository<
 
     public async Task DeleteAsync(TEntity entity, CancellationToken cancellationToken)
     {
-        context.Remove(entity);
-        await SaveAsync(cancellationToken);
+        await context.Set<TEntity>()
+            .Where(e => e.Id == entity.Id)
+            .ExecuteUpdateAsync(
+                s => s
+                    .SetProperty(e => e.Deleted, true)
+                    .SetProperty(e => e.DeletedAt, DateTime.UtcNow),
+                cancellationToken);
     }
 
     public async Task CreateAsync(TEntity entity, CancellationToken cancellationToken)

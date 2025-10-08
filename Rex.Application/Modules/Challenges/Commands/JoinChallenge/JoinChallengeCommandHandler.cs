@@ -14,52 +14,55 @@ public class JoinChallengeCommandHandler(
     IGroupRepository groupRepository,
     IUserRepository userRepository,
     IUserChallengeRepository userChallengeRepository
-    ): ICommandHandler<JoinChallengeCommand, ResponseDto>
+) : ICommandHandler<JoinChallengeCommand, ResponseDto>
 {
-        public async Task<ResultT<ResponseDto>> Handle(JoinChallengeCommand request, CancellationToken cancellationToken)
+    public async Task<ResultT<ResponseDto>> Handle(JoinChallengeCommand request, CancellationToken cancellationToken)
     {
         if (request is null)
         {
-            logger.LogWarning("JoinChallengeCommand request was null");
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Request is invalid. Please try again."));
+            logger.LogWarning("Received empty request to join a challenge.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400",
+                "Oops! The request is invalid. Please try again."));
         }
-        
+
         var challenge = await challengeRepository.GetByIdAsync(request.ChallengeId, cancellationToken);
         if (challenge is null)
         {
-            logger.LogWarning("Challenge with id {ChallengeId} not found", request.ChallengeId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("404", "Sorry, we couldn't find the challenge."));
+            logger.LogWarning("Challenge not found when attempting to join.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("404",
+                "Sorry, we couldn't find the challenge you want to join."));
         }
 
         if (challenge.Status != ChallengeStatus.Active.ToString())
         {
-            logger.LogWarning("Challenge with id {ChallengeId} is not active", request.ChallengeId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "This challenge is not active at the moment."));
+            logger.LogWarning("Challenge is not active.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400", "This challenge is not active right now."));
         }
 
         if ((challenge.CreatedAt + challenge.Duration) < DateTime.UtcNow)
         {
-            logger.LogWarning("Challenge with id {ChallengeId} has expired", request.ChallengeId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "The time to join this challenge has expired."));
+            logger.LogWarning("Challenge has expired.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400", "The time to join this challenge has passed."));
         }
-        
+
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            logger.LogWarning("User with id {UserId} not found", request.UserId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("404", "User not found. Please check your account details."));
+            logger.LogWarning("User not found when attempting to join challenge.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("404",
+                "We couldn't find your account. Please check your details."));
         }
-        
+
         UserChallenge userChallenge = new()
         {
             ChallengeId = challenge.Id,
             UserId = user.Id,
             Status = UserChallengeStatus.Enrolled.ToString()
         };
-        
+
         await userChallengeRepository.CreateAsync(userChallenge, cancellationToken);
-        logger.LogInformation("User with id {UserId} joined challenge with id {ChallengeId}", request.UserId, request.ChallengeId);
+
+        logger.LogInformation("User joined the challenge successfully.");
         return ResultT<ResponseDto>.Success(new ResponseDto("You've successfully joined the challenge! Good luck!"));
     }
-
 }

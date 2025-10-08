@@ -26,5 +26,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>True if the chat exists; otherwise false.</returns>
         Task<bool> ChatExistsAsync(Guid chatId, CancellationToken cancellationToken);
+
+        Task<Chat?> GetOneToOneChat(Guid firstUser, Guid secondUser, CancellationToken cancellationToken);
     }
 }

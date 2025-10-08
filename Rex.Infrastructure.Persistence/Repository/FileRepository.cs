@@ -12,13 +12,14 @@ public class FileRepository(RexContext context): GenericRepository<File>(context
     public async Task<PagedResult<File>> GetFilesPaginatedByEntityAndTypeAsync(Guid targetId, TargetType targetType, int page, 
         int size, FileType type, CancellationToken cancellationToken)
     {
-        var total = await context.Set<File>()
+        var query = context.Set<File>()
             .AsNoTracking()
             .Where(f => f.Type == type.ToString() &&
-                        f.EntityFiles.Any(c => c.TargetId == targetId && c.TargetType == targetType.ToString()))
-            .CountAsync(cancellationToken);
+                        f.EntityFiles.Any(c => c.TargetId == targetId && c.TargetType == targetType.ToString()));
         
-        var files = await context.Set<File>()
+        var total = await query.CountAsync(cancellationToken);
+        
+        var files = await query
             .AsNoTracking()
             .Where(f => f.Type == type.ToString() &&
                         f.EntityFiles.Any(c => c.TargetId == targetId && c.TargetType == targetType.ToString()))
@@ -33,12 +34,13 @@ public class FileRepository(RexContext context): GenericRepository<File>(context
     public async Task<PagedResult<File>> GetFilesPaginatedByEntityAsync(Guid targetId, TargetType targetType, int page, 
         int size, CancellationToken cancellationToken)
     {
-        var total = await context.Set<File>()
+        var query = context.Set<File>()
             .AsNoTracking()
-            .Where(t => t.EntityFiles.Any(c => c.TargetId == targetId && c.TargetType == targetType.ToString()))
-            .CountAsync(cancellationToken);
+            .Where(t => t.EntityFiles.Any(c => c.TargetId == targetId && c.TargetType == targetType.ToString()));
+
+        var total = await query.CountAsync(cancellationToken);
         
-        var files = await context.Set<File>()
+        var files = await query
             .Where(t => t.EntityFiles.Any(c => c.TargetId == targetId && c.TargetType == targetType.ToString()))
             .OrderByDescending(t => t.CreatedAt)
             .Skip((page - 1) * size)

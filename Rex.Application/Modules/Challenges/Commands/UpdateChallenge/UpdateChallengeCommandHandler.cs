@@ -15,17 +15,17 @@ public class UpdateChallengeCommandHandler(
     {
         if (request is null)
         {
-            logger.LogWarning("UpdateChallenge: Received an empty request.");
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "We couldn’t process your request because it was empty. Please provide the challenge details and try again."));
+            logger.LogWarning("Received empty request to update a challenge.");
+            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Oops! Your request was empty. Please provide the challenge details and try again."));
         }
-        
+
         var challenge = await challengeRepository.GetByIdAsync(request.ChallengeId, cancellationToken);
         if (challenge is null)
         {
-            logger.LogWarning("UpdateChallenge: Challenge with ID {ChallengeId} could not be found.", request.ChallengeId);
-            return ResultT<ResponseDto>.Failure(Error.NotFound("404", $"We couldn’t find the challenge. Please make sure the ID is correct."));
+            logger.LogWarning("Challenge not found when attempting to update.");
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "Hmm, we couldn’t find the challenge you’re trying to update."));
         }
-        
+
         challenge.Title = request.Title;
         challenge.Description = request.Description;
         challenge.Duration = request.Duration;
@@ -34,7 +34,8 @@ public class UpdateChallengeCommandHandler(
 
         await challengeRepository.UpdateAsync(challenge, cancellationToken);
 
-        logger.LogInformation("UpdateChallenge: Challenge with ID {ChallengeId} was updated successfully.", request.ChallengeId);
-        return ResultT<ResponseDto>.Success(new ("Your challenge has been updated successfully!"));
+        logger.LogInformation("Challenge updated successfully.");
+        return ResultT<ResponseDto>.Success(new ResponseDto("Your challenge has been updated successfully!"));
     }
+
 }

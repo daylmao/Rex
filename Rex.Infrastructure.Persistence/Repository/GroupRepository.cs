@@ -13,12 +13,13 @@ public class GroupRepository(RexContext context) : GenericRepository<Group>(cont
     public async Task<PagedResult<Group>> GetGroupsByUserIdAsync(Guid userId, int page, int size,
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<Group>()
+        var query = context.Set<Group>()
             .AsNoTracking()
-            .Where(c => c.UserGroups.Any(g => g.UserId == userId))
-            .CountAsync(cancellationToken);
+            .Where(c => c.UserGroups.Any(g => g.UserId == userId));
 
-        var groups = await context.Set<Group>()
+        var total = await query.CountAsync(cancellationToken);
+
+        var groups = await query
             .AsNoTracking()
             .Where(c => c.UserGroups.Any(g => g.UserId == userId))
             .OrderBy(c => c.CreatedAt)

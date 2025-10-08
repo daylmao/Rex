@@ -448,12 +448,18 @@ public class RexContext: DbContext
 
             entity.Property(u => u.ConfirmedAccount)
                 .HasDefaultValue(false);
+            
+            entity.Property(u => u.IsActive)
+                .HasDefaultValue(false);
 
             entity.Property(u => u.Birthday)
                 .HasColumnType("date");
 
             entity.Property(u => u.LastLoginAt)
-                .HasColumnType("date");
+                .HasColumnType("timestamptz");
+            
+            entity.Property(u => u.LastConnection)
+                .HasColumnType("timestamptz");
 
             entity.Property(u => u.Status)
                 .IsRequired()
@@ -522,7 +528,7 @@ public class RexContext: DbContext
                 .HasMaxLength(30);
             
             entity.Property(u => u.UploadedAt)
-                .HasColumnType("date");
+                .HasColumnType("timestamptz");
 
         });
 
@@ -578,6 +584,9 @@ public class RexContext: DbContext
             entity.Property(c => c.Type)
                 .IsRequired()
                 .HasMaxLength(30);
+            
+            entity.Property(a => a.Name)
+                .HasMaxLength(100);
         });
 
         #endregion
@@ -645,6 +654,9 @@ public class RexContext: DbContext
             entity.Property(r => r.TargetType)
                 .IsRequired()
                 .HasMaxLength(30);
+
+            entity.Property(a => a.Like)
+                .HasDefaultValue(false);
         });
 
         #endregion
@@ -709,10 +721,10 @@ public class RexContext: DbContext
                 .IsRequired();
             
             entity.Property(ug => ug.RequestedAt)
-                .HasColumnType("date");
+                .HasColumnType("timestamptz");
             
             entity.Property(ug => ug.CreatedAt)
-                .HasColumnType("date");
+                .HasColumnType("timestamptz");
 
             entity.Property(ug => ug.Status)
                 .HasMaxLength(50);

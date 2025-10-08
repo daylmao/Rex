@@ -23,4 +23,10 @@
       <ProjectReference Include="..\Rex.Domain\Rex.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Modules\Friendships\Queries\" />
+      <Folder Include="Modules\Posts\Queries\" />
+      <Folder Include="Modules\Reactions\Queries\" />
+    </ItemGroup>
+
 </Project>

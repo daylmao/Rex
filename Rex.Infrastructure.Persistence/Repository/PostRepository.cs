@@ -10,13 +10,14 @@ public class PostRepository(RexContext context): GenericRepository<Post>(context
 {
     public async Task<PagedResult<Post>> GetPostsByGroupIdAsync(Guid groupId, int page, int size,
         CancellationToken cancellationToken)
-    { 
-        var total = await context.Set<Post>()
+    {
+        var query = context.Set<Post>()
             .AsNoTracking()
-            .Where(p => p.GroupId == groupId)
-            .CountAsync(cancellationToken);
+            .Where(p => p.GroupId == groupId);
         
-        var posts = await context.Set<Post>()
+        var total = await query.CountAsync(cancellationToken);
+        
+        var posts = await query
             .Where(p => p.GroupId == groupId)
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page -1) * size)

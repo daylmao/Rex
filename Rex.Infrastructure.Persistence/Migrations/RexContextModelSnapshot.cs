@@ -93,6 +93,10 @@ namespace Rex.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -283,7 +287,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("date");
+                        .HasColumnType("timestamptz");
 
                     b.Property<string>("Url")
                         .IsRequired()
@@ -571,6 +575,11 @@ namespace Rex.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("Like")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<Guid>("TargetId")
                         .HasColumnType("uuid")
                         .HasColumnName("FkTargetId");
@@ -687,8 +696,16 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("LastConnection")
+                        .HasColumnType("timestamptz");
+
                     b.Property<DateTime?>("LastLoginAt")
-                        .HasColumnType("date");
+                        .HasColumnType("timestamptz");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -820,7 +837,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnName("PkUserGroupId");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("date");
+                        .HasColumnType("timestamptz");
 
                     b.Property<bool>("Deleted")
                         .HasColumnType("boolean");
@@ -837,7 +854,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnName("FkGroupRoleId");
 
                     b.Property<DateTime>("RequestedAt")
-                        .HasColumnType("date");
+                        .HasColumnType("timestamptz");
 
                     b.Property<string>("Status")
                         .HasMaxLength(50)
@@ -869,10 +886,22 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("PkUserRoleId");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id")
                         .HasName("PkUserRoleId");

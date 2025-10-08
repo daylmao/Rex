@@ -14,21 +14,24 @@ public class GetChallengesByUserQueryHandler(
     IChallengeRepository challengeRepository,
     IUserRepository userRepository,
     IDistributedCache cache
-    ): IQueryHandler<GetChallengesByUserQuery, PagedResult<ChallengeUserDetailsDto>>
+) : IQueryHandler<GetChallengesByUserQuery, PagedResult<ChallengeUserDetailsDto>>
 {
-    public async Task<ResultT<PagedResult<ChallengeUserDetailsDto>>> Handle(GetChallengesByUserQuery request, CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<ChallengeUserDetailsDto>>> Handle(GetChallengesByUserQuery request,
+        CancellationToken cancellationToken)
     {
         if (request is null)
         {
-            logger.LogWarning("");
-            return ResultT<PagedResult<ChallengeUserDetailsDto>>.Failure(Error.Failure("400", "Request is invalid. Please try again."));
+            logger.LogWarning("Received invalid request for retrieving challenges.");
+            return ResultT<PagedResult<ChallengeUserDetailsDto>>.Failure(Error.Failure("400",
+                "Oops! The request seems invalid. Please try again."));
         }
-        
+
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            logger.LogWarning("User with id {UserId} not found", request.UserId);
-            return ResultT<PagedResult<ChallengeUserDetailsDto>>.Failure(Error.Failure("404", "User not found. Please check your account details."));
+            logger.LogWarning("User not found when fetching challenges.");
+            return ResultT<PagedResult<ChallengeUserDetailsDto>>.Failure(Error.Failure("404",
+                "Hmm, we couldn't find your account. Please check your details."));
         }
 
         var result = await cache.GetOrCreateAsync(
@@ -43,7 +46,7 @@ public class GetChallengesByUserQueryHandler(
             logger,
             cancellationToken: cancellationToken
         );
-        
+
         var elements = result.Items.Select(challenge => new ChallengeUserDetailsDto
         (
             challenge.Group.ProfilePhoto,
@@ -53,26 +56,30 @@ public class GetChallengesByUserQueryHandler(
             challenge.UserChallenges!.FirstOrDefault(uc => uc.UserId == request.UserId)!.Status,
             challenge.Duration,
             challenge.Group.Title,
-            challenge.UserChallenges.Select(c => c.User.ProfilePhoto)
+            challenge.UserChallenges
+                .Select(c => c.User.ProfilePhoto)
                 .Where(photo => !string.IsNullOrEmpty(photo))
                 .Take(5)
-                .ToList(), 
+                .ToList(),
             challenge.UserChallenges
                 .Count(c => c.Status == UserChallengeStatus.Enrolled.ToString())
         )).ToList();
 
         if (!elements.Any())
         {
-            logger.LogWarning("No challenges found for user with ID {UserId} and status {Status}.", request.UserId, request.Status);
-            return ResultT<PagedResult<ChallengeUserDetailsDto>>.Failure(Error.NotFound("404", "No challenges found for the specified user and status."));
+            logger.LogWarning("No challenges found for the user with the specified status.");
+            return ResultT<PagedResult<ChallengeUserDetailsDto>>.Failure(Error.NotFound("404",
+                "No challenges found for your account with the selected status."));
         }
-        
+
         var pagedResult = new PagedResult<ChallengeUserDetailsDto>(
             elements,
             result.TotalItems,
             result.ActualPage,
             result.TotalPages
         );
+
+        logger.LogInformation("Challenges retrieved successfully.");
         return ResultT<PagedResult<ChallengeUserDetailsDto>>.Success(pagedResult);
     }
 }

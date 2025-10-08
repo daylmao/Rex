@@ -44,12 +44,13 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
     public async Task<PagedResult<User>> GetUsersByGroupIdAsync(Guid groupId, int page, int size,
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<User>()
+        var query = context.Set<User>()
             .AsNoTracking()
-            .Where(c => c.UserGroups.Any(ug => ug.GroupId == groupId))
-            .CountAsync(cancellationToken);
+            .Where(c => c.UserGroups.Any(ug => ug.GroupId == groupId));
+
+        var total = await query.CountAsync(cancellationToken);
         
-        var users = await context.Set<User>()
+        var users = await query
             .Where(c => c.UserGroups.Any(ug => ug.GroupId == groupId))
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * size)
@@ -63,12 +64,14 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
     public async Task<PagedResult<User>> GetUsersByNameOrLastnameAsync(Guid groupId, string searchTerm, int page, 
         int size, CancellationToken cancellationToken)
     {
-        var total = await context.Set<User>()
+        var query = context.Set<User>()
             .AsNoTracking()
-            .Where(u => u.FirstName.Contains(searchTerm) || u.LastName.Contains(searchTerm) && u.UserGroups.Any(ug => ug.GroupId == groupId))
-            .CountAsync(cancellationToken);
+            .Where(u => u.FirstName.Contains(searchTerm) ||
+                        u.LastName.Contains(searchTerm) && u.UserGroups.Any(ug => ug.GroupId == groupId));
+
+        var total = await query.CountAsync(cancellationToken);
         
-        var users = await context.Set<User>()
+        var users = await query
             .Where(u => u.FirstName.Contains(searchTerm) || u.LastName.Contains(searchTerm) && u.UserGroups.Any(ug => ug.GroupId == groupId))
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * size)
@@ -82,15 +85,16 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
     public async Task<PagedResult<User>> GetAdministrativeMembersByGroupIdAsync(Guid groupId, int page, int size,
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<User>()
+        var query = context.Set<User>()
             .AsNoTracking()
-            .Where(u => u.Role.Role == GroupRole.Leader.ToString() 
-                        || u.Role.Role == GroupRole.Moderator.ToString() 
-                        || u.Role.Role == GroupRole.Mentor.ToString() 
-                        && u.UserGroups.Any(ug => ug.GroupId == groupId))
-            .CountAsync(cancellationToken);
+            .Where(u => u.Role.Role == GroupRole.Leader.ToString()
+                        || u.Role.Role == GroupRole.Moderator.ToString()
+                        || u.Role.Role == GroupRole.Mentor.ToString()
+                        && u.UserGroups.Any(ug => ug.GroupId == groupId));
+
+        var total = await query.CountAsync(cancellationToken);
         
-        var users = await context.Set<User>()
+        var users = await query
             .Where(u => u.Role.Role == GroupRole.Leader.ToString() 
                         || u.Role.Role == GroupRole.Moderator.ToString() 
                         || u.Role.Role == GroupRole.Mentor.ToString() 
@@ -107,11 +111,12 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
     public async Task<PagedResult<User>> GetPendingRequestsByGroupIdAsync(Guid groupId, int page, int size, 
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<User>()
-            .Where(u => u.UserGroups.Any(g => g.GroupId == groupId && g.Status == RequestStatus.Pending.ToString()))
-            .CountAsync(cancellationToken);
+        var query = context.Set<User>()
+            .Where(u => u.UserGroups.Any(g => g.GroupId == groupId && g.Status == RequestStatus.Pending.ToString()));
+
+        var total = await query.CountAsync(cancellationToken);
         
-        var users = await context.Set<User>()
+        var users = await query
             .Where(u => u.UserGroups.Any(g => g.GroupId == groupId && g.Status == RequestStatus.Pending.ToString()))
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * size)
@@ -146,5 +151,12 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
                 UserChallenges = c.UserChallenges
             })
             .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task UpdateLastTimeConnectionAsync(Guid userId, bool isActive , CancellationToken cancellationToken) =>
+        await context.Set<User>()
+            .Where(uc => uc.Id == userId)
+            .ExecuteUpdateAsync(s => s.SetProperty(uc => uc.LastConnection, DateTime.UtcNow)
+                .SetProperty(uc => uc.IsActive, isActive), cancellationToken);
+    
 
 }

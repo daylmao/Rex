@@ -15,53 +15,50 @@ public class RegisterUserCommandHandler(
     IUserRepository userRepository,
     IUserRoleRepository roleRepository,
     ICloudinaryService cloudinaryService
-    ): ICommandHandler<RegisterUserCommand, RegisterUserDto>
+) : ICommandHandler<RegisterUserCommand, RegisterUserDto>
 {
     public async Task<ResultT<RegisterUserDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
         var userExists = await userRepository.EmailExistAsync(request.Email, cancellationToken);
         if (userExists)
         {
-            logger.LogInformation("Email {Email} already exists.", request.Email);
-            return ResultT<RegisterUserDto>.Failure(Error.Conflict("409", "The provided email is already registered."));
+            logger.LogInformation("Email already exists.");
+            return ResultT<RegisterUserDto>.Failure(Error.Conflict("409",
+                "Looks like this email is already in use. Try logging in or use another email."));
         }
-        
+
         var userNameExists = await userRepository.UserNameExistAsync(request.UserName, cancellationToken);
         if (userNameExists)
         {
-            logger.LogInformation("Username {UserName} already exists.", request.UserName);
-            return ResultT<RegisterUserDto>.Failure(Error.Conflict("409", "The provided username is already taken."));
+            logger.LogInformation("Username already exists.");
+            return ResultT<RegisterUserDto>.Failure(Error.Conflict("409",
+                "Oops! This username is already taken. Try another one."));
         }
 
         var roleExists = await roleRepository.GetRoleByNameAsync(UserRole.User.ToString(), cancellationToken);
         if (roleExists is null)
         {
-           logger.LogWarning("Role {Role} does not exist.", UserRole.User);
-           return ResultT<RegisterUserDto>.Failure(Error.Failure("400","The specified role does not exist."));
+            logger.LogWarning("Role does not exist.");
+            return ResultT<RegisterUserDto>.Failure(Error.Failure("400",
+                "Something went wrong: the user role does not exist."));
         }
 
         string profilePhotoUrl = "";
         if (request.ProfilePhoto is not null)
         {
             await using var stream = request.ProfilePhoto.OpenReadStream();
-            profilePhotoUrl = await cloudinaryService.UploadImageAsync(
-                stream,
-                request.ProfilePhoto.FileName,
-                cancellationToken
-            );
-            logger.LogInformation("Profile photo uploaded for user {UserName}.", request.UserName);
+            profilePhotoUrl =
+                await cloudinaryService.UploadImageAsync(stream, request.ProfilePhoto.FileName, cancellationToken);
+            logger.LogInformation("Profile photo uploaded.");
         }
-        
+
         string coverPhotoUrl = "";
         if (request.CoverPhoto is not null)
         {
             await using var stream = request.CoverPhoto.OpenReadStream();
-            coverPhotoUrl = await cloudinaryService.UploadImageAsync(
-                stream,
-                request.CoverPhoto.FileName,
-                cancellationToken
-            );
-            logger.LogInformation("Cover photo uploaded for user {UserName}.", request.UserName);
+            coverPhotoUrl =
+                await cloudinaryService.UploadImageAsync(stream, request.CoverPhoto.FileName, cancellationToken);
+            logger.LogInformation("Cover photo uploaded.");
         }
 
         Models.User user = new()
@@ -75,34 +72,32 @@ public class RegisterUserCommandHandler(
             ProfilePhoto = profilePhotoUrl,
             CoverPhoto = coverPhotoUrl,
             Biography = request.Biography,
-            Gender = request.Gender,
+            Gender = request.Gender.ToString(),
             Birthday = request.Birthday,
             Status = UserStatus.Active.ToString(),
             RoleId = roleExists.Id,
             ConfirmedAccount = false,
         };
-        
-        await userRepository.CreateAsync(user, cancellationToken);
-        logger.LogInformation("User {UserName} created in database with Id {UserId}.", user.UserName, user.Id);
-        
-        var code = await codeService.CreateCodeAsync(user.Id, CodeType.ConfirmAccount, cancellationToken);
 
+        await userRepository.CreateAsync(user, cancellationToken);
+        logger.LogInformation("User created successfully in database.");
+
+        var code = await codeService.CreateCodeAsync(user.Id, CodeType.ConfirmAccount, cancellationToken);
         if (!code.IsSuccess)
         {
-            logger.LogError("Failed to create confirmation code for user {UserId}. Error: {Error}", user.Id, code.Value);
-            return ResultT<RegisterUserDto>.Failure(Error.Failure("400","Failed to generate confirmation code."));
+            logger.LogError("Failed to create confirmation code.");
+            return ResultT<RegisterUserDto>.Failure(Error.Failure("400",
+                "Oops! Something went wrong while generating your confirmation code. Try again later."));
         }
 
-        await emailService.SendEmailAsync(
-            new EmailDto(
-                User: request.Email,
-                Body: EmailTemplate.ConfirmAccountTemplate(user.FirstName, user.LastName, code.Value),
-                Subject: "Confirm Account"
-                )
-            );
-        
-        logger.LogInformation("Confirmation email sent to {Email}.", request.Email);
-        
+        await emailService.SendEmailAsync(new EmailDto(
+            User: request.Email,
+            Body: EmailTemplate.ConfirmAccountTemplate(user.FirstName, user.LastName, code.Value),
+            Subject: "Confirm Your Account"
+        ));
+
+        logger.LogInformation("Confirmation email sent.");
+
         RegisterUserDto userDto = new(
             UserId: user.Id,
             FirstName: user.FirstName,
@@ -115,8 +110,6 @@ public class RegisterUserCommandHandler(
             Gender: user.Gender,
             Birthday: user.Birthday
         );
-        
-        logger.LogInformation("User {UserName} registered successfully.", user.UserName);
 
         return ResultT<RegisterUserDto>.Success(userDto);
     }

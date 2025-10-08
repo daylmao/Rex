@@ -15,5 +15,11 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>True if the user is in the chat; otherwise false.</returns>
         Task<bool> IsUserInChatAsync(Guid userId, Guid chatId, CancellationToken cancellationToken);
+        
+        Task<List<Guid>> GetUserChatsAsync(Guid userId, CancellationToken cancellationToken);
+
+        Task CreateRangeAsync(IEnumerable<UserChat> entities, CancellationToken cancellationToken);
+        
+        Task<User> GetOtherUserInChatAsync(Guid chatId, Guid currentUserId, CancellationToken cancellationToken);
     }
 }

@@ -7,49 +7,19 @@ using Rex.Models;
 
 namespace Rex.Infrastructure.Persistence.Repository;
 
-public class ChallengeRepository(RexContext context): GenericRepository<Challenge>(context), IChallengeRepository
+public class ChallengeRepository(RexContext context) : GenericRepository<Challenge>(context), IChallengeRepository
 {
-    public async Task<PagedResult<Challenge>> GetChallengesPaginatedByGroupIdAndStatusAsync(Guid groupId, int page, int size, ChallengeStatus status,
+    public async Task<PagedResult<Challenge>> GetChallengesPaginatedByGroupIdAndStatusAsync(Guid groupId, int page,
+        int size, ChallengeStatus status,
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<Challenge>()
+        var query = context.Set<Challenge>()
             .AsNoTracking()
-            .Where(g => g.GroupId == groupId && g.Status == status.ToString())
-            .Select(g => new Challenge
-            {
-                Id = g.Id,
-                Title = g.Title,
-                Description = g.Description,
-                Status = g.Status,
-                CreatedAt = g.CreatedAt,
-                Duration = g.Duration,
-                Group = new Group
-                {
-                    Id = g.Group.Id,
-                    Title = g.Group.Title,
-                    ProfilePhoto = g.Group.ProfilePhoto,
-                    CoverPhoto = g.Group.CoverPhoto,
-                    Description = g.Group.Description,
-                    Visibility = g.Group.Visibility
-                },
-                UserChallenges = g.UserChallenges
-                    .Select(uc => new UserChallenge
-                    {
-                        Id = uc.Id,
-                        Status = uc.Status,
-                        User = new User
-                        {
-                            Id = uc.User.Id,
-                            ProfilePhoto = uc.User.ProfilePhoto
-                        }
-                    })
-                    .ToList()
-                    
-                
-            })
-            .CountAsync(cancellationToken);
+            .Where(g => g.GroupId == groupId && g.Status == status.ToString());
 
-        var challenges = await context.Set<Challenge>()
+        var total = await query.CountAsync(cancellationToken);
+
+        var challenges = await query
             .Where(g => g.GroupId == groupId && g.Status == status.ToString())
             .Select(g => new Challenge
             {
@@ -58,7 +28,7 @@ public class ChallengeRepository(RexContext context): GenericRepository<Challeng
                 Description = g.Description,
                 Status = g.Status,
                 CreatedAt = g.CreatedAt,
-                Duration = g.Duration,
+                Duration = (g.CreatedAt + g.Duration) - DateTime.UtcNow,
                 Group = new Group
                 {
                     Id = g.Group.Id,
@@ -80,38 +50,40 @@ public class ChallengeRepository(RexContext context): GenericRepository<Challeng
                         }
                     })
                     .ToList()
-                    
-                
             })
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync(cancellationToken);
-        
+
         return new PagedResult<Challenge>(challenges, total, page, size);
     }
 
-    public async Task<PagedResult<Challenge>> GetChallengesPaginatedByUserParticipationGroupAndStatusAsync(Guid userId, int page, int size,
+    public async Task<PagedResult<Challenge>> GetChallengesPaginatedByUserParticipationGroupAndStatusAsync(Guid userId,
+        int page, int size,
         Guid groupId, UserChallengeStatus status,
         CancellationToken cancellationToken)
     {
-        var total = await context.Set<Challenge>()
+        var query = context.Set<Challenge>()
             .AsNoTracking()
             .Where(c => c.Status == status.ToString() && c.GroupId == groupId &&
-                        c.UserChallenges.Any(g => g.UserId == userId)).CountAsync(cancellationToken);
-        
-        var challenges = await context.Set<Challenge>()
+                        c.UserChallenges.Any(g => g.UserId == userId));
+
+        var total = await query.CountAsync(cancellationToken);
+
+        var challenges = await query
             .Where(c => c.Status == status.ToString() && c.GroupId == groupId &&
                         c.UserChallenges.Any(g => g.UserId == userId))
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync(cancellationToken);
-        
+
         return new PagedResult<Challenge>(challenges, total, page, size);
     }
 
-    public async Task<PagedResult<Challenge>> GetChallengesPaginatedByUserIdAndStatusAsync(Guid userId, int page, int size,
+    public async Task<PagedResult<Challenge>> GetChallengesPaginatedByUserIdAndStatusAsync(Guid userId, int page,
+        int size,
         UserChallengeStatus status,
         CancellationToken cancellationToken)
     {
@@ -151,10 +123,13 @@ public class ChallengeRepository(RexContext context): GenericRepository<Challeng
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync(cancellationToken);
-        
+
         return new PagedResult<Challenge>(challenges, total, page, size);
     }
 
     public async Task<bool> UserAlreadyJoined(Guid userId, Guid challengeId, CancellationToken cancellationToken) =>
-        await ValidateAsync( c => c.UserChallenges.Any( a => a.UserId == userId && a.ChallengeId == challengeId ), cancellationToken);
+        await ValidateAsync(
+            c => c.UserChallenges.Any(a =>
+                a.UserId == userId && a.ChallengeId == challengeId &&
+                a.Status == UserChallengeStatus.Enrolled.ToString()), cancellationToken);
 }

@@ -120,5 +120,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <returns>A paginated list of administrative members.</returns>
         Task<PagedResult<User>> GetAdministrativeMembersByGroupIdAsync(Guid groupId, int page, int size,
             CancellationToken cancellationToken);
+
+        Task UpdateLastTimeConnectionAsync(Guid userId, bool isActive, CancellationToken cancellationToken);
     }
 }

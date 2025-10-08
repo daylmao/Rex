@@ -13,29 +13,38 @@ public class GetGroupMembersQueryHandler(
     IGroupRepository groupRepository,
     IUserGroupRepository userGroupRepository,
     IDistributedCache cache
-    ): IQueryHandler<GetGroupMembersQuery, PagedResult<UserGroupDetailsDto>>
+) : IQueryHandler<GetGroupMembersQuery, PagedResult<UserGroupDetailsDto>>
 {
     public async Task<ResultT<PagedResult<UserGroupDetailsDto>>> Handle(GetGroupMembersQuery request, CancellationToken cancellationToken)
     {
         if (request is null)
         {
             logger.LogWarning("GetGroupMembersQueryHandler: Request is null");
-            return ResultT<PagedResult<UserGroupDetailsDto>>.Failure(Error.Failure("400", "Request is null"));
+            return ResultT<PagedResult<UserGroupDetailsDto>>.Failure(
+                Error.Failure("400", "Oops! No data was provided to fetch group members."));
         }
 
         var group = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
         if (group is null)
         {
             logger.LogWarning("GetGroupMembersQueryHandler: Group with Id {GroupId} not found", request.GroupId);
-            return ResultT<PagedResult<UserGroupDetailsDto>>.Failure(Error.NotFound("404", "Group not found"));
+            return ResultT<PagedResult<UserGroupDetailsDto>>.Failure(
+                Error.NotFound("404", "We couldn't find the group you’re looking for."));
         }
         
         var result = await cache.GetOrCreateAsync(
-            $"GetGroupMembers-{request.GroupId.ToString()}-{request.PageNumber}-{request.PageSize}-{request.SearchTerm}-{request.RoleFilter}",
-            async () => await userGroupRepository.GetMembersAsync(request.GroupId, request.RoleFilter, request.SearchTerm,
-                request.PageNumber, request.PageSize, cancellationToken),
-                logger, cancellationToken: cancellationToken
-            );
+            $"GetGroupMembers-{request.GroupId}-{request.PageNumber}-{request.PageSize}-{request.SearchTerm}-{request.RoleFilter}",
+            async () => await userGroupRepository.GetMembersAsync(
+                request.GroupId, 
+                request.RoleFilter, 
+                request.SearchTerm,
+                request.PageNumber, 
+                request.PageSize, 
+                cancellationToken
+            ),
+            logger, 
+            cancellationToken: cancellationToken
+        );
         
         var elements = result.Items
             .Select(ug => new UserGroupDetailsDto(
@@ -49,8 +58,10 @@ public class GetGroupMembersQueryHandler(
         if (!elements.Any())
         {
             logger.LogWarning("GetGroupMembersQueryHandler: No members found for group with Id {GroupId}", request.GroupId);
-            return ResultT<PagedResult<UserGroupDetailsDto>>.Failure(Error.NotFound("404", "No members found"));
+            return ResultT<PagedResult<UserGroupDetailsDto>>.Failure(
+                Error.NotFound("404", "No members found in this group."));
         }
+
         var pagedResult = new PagedResult<UserGroupDetailsDto>(
             elements,
             result.TotalItems,
@@ -58,6 +69,7 @@ public class GetGroupMembersQueryHandler(
             request.PageSize
         );
         
+        logger.LogInformation("Successfully retrieved {Count} members for group {GroupId}", elements.Count(), request.GroupId);
         return ResultT<PagedResult<UserGroupDetailsDto>>.Success(pagedResult);
     }
 }
