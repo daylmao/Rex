@@ -24,7 +24,8 @@ public static class DependecyInjection
         #region Services
 
         services.AddScoped<ICodeService, CodeService>();
-
+        services.AddScoped<IMessageService, MessageService>();
+        
         #endregion
 
         services.AddHttpContextAccessor();
