@@ -21,9 +21,10 @@ public class MessageService(
     IFileRepository fileRepository,
     IEntityFileRepository entityFileRepository,
     ICloudinaryService cloudinaryService
-    ): IMessageService
+) : IMessageService
 {
-    public async Task<ResultT<MessageDto>> SendMessageAsync(Guid chatId, Guid userId, string messageText, IEnumerable<IFormFile?> files = null, CancellationToken cancellationToken = default)
+    public async Task<ResultT<MessageDto>> SendMessageAsync(Guid chatId, Guid userId, string messageText,
+        IEnumerable<IFormFile?> files = null, CancellationToken cancellationToken = default)
     {
         var chat = await chatRepository.GetByIdAsync(chatId, cancellationToken);
         if (chat is null)
@@ -48,10 +49,13 @@ public class MessageService(
         };
 
         await messageRepository.CreateAsync(message, cancellationToken);
-        
-        await ProcessFiles.ProcessFilesAsync(logger,files, chatId,
-            fileRepository, entityFileRepository,
-            cloudinaryService, TargetType.Message, cancellationToken);
+
+        if (files is not null)
+        {
+            await ProcessFiles.ProcessFilesAsync(logger, files, chatId,
+                fileRepository, entityFileRepository,
+                cloudinaryService, TargetType.Message, cancellationToken);
+        }
 
         var dto = new MessageDto(
             message.ChatId,
