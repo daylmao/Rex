@@ -35,20 +35,15 @@ public class ManageFriendshipRequestCommandHandler(
             return ResultT<ResponseDto>.Failure(Error.Failure("400", "Friend requests cannot be set back to pending."));
         }
 
-        var requesterTask = userRepository.GetByIdAsync(request.RequesterId, cancellationToken);
-        var targetUserTask = userRepository.GetByIdAsync(request.TargetUserId, cancellationToken);
-
-
-        await Task.WhenAll(requesterTask, targetUserTask);
-
-        var requester = await requesterTask;
+        var requester = await userRepository.GetByIdAsync(request.RequesterId, cancellationToken);
+        var targetUser = await userRepository.GetByIdAsync(request.TargetUserId, cancellationToken);
+        
         if (requester is null)
         {
             logger.LogWarning("Requester user {UserId} not found", request.RequesterId);
             return ResultT<ResponseDto>.Failure(Error.Failure("404", "Your account could not be found."));
         }
 
-        var targetUser = await targetUserTask;
         if (targetUser is null)
         {
             logger.LogWarning("Target user {UserId} not found", request.TargetUserId);

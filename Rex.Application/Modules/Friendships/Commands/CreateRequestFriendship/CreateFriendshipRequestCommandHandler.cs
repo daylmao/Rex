@@ -31,19 +31,15 @@ public class CreateFriendshipRequestCommandHandler(
             return ResultT<ResponseDto>.Failure(Error.Failure("400", "You can't send a friend request to yourself."));
         }
 
-        var requesterTask = userRepository.GetByIdAsync(request.RequesterId, cancellationToken);
-        var targetUserTask = userRepository.GetByIdAsync(request.TargetUserId, cancellationToken);
-
-        await Task.WhenAll(requesterTask, targetUserTask);
-
-        var requester = await requesterTask;
+        var requester = await userRepository.GetByIdAsync(request.RequesterId, cancellationToken);
+        var targetUser = await userRepository.GetByIdAsync(request.TargetUserId, cancellationToken);
+        
         if (requester is null)
         {
             logger.LogWarning("Requester user not found: {UserId}", request.RequesterId);
             return ResultT<ResponseDto>.Failure(Error.Failure("404", "We couldn't find your account."));
         }
 
-        var targetUser = await targetUserTask;
         if (targetUser is null)
         {
             logger.LogWarning("Target user not found: {UserId}", request.TargetUserId);
