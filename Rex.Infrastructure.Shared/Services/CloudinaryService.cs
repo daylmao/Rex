@@ -42,14 +42,14 @@ public sealed class CloudinaryService(IOptions<CloudinaryConfiguration> cloudina
     public async Task<string> UploadVideoAsync(Stream archive, string imageName, CancellationToken cancellationToken)
     {
         var cloudinary = new Cloudinary(_cloudinaryConfiguration.CloudinaryUrl);
-        VideoUploadParams uploadImage = new()
+        VideoUploadParams uploadVideo = new()
         {
             File = new FileDescription(imageName, archive),
             UseFilename = true,
             UniqueFilename = false,
             Overwrite = true
         };
-        VideoUploadResult uploadResult = await cloudinary.UploadAsync(uploadImage, cancellationToken);
+        VideoUploadResult uploadResult = await cloudinary.UploadAsync(uploadVideo, cancellationToken);
         return uploadResult.SecureUrl.ToString();
     }
 }

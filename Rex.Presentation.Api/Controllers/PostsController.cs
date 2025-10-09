@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Rex.Application.DTOs;
 using Rex.Application.Modules.Posts.Commands;
+using Rex.Application.Modules.Posts.Queries.GetPostsByGroupId;
+using Rex.Application.Pagination;
 using Rex.Application.Utilities;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -18,14 +20,35 @@ public class PostsController(IMediator mediator) : ControllerBase
     [SwaggerOperation(
         Summary = " Create a new post",
         Description = "Creates a new post in a specified group"
-        )]
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ResultT<ResponseDto>> CreatePostAsync([FromForm] CreatePostCommand command, CancellationToken cancellationToken)
+    public async Task<ResultT<ResponseDto>> CreatePostAsync([FromForm] CreatePostCommand command,
+        CancellationToken cancellationToken)
     {
         return await mediator.Send(command, cancellationToken);
     }
-  
+
+    [HttpGet("group/{groupId}")]
+    [SwaggerOperation(
+        Summary = "Get posts by group ID",
+        Description = "Retrieves a paginated list of posts for a specific group"
+    )]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ResultT<PagedResult<PostDetailsDto>>> GetPostsByGroupIdAsync(
+        [FromRoute] Guid groupId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
+        [FromQuery] Guid? challengeId = null,
+        CancellationToken cancellationToken = default)
+    {
+        return await mediator.Send(
+            new GetPostsByGroupIdQuery(groupId, pageNumber, pageSize, challengeId),
+            cancellationToken
+        );
+    }
 }

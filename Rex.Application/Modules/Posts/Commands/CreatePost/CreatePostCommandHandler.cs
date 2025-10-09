@@ -91,7 +91,7 @@ public class CreatePostCommandHandler(
         logger.LogInformation("Post '{PostTitle}' created successfully in group {GroupId} by user {UserId}.",
             request.Title, request.GroupId, request.UserId);
         
-        if (request.Files.Count > 0 || request.Files is not null)
+        if (request.Files is not null)
         {
             var filesResult = await ProcessFiles.ProcessFilesAsync(logger, request.Files, post.Id, fileRepository,
                 entityFileRepository, cloudinaryService, TargetType.Post, cancellationToken);

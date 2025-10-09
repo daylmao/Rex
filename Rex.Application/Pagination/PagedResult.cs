@@ -11,7 +11,9 @@ public class PagedResult<T>
         Items = items;
         TotalItems = totalItems;
         ActualPage = actualPage;
-        TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+        TotalPages = pageSize > 0
+            ? (int)Math.Ceiling(totalItems / (double)pageSize)
+            : 0;
     }
     
     public IEnumerable<T> Items { get; set; }
