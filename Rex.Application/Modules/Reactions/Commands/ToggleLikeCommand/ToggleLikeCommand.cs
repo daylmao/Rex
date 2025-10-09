@@ -6,6 +6,7 @@ namespace Rex.Application.Modules.Reactions.Commands.ToggleLikeCommand;
 
 public record ToggleLikeCommand(
     Guid UserId,
-    Guid TargetId,
+    Guid PostId,
+    Guid GroupId,
     ReactionTargetType ReactionTargetType
     ): ICommand<ResponseDto>;
