@@ -30,11 +30,11 @@ public class GetGroupsPaginatedQueryHandler(
         {
             logger.LogWarning("GetGroupsPaginatedQuery: User with ID {UserId} not found.", request.UserId);
             return ResultT<PagedResult<GroupDetailsDto>>.Failure(
-                Error.Failure("404", "We couldn’t find your account."));
+                Error.Failure("404", "We couldn't find your account."));
         }
 
         var groups = await distributedCache.GetOrCreateAsync(
-            $"get-groups-by-userid-{request.UserId}-{request.pageNumber}-{request.pageSize}",
+            $"groups:available:user:{request.UserId}:page:{request.pageNumber}:size:{request.pageSize}",
             async () => await groupRepository.GetGroupsPaginatedAsync(
                 request.UserId,
                 page: request.pageNumber,
@@ -44,6 +44,14 @@ public class GetGroupsPaginatedQueryHandler(
             cancellationToken: cancellationToken
         );
 
+        if (!groups.Items.Any())
+        {
+            logger.LogInformation("No available groups to join for user {UserId}", request.UserId);
+            return ResultT<PagedResult<GroupDetailsDto>>.Success(
+                new PagedResult<GroupDetailsDto>([], groups.TotalItems, groups.ActualPage, groups.TotalPages)
+            );
+        }
+
         var elements = groups.Items
             .Select(g => new GroupDetailsDto(
                 g.ProfilePhoto,
@@ -52,25 +60,19 @@ public class GetGroupsPaginatedQueryHandler(
                 g.Description,
                 g.Visibility,
                 g.UserGroups.Count,
-                g.UserGroups.Any(ug => ug.UserId == request.UserId)
-            ));
-
-        if (!elements.Any())
-        {
-            logger.LogWarning("GetGroupsPaginatedQuery: No groups found for user ID {UserId}.", request.UserId);
-            return ResultT<PagedResult<GroupDetailsDto>>.Failure(
-                Error.Failure("404", "It looks like you haven’t joined any groups yet."));
-        }
+                false  
+            ))
+            .ToList();
 
         var result = new PagedResult<GroupDetailsDto>(
-            items: elements.ToList(),
+            items: elements,
             totalItems: groups.TotalItems,
             actualPage: groups.ActualPage,
-            pageSize: request.pageSize
+            pageSize: groups.TotalPages
         );
 
-        logger.LogInformation("GetGroupsPaginatedQuery: Successfully retrieved {Count} groups for user ID {UserId}.",
-            elements.Count(), request.UserId);
+        logger.LogInformation("Successfully retrieved {Count} available groups for user {UserId}", 
+            elements.Count, request.UserId);
 
         return ResultT<PagedResult<GroupDetailsDto>>.Success(result);
     }

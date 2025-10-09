@@ -20,9 +20,9 @@ public class GetGroupsByUserIdQueryHandler(
     {
         if (request is null)
         {
-            logger.LogError("GetGroupsByUserIdQuery: Request is null.");
+            logger.LogWarning("GetGroupsByUserIdQuery: Request is null.");
             return ResultT<PagedResult<GroupDetailsDto>>.Failure(
-                Error.Failure("400", "Oops! We didn’t receive any data to fetch groups."));
+                Error.Failure("400", "Oops! We didn't receive any data to fetch groups."));
         }
 
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
@@ -30,11 +30,11 @@ public class GetGroupsByUserIdQueryHandler(
         {
             logger.LogWarning("GetGroupsByUserIdQuery: User with ID {UserId} not found.", request.UserId);
             return ResultT<PagedResult<GroupDetailsDto>>.Failure(
-                Error.Failure("404", "We couldn’t find your user account."));
+                Error.Failure("404", "We couldn't find your user account."));
         }
 
         var result = await distributedCache.GetOrCreateAsync(
-            $"get-groups-by-userid-{request.UserId}-{request.pageNumber}-{request.pageSize}",
+            $"groups:user:{request.UserId}:page:{request.pageNumber}:size:{request.pageSize}",
             async () => await groupRepository.GetGroupsByUserIdAsync(
                 request.UserId,
                 request.pageNumber,
@@ -45,6 +45,14 @@ public class GetGroupsByUserIdQueryHandler(
             cancellationToken: cancellationToken
         );
 
+        if (!result.Items.Any())
+        {
+            logger.LogInformation("No groups found for user {UserId}", request.UserId);
+            return ResultT<PagedResult<GroupDetailsDto>>.Success(
+                new PagedResult<GroupDetailsDto>([], result.TotalItems, result.ActualPage, result.TotalPages)
+            );
+        }
+
         var elements = result.Items
             .Select(c => new GroupDetailsDto(
                 ProfilePicture: c.ProfilePhoto,
@@ -54,24 +62,18 @@ public class GetGroupsByUserIdQueryHandler(
                 Visibility: c.Visibility,
                 MemberCount: c.UserGroups.Count,
                 IsJoined: c.UserGroups.Any(ug => ug.UserId == request.UserId)
-            ));
-
-        if (!elements.Any())
-        {
-            logger.LogWarning("GetGroupsByUserIdQuery: No groups found for user {UserId}.", request.UserId);
-            return ResultT<PagedResult<GroupDetailsDto>>.Failure(
-                Error.Failure("404", "You haven’t joined any groups yet."));
-        }
+            ))
+            .ToList();
 
         var pagedResult = new PagedResult<GroupDetailsDto>(
-            elements.ToList(),
+            elements,
             result.TotalItems,
             result.ActualPage,
             result.TotalPages
         );
 
-        logger.LogInformation("GetGroupsByUserIdQuery: Returning {Count} groups for user {UserId}.",
-            pagedResult.TotalItems, request.UserId);
+        logger.LogInformation("Successfully retrieved {Count} groups for user {UserId}", 
+            elements.Count, request.UserId);
 
         return ResultT<PagedResult<GroupDetailsDto>>.Success(pagedResult);
     }

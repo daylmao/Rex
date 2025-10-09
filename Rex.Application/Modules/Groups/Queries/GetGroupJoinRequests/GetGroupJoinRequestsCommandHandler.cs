@@ -23,7 +23,7 @@ public class GetGroupJoinRequestsCommandHandler(
         {
             logger.LogWarning("Received a null GetGroupJoinRequestsCommand.");
             return ResultT<PagedResult<UserGroupRequestDto>>.Failure(
-                Error.Failure("400", "We couldn’t process your request. Please try again.")
+                Error.Failure("400", "We couldn't process your request. Please try again.")
             );
         }
 
@@ -32,12 +32,13 @@ public class GetGroupJoinRequestsCommandHandler(
         {
             logger.LogWarning("No group found with ID {GroupId}.", request.GroupId);
             return ResultT<PagedResult<UserGroupRequestDto>>.Failure(
-                Error.NotFound("404", "The group you’re looking for doesn’t exist.")
+                Error.NotFound("404", "The group you're looking for doesn't exist.")
             );
         }
 
+        var searchTerm = string.IsNullOrEmpty(request.SearchTerm) ? "all" : request.SearchTerm;
         var result = await distributedCache.GetOrCreateAsync(
-            $"get-group-join-requests-{request.GroupId}-{request.PageNumber}-{request.PageSize}-{request.SearchTerm}",
+            $"group-requests:group:{request.GroupId}:search:{searchTerm}:page:{request.PageNumber}:size:{request.PageSize}",
             async () => await userGroupRepository.GetGroupRequestsAsync(
                 request.GroupId, 
                 RequestStatus.Pending, 
@@ -50,6 +51,14 @@ public class GetGroupJoinRequestsCommandHandler(
             cancellationToken: cancellationToken
         );
 
+        if (!result.Items.Any())
+        {
+            logger.LogInformation("No join requests found for group {GroupId}", request.GroupId);
+            return ResultT<PagedResult<UserGroupRequestDto>>.Success(
+                new PagedResult<UserGroupRequestDto>([], result.TotalItems, result.ActualPage, result.TotalPages)
+            );
+        }
+
         var elements = result.Items
             .Select(c => new UserGroupRequestDto(
                 c.User.FirstName,
@@ -57,15 +66,8 @@ public class GetGroupJoinRequestsCommandHandler(
                 c.User.ProfilePhoto,
                 c.Status?.ToString() ?? "Unknown",
                 DateTime.UtcNow - c.RequestedAt
-            ));
-
-        if (!elements.Any())
-        {
-            logger.LogInformation("No join requests found for group with ID {GroupId}.", request.GroupId);
-            return ResultT<PagedResult<UserGroupRequestDto>>.Failure(
-                Error.NotFound("404", "This group doesn’t have any pending join requests yet.")
-            );
-        }
+            ))
+            .ToList();
 
         var pagedResult = new PagedResult<UserGroupRequestDto>(
             elements,
@@ -74,7 +76,8 @@ public class GetGroupJoinRequestsCommandHandler(
             result.TotalPages
         );
 
-        logger.LogInformation("Returning {Count} join requests for group {GroupId}.", result.TotalItems, request.GroupId);
+        logger.LogInformation("Successfully retrieved {Count} join requests for group {GroupId}", 
+            elements.Count, request.GroupId);
 
         return ResultT<PagedResult<UserGroupRequestDto>>.Success(pagedResult);
     }

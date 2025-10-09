@@ -7,5 +7,5 @@ public record MessageDto(
     string ProfilePicture,
     string Description,
     DateTime CreatedAt,
-    string? ImageUrl = null
-);
+    IEnumerable<FileDetailDto>? Files = null
+    );
