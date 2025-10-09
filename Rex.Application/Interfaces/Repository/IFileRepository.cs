@@ -19,7 +19,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="type">The type of files to retrieve.</param>
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>A paginated list of files matching the entity and file type.</returns>
-        Task<PagedResult<File>> GetFilesPaginatedByEntityAndTypeAsync(Guid targetId, TargetType targetType, int page,
+        Task<IEnumerable<File>> GetFilesByEntityAndTypeAsync(Guid targetId, TargetType targetType, int page,
             int size, FileType type, CancellationToken cancellationToken);
 
         /// <summary>
@@ -31,10 +31,13 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="size">The number of items per page.</param>
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>A paginated list of files for the entity.</returns>
-        Task<PagedResult<File>> GetFilesPaginatedByEntityAsync(Guid targetId, TargetType targetType, int page,
+        Task<IEnumerable<File>> GetFilesByEntityAsync(Guid targetId, TargetType targetType, int page,
             int size, CancellationToken cancellationToken);
         
         Task<File> GetFileByEntityAndTypeAsync(Guid targetId, TargetType targetType, CancellationToken cancellationToken);
+
+        Task<IEnumerable<File>> GetFilesByTargetIdsAsync(IEnumerable<Guid> ids, TargetType targetType,
+            CancellationToken cancellationToken);
 
     }
 }

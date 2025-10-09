@@ -15,5 +15,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>The total number of challenges for the user.</returns>
         Task<int> GetChallengesCountByUserIdAsync(Guid userId, CancellationToken cancellationToken);
+
+        Task<bool> AnyUserCompletedChallengeAsync(Guid challengeId, CancellationToken cancellationToken);
     }
 }

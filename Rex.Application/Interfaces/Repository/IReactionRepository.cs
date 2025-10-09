@@ -9,8 +9,10 @@ namespace Rex.Application.Interfaces.Repository
     public interface IReactionRepository : IGenericRepository<Reaction>
     {
         Task<int> CountLikesAsync(Guid targetId, ReactionTargetType targetType, CancellationToken cancellationToken);
-        
-        Task<Reaction> HasLikedAsync(Guid targetId, Guid userId, ReactionTargetType targetType,
+
+        Task<Reaction> HasLikedAsync(Guid targetId, Guid userId, CancellationToken cancellationToken);
+
+        Task<Dictionary<Guid, int>> GetLikesCountByPostIdsAsync(IEnumerable<Guid> Ids, TargetType targetType,
             CancellationToken cancellationToken);
     }
 }
