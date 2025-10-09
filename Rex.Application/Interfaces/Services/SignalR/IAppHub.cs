@@ -2,9 +2,10 @@ using Rex.Application.DTOs;
 
 namespace Rex.Application.Interfaces.SignalR;
 
-public interface IChatHub
+public interface IAppHub
 {
-    Task SendMessageResult(SignalResponse response);
     Task ReceiveMessage(MessageDto message);
+    Task ReceiveFriendRequestNotification(NotificationDto notification);
+    Task ReceiveReactionNotification(NotificationDto notification);
     Task ReceiveChatCreated(ChatDto chat);
 }

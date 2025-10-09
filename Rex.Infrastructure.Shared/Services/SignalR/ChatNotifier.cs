@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.SignalR;
 using Rex.Application.DTOs;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Interfaces.SignalR;
+using Rex.Infrastructure.Shared.Services.SignalR.Hubs;
 using Rex.Models;
 
 namespace Rex.Infrastructure.Shared.Services.SignalR;
 
 public class ChatNotifier(
-    IHubContext<ChatHub, IChatHub> hubContext,
+    IHubContext<AppHub, IAppHub> hubContext,
     IUserChatRepository userChatRepository
 ) : IChatNotifier
 {

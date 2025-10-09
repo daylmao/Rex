@@ -1,16 +1,15 @@
-using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
-using Rex.Application.DTOs;
 using Rex.Application.Helpers;
 using Rex.Application.Interfaces.SignalR;
 using Rex.Application.Modules.Chats.Commands.CreatePrivateChat;
 using Rex.Application.Modules.Messages.Commands.SendMessage;
-using Rex.Application.Utilities;
 
-public class ChatHub(
-    IChatConnectionService connectionService,
-    IMediator mediator) : Hub<IChatHub>
+namespace Rex.Infrastructure.Shared.Services.SignalR.Hubs;
+
+public class AppHub(
+    IAppConnectionService connectionService,
+    IMediator mediator) : Hub<IAppHub>
 {
     public override async Task OnConnectedAsync()
         => await connectionService.HandleConnectedAsync(Context, Groups);

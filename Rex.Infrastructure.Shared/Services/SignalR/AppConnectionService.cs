@@ -5,11 +5,11 @@ using Rex.Application.Interfaces.SignalR;
 
 namespace Rex.Infrastructure.Shared.Services.SignalR;
 
-public class ChatConnectionService(
-    ILogger<ChatConnectionService> logger,
+public class AppConnectionService(
+    ILogger<AppConnectionService> logger,
     IUserChatRepository userChatRepository,
     IUserRepository userRepository
-) : IChatConnectionService
+) : IAppConnectionService
 {
     public async Task HandleConnectedAsync(HubCallerContext context, IGroupManager groups)
     {
