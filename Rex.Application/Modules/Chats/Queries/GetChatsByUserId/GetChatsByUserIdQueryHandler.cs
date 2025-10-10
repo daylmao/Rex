@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;
+using Rex.Application.DTOs.Message;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -58,6 +59,7 @@ public class GetChatsByUserIdQueryHandler(
 
             var lastMessageDto = lastMessage != null
                 ? new LastMessageDto(
+                    lastMessage.Id,
                     lastMessage.Description,
                     lastMessage.CreatedAt,
                     lastMessage.SenderId,

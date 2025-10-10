@@ -1,5 +1,4 @@
-
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Message;
 using Rex.Models;
 
 namespace Rex.Application.Interfaces.SignalR;

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;  
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -63,6 +63,7 @@ public class GetChallengesByUserQueryHandler(
 
             return new ChallengeUserDetailsDto
             (
+                challenge.Id,
                 challenge.Group.ProfilePhoto,
                 challenge.CoverPhoto,
                 challenge.Title,

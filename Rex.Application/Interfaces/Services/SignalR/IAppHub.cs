@@ -1,4 +1,6 @@
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;
+using Rex.Application.DTOs.Message;
+using Rex.Application.DTOs.Notification;
 
 namespace Rex.Application.Interfaces.SignalR;
 

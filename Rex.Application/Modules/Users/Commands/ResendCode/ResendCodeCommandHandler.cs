@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Configs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Message;
 using Rex.Application.Helpers;
 using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
@@ -58,6 +58,7 @@ public class MessageService(
         }
 
         var dto = new MessageDto(
+            message.Id,
             message.ChatId,
             message.SenderId,
             $"{sender.FirstName} {sender.LastName}",

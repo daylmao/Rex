@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Group;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -34,11 +34,11 @@ public class GetGroupsPaginatedQueryHandler(
         }
 
         var groups = await distributedCache.GetOrCreateAsync(
-            $"groups:available:user:{request.UserId}:page:{request.pageNumber}:size:{request.pageSize}",
+            $"groups:available:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}",
             async () => await groupRepository.GetGroupsPaginatedAsync(
                 request.UserId,
-                page: request.pageNumber,
-                size: request.pageSize,
+                page: request.PageNumber,
+                size: request.PageSize,
                 cancellationToken),
             logger: logger,
             cancellationToken: cancellationToken
@@ -54,6 +54,7 @@ public class GetGroupsPaginatedQueryHandler(
 
         var elements = groups.Items
             .Select(g => new GroupDetailsDto(
+                g.Id,
                 g.ProfilePhoto,
                 g.CoverPhoto ?? string.Empty,
                 g.Title,

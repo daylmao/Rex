@@ -16,6 +16,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <returns>The total number of challenges for the user.</returns>
         Task<int> GetChallengesCountByUserIdAsync(Guid userId, CancellationToken cancellationToken);
 
-        Task<bool> AnyUserCompletedChallengeAsync(Guid challengeId, CancellationToken cancellationToken);
+        Task<UserChallenge> GetByUserAndChallengeAsync(Guid userId, Guid challengeId,
+            CancellationToken cancellationToken);
     }
 }

@@ -1,5 +1,5 @@
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Message;
 using Rex.Application.Pagination;
 
 namespace Rex.Application.Modules.Messages.Queries.GetMessagesByUserId;

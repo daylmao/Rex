@@ -1,5 +1,5 @@
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Message;
 using Rex.Application.Interfaces;
 using Rex.Application.Utilities;
 

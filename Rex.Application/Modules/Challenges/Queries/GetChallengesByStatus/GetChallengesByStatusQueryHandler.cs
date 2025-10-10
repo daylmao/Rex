@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;  
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -62,6 +62,7 @@ public class GetChallengesByStatusQueryHandler(
 
         var elements = result.Items
             .Select(c => new ChallengeGroupDetailsDto(
+                c.Id,
                 c.Title,
                 c.Description,
                 c.Status.ToString(),

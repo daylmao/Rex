@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
-using Rex.Application.Utilities;
+using Rex.Application.DTOs.Message;
 
 namespace Rex.Application.Modules.Messages.Commands.SendFileMessage;
 

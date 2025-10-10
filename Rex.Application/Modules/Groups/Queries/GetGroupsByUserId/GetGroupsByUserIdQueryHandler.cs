@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Group;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -55,6 +55,7 @@ public class GetGroupsByUserIdQueryHandler(
 
         var elements = result.Items
             .Select(c => new GroupDetailsDto(
+                GroupId: c.Id,
                 ProfilePicture: c.ProfilePhoto,
                 CoverPicture: c.CoverPhoto ?? string.Empty,
                 Title: c.Title,

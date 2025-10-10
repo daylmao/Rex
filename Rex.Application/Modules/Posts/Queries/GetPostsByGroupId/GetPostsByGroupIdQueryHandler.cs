@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.File;
+using Rex.Application.DTOs.Post;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -32,9 +33,9 @@ public class GetPostsByGroupIdQueryHandler(
         var group = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
         if (group is null)
         {
-            logger.LogWarning("No group found with the provided GroupId: {GroupId}.", request.GroupId);
-            return ResultT<PagedResult<PostDetailsDto>>.Failure(Error.Failure("404",
-                "We couldn't find the group you selected."));
+            logger.LogWarning("No group found with GroupId: {GroupId}.", request.GroupId);
+            return ResultT<PagedResult<PostDetailsDto>>.Failure(Error.NotFound("404",
+                "We couldn't find the group you're looking for."));
         }
 
         var posts = await cache.GetOrCreateAsync(
@@ -47,7 +48,7 @@ public class GetPostsByGroupIdQueryHandler(
 
         if (!posts.Items.Any())
         {
-            logger.LogInformation("No posts found for group ID {GroupId}", request.GroupId);
+            logger.LogInformation("No posts found for group {GroupId}.", request.GroupId);
             return ResultT<PagedResult<PostDetailsDto>>.Success(
                 new PagedResult<PostDetailsDto>([], posts.TotalItems, posts.ActualPage, posts.TotalPages)
             );
@@ -55,16 +56,10 @@ public class GetPostsByGroupIdQueryHandler(
 
         var postIds = posts.Items.Select(p => p.Id).ToList();
 
-        var commentCountsTask = commentRepository.GetCommentsCountByPostIdsAsync(postIds, cancellationToken);
-        var likeCountsTask =
-            reactionRepository.GetLikesCountByPostIdsAsync(postIds, TargetType.Post, cancellationToken);
-        var filesTask = fileRepository.GetFilesByTargetIdsAsync(postIds, TargetType.Post, cancellationToken);
-
-        await Task.WhenAll(commentCountsTask, likeCountsTask, filesTask);
-
-        var commentCounts = await commentCountsTask;
-        var likeCounts = await likeCountsTask;
-        var files = await filesTask;
+        var commentCounts = await commentRepository.GetCommentsCountByPostIdsAsync(postIds, cancellationToken);
+        var likeCounts =
+            await reactionRepository.GetLikesCountByPostIdsAsync(postIds, TargetType.Post, cancellationToken);
+        var files = await fileRepository.GetFilesByTargetIdsAsync(postIds, TargetType.Post, cancellationToken);
 
         var filesByPostId = files
             .SelectMany(f => f.EntityFiles, (file, entityFile) =>
@@ -82,7 +77,13 @@ public class GetPostsByGroupIdQueryHandler(
             likeCounts.TryGetValue(p.Id, out var likeCount);
             var fileUrls = filesByPostId.GetValueOrDefault(p.Id) ?? [];
 
+            var hasCompletedChallenge = p.ChallengeId.HasValue &&
+                                        p.User.UserChallenges.Any(uc =>
+                                            uc.ChallengeId == p.ChallengeId &&
+                                            uc.Status == UserChallengeStatus.Completed.ToString()
+                                        );
             return new PostDetailsDto(
+                p.Id,
                 $"{p.User.FirstName} {p.User.LastName}",
                 p.Title,
                 p.Description,
@@ -90,13 +91,14 @@ public class GetPostsByGroupIdQueryHandler(
                 likeCount,
                 commentCount,
                 p.CreatedAt,
+                hasCompletedChallenge,
                 fileUrls
             );
         }).ToList();
 
         var result = new PagedResult<PostDetailsDto>(elements, posts.TotalItems, posts.ActualPage, posts.TotalPages);
 
-        logger.LogInformation("Successfully retrieved {Count} posts for group {GroupId}",
+        logger.LogInformation("Successfully retrieved {Count} posts for group {GroupId}.",
             elements.Count, request.GroupId);
 
         return ResultT<PagedResult<PostDetailsDto>>.Success(result);

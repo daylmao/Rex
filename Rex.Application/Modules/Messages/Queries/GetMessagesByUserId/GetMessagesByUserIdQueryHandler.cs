@@ -2,6 +2,8 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs;
+using Rex.Application.DTOs.File;
+using Rex.Application.DTOs.Message;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -55,6 +57,7 @@ public class GetMessagesByUserIdQueryHandler(
             .ToDictionary(g => g.Key, g => g.Select(x => x.File).ToList());
 
         var elements = result.Items.Select(m => new MessageDto(
+            m.Id,
             m.ChatId,
             m.SenderId,
             m.Sender.FirstName,

@@ -57,5 +57,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>True if the user has already joined the challenge; otherwise false.</returns>
         Task<bool> UserAlreadyJoined(Guid userId, Guid challengeId, CancellationToken cancellationToken);
+
+        Task<bool> ChallengeBelongsToGroup(Guid groupId, Guid challengeId, CancellationToken cancellationToken);
     }
 }

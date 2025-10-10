@@ -1,4 +1,4 @@
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Utilities;
 using Rex.Models;
 

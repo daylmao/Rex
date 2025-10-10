@@ -1,7 +1,6 @@
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Code;
 using Rex.Application.Utilities;
 using Rex.Enum;
-using Rex.Models;
 
 namespace Rex.Application.Interfaces;
 

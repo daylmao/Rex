@@ -1,6 +1,5 @@
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
-using Rex.Enum;
+using Rex.Application.DTOs.JWT;
 
 namespace Rex.Application.Modules.Friendships.Commands;
 
