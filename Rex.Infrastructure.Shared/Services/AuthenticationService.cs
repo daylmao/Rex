@@ -3,13 +3,12 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 using Rex.Configurations;
 using Rex.Models;
-using UserRole = Rex.Enum.UserRole;
 
 namespace Rex.Infrastructure.Shared.Services;
 

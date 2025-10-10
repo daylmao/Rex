@@ -29,7 +29,8 @@ public class PostRepository(RexContext context) : GenericRepository<Post>(contex
                     Id = p.User.Id,
                     ProfilePhoto = p.User.ProfilePhoto,
                     FirstName = p.User.FirstName,
-                    LastName = p.User.LastName
+                    LastName = p.User.LastName,
+                    UserChallenges = p.User.UserChallenges
                 }
             });
 

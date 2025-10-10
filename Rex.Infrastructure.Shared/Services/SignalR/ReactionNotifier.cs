@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Notification;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Interfaces.SignalR;
 using Rex.Infrastructure.Shared.Services.SignalR.Hubs;

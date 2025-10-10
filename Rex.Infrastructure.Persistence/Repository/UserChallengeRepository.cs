@@ -6,16 +6,17 @@ using Rex.Models;
 
 namespace Rex.Infrastructure.Persistence.Repository;
 
-public class UserChallengeRepository(RexContext context): GenericRepository<UserChallenge>(context), IUserChallengeRepository
+public class UserChallengeRepository(RexContext context)
+    : GenericRepository<UserChallenge>(context), IUserChallengeRepository
 {
     public async Task<int> GetChallengesCountByUserIdAsync(Guid userId, CancellationToken cancellationToken) =>
         await context.Set<UserChallenge>()
             .AsNoTracking()
             .Where(u => u.UserId == userId)
             .CountAsync(cancellationToken);
-    public Task<bool> AnyUserCompletedChallengeAsync(Guid challengeId, CancellationToken cancellationToken)
-    {
-        return context.Set<UserChallenge>()
-            .AnyAsync(uc => uc.ChallengeId == challengeId && uc.Status == UserChallengeStatus.Completed.ToString(), cancellationToken);
-    }
-}   
+
+    public async Task<UserChallenge> GetByUserAndChallengeAsync(Guid userId, Guid challengeId,
+        CancellationToken cancellationToken) =>
+        await context.Set<UserChallenge>()
+            .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.ChallengeId == challengeId, cancellationToken);
+}

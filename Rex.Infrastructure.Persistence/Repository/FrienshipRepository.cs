@@ -13,18 +13,18 @@ public class FrienshipRepository(RexContext context): GenericRepository<FriendSh
         RequestStatus status, CancellationToken cancellationToken)
     {
         var query = context.Set<FriendShip>()
+            .Include(f => f.Requester)
             .Where(f => f.TargetUserId == userId && f.Status == status.ToString());
-        
-        var total = await query.CountAsync(cancellationToken);
-       
-       var friendships = await query
-           .Where(f => f.TargetUserId == userId && f.Status == status.ToString())
-           .OrderByDescending(c => c.CreatedAt)
-           .Skip((page - 1) * size)
-           .Take(size)
-           .ToListAsync(cancellationToken);
 
-       return new PagedResult<FriendShip>(friendships, total, page, size);
+        var total = await query.CountAsync(cancellationToken);
+
+        var friendships = await query
+            .OrderByDescending(c => c.CreatedAt)
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<FriendShip>(friendships, total, page, size);
     }
 
     public async Task<bool> FriendShipExistAsync(Guid requesterId, Guid targetUserId,

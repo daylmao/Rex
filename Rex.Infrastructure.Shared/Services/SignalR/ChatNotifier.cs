@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;
+using Rex.Application.DTOs.Message;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Interfaces.SignalR;
 using Rex.Infrastructure.Shared.Services.SignalR.Hubs;

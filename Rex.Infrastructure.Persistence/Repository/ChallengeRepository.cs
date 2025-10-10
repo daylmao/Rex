@@ -132,4 +132,7 @@ public class ChallengeRepository(RexContext context) : GenericRepository<Challen
             c => c.UserChallenges.Any(a =>
                 a.UserId == userId && a.ChallengeId == challengeId &&
                 a.Status == UserChallengeStatus.Enrolled.ToString()), cancellationToken);
+
+    public async Task<bool> ChallengeBelongsToGroup(Guid groupId, Guid challengeId, CancellationToken cancellationToken) =>
+        await ValidateAsync(c => c.Id == challengeId && c.GroupId == groupId, cancellationToken);
 }
