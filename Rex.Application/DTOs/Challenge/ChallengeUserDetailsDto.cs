@@ -1,4 +1,4 @@
-namespace Rex.Application.DTOs;
+namespace Rex.Application.DTOs.Challenge;
 
 public record ChallengeUserDetailsDto(
     Guid ChallengeId,

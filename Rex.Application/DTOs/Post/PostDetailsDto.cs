@@ -1,4 +1,6 @@
-namespace Rex.Application.DTOs;
+using Rex.Application.DTOs.File;
+
+namespace Rex.Application.DTOs.Post;
 
 public record PostDetailsDto(
     Guid PostId,

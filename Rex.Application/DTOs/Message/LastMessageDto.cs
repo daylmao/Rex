@@ -1,4 +1,4 @@
-namespace Rex.Application.DTOs;
+namespace Rex.Application.DTOs.Message;
 
 public record LastMessageDto(
     Guid MessageId,

@@ -1,4 +1,6 @@
-namespace Rex.Application.DTOs;
+using Rex.Application.DTOs.Message;
+
+namespace Rex.Application.DTOs.Challenge;
 
 public record ChatLastMessageDto(
     Guid Id,

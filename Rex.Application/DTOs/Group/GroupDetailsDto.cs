@@ -1,4 +1,4 @@
-namespace Rex.Application.DTOs.JWT;
+namespace Rex.Application.DTOs.Group;
 
 public record GroupDetailsDto(
     Guid GroupId,

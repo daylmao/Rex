@@ -1,5 +1,3 @@
-using Rex.Enum;
-
-namespace Rex.Application.DTOs;
+namespace Rex.Application.DTOs.File;
 
 public record FileDetailDto(string Url, string Type);

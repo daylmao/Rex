@@ -1,4 +1,4 @@
-namespace Rex.Application.DTOs;
+namespace Rex.Application.DTOs.Configs;
 
 public record EmailDto(
     string User,

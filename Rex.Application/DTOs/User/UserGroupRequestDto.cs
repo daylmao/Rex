@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace Rex.Application.DTOs;
+namespace Rex.Application.DTOs.User;
 
 public record UserGroupRequestDto(
     string FirstName,
