@@ -8,6 +8,5 @@ public record UserGroupRequestDto(
     string ProfilePicture,
     string Status,
     
-    [property: DataType(DataType.Duration)]
     TimeSpan TimeSinceRequested 
     );

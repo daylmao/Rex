@@ -1,6 +1,7 @@
 namespace Rex.Application.DTOs;
 
 public record ChallengeGroupDetailsDto(
+    Guid ChallengeId,
     string Title,
     string Description,
     string Status,

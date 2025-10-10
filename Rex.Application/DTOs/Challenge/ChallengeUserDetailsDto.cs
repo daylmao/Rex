@@ -1,6 +1,7 @@
 namespace Rex.Application.DTOs;
 
 public record ChallengeUserDetailsDto(
+    Guid ChallengeId,
     string ProfilePhoto,
     string CoverPhoto,
     string Title,
