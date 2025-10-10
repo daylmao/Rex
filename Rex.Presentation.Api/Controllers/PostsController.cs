@@ -1,8 +1,8 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Asn1.Ocsp;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
+using Rex.Application.DTOs.Post;
 using Rex.Application.Modules.Posts.Commands;
 using Rex.Application.Modules.Posts.Queries.GetPostsByGroupId;
 using Rex.Application.Pagination;
@@ -43,11 +43,10 @@ public class PostsController(IMediator mediator) : ControllerBase
         [FromRoute] Guid groupId,
         [FromQuery] int pageNumber,
         [FromQuery] int pageSize,
-        [FromQuery] Guid? challengeId = null,
         CancellationToken cancellationToken = default)
     {
         return await mediator.Send(
-            new GetPostsByGroupIdQuery(groupId, pageNumber, pageSize, challengeId),
+            new GetPostsByGroupIdQuery(groupId, pageNumber, pageSize),
             cancellationToken
         );
     }

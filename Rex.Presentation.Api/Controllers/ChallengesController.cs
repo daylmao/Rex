@@ -1,7 +1,8 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Modules.Challenges.Commands.JoinChallenge;
 using Rex.Application.Modules.Challenges.Commands.UpdateChallenge;
 using Rex.Application.Modules.Challenges.CreateChallenge;

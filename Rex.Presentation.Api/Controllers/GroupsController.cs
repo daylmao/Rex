@@ -1,7 +1,9 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Group;
+using Rex.Application.DTOs.JWT;
+using Rex.Application.DTOs.User;
 using Rex.Application.Modules.Groups.Commands;
 using Rex.Application.Modules.Groups.Commands.AproveRequest;
 using Rex.Application.Modules.Groups.Commands.RejectRequest;

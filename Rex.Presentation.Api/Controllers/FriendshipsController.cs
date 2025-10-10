@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Modules.Friendships.Commands;
 using Rex.Application.Modules.Friendships.Commands.ManageFriendshipRequest;
 using Rex.Application.Utilities;

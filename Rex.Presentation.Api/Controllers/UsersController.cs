@@ -1,13 +1,12 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Group;
+using Rex.Application.DTOs.JWT;
+using Rex.Application.DTOs.User;
 using Rex.Application.Modules.Groups.Queries.GetGroupsPaginated;
-using Rex.Application.Modules.User.Commands.ConfirmAccount;
 using Rex.Application.Modules.User.Commands.ConfirmEmailChange;
-using Rex.Application.Modules.User.Commands.Login;
 using Rex.Application.Modules.User.Commands.RegisterUser;
-using Rex.Application.Modules.User.Commands.ResendCode;
 using Rex.Application.Modules.User.Commands.UpdateEmail;
 using Rex.Application.Modules.User.Commands.UpdatePassword;
 using Rex.Application.Modules.User.Commands.UpdateUserInformation;
@@ -18,7 +17,7 @@ using Rex.Application.Modules.Users.Commands.InactiveAccount;
 using Rex.Application.Modules.Users.Commands.UpdatePasswordByEmail;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
-using Swashbuckle.AspNetCore.Annotations; // <-- needed
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Rex.Presentation.Api.Controllers;
 

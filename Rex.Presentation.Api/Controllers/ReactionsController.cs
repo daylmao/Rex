@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Modules.Reactions.Commands.ToggleLikeCommand;
 using Rex.Application.Utilities;
 using Swashbuckle.AspNetCore.Annotations;

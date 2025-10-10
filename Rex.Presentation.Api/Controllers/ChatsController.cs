@@ -1,8 +1,7 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Rex.Application.DTOs;
-using Rex.Application.Modules.Chats.Commands.CreatePrivateChat;
+using Rex.Application.DTOs.Challenge;
 using Rex.Application.Modules.Chats.Queries.GetChatsByUserId;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;

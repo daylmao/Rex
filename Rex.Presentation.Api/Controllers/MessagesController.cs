@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Message;
 using Rex.Application.Modules.Messages.Commands.SendFileMessage;
 using Rex.Application.Modules.Messages.Queries.GetMessagesByUserId;
 using Rex.Application.Pagination;
