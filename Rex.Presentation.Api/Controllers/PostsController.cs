@@ -31,7 +31,7 @@ public class PostsController(IMediator mediator) : ControllerBase
         return await mediator.Send(command, cancellationToken);
     }
 
-    [HttpGet("group/{groupId}")]
+    [HttpGet("group/{groupId}/user/{userId}")]
     [SwaggerOperation(
         Summary = "Get posts by group ID",
         Description = "Retrieves a paginated list of posts for a specific group"
@@ -41,12 +41,13 @@ public class PostsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<PagedResult<PostDetailsDto>>> GetPostsByGroupIdAsync(
         [FromRoute] Guid groupId,
+        [FromRoute] Guid userId, 
         [FromQuery] int pageNumber,
         [FromQuery] int pageSize,
         CancellationToken cancellationToken = default)
     {
         return await mediator.Send(
-            new GetPostsByGroupIdQuery(groupId, pageNumber, pageSize),
+            new GetPostsByGroupIdQuery(groupId, userId, pageNumber, pageSize),
             cancellationToken
         );
     }

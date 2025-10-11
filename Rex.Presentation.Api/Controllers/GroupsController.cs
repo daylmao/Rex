@@ -9,6 +9,7 @@ using Rex.Application.Modules.Groups.Commands.AproveRequest;
 using Rex.Application.Modules.Groups.Commands.RejectRequest;
 using Rex.Application.Modules.Groups.Commands.RequestToJoinGroupCommand;
 using Rex.Application.Modules.Groups.Commands.UpdateGroup;
+using Rex.Application.Modules.Groups.Commands.UpdateGroupRoleMember;
 using Rex.Application.Modules.Groups.Queries.GetGroupById;
 using Rex.Application.Modules.Groups.Queries.GetGroupJoinRequests;
 using Rex.Application.Modules.Groups.Queries.GetGroupMembers;
@@ -159,5 +160,19 @@ public class GroupsController(IMediator mediator) : ControllerBase
         CancellationToken cancellationToken)
     {
         return await mediator.Send(new RejectRequestCommand(userId, groupId), cancellationToken);
+    }
+
+    [HttpPut("role")]
+    [SwaggerOperation(
+        Summary = "Update group member role",
+        Description = "Updates the role of a specific user in the selected group"
+    )]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ResultT<ResponseDto>> UpdateGroupMemberRole([FromBody] UpdateGroupRoleMemberCommand command,
+        CancellationToken cancellationToken)
+    {
+        return await mediator.Send(command, cancellationToken);
     }
 }
