@@ -5,5 +5,6 @@ public record ChallengeDetailsDto(
     string Title,
     string Description,
     string Status,
+    string CoverPhoto,
     TimeSpan Duration
     );

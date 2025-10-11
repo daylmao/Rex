@@ -3,14 +3,15 @@ using Rex.Application.DTOs.File;
 namespace Rex.Application.DTOs.Post;
 
 public record PostDetailsDto(
-    Guid PostId,
-    string Name,
+    Guid Id,
+    string AuthorName,
     string Title,
-    string Content,
-    string? ProfileImage,
-    int? LikesCount,
-    int? CommentsCount,
+    string Description,
+    string ProfilePhoto,
+    int LikeCount,
+    int CommentCount,
+    bool HasLiked,             
     DateTime CreatedAt,
-    bool? ChallengeCompleted,
-    IEnumerable<FileDetailDto>? Files
+    bool HasCompletedChallenge,
+    List<FileDetailDto> Files
 );
