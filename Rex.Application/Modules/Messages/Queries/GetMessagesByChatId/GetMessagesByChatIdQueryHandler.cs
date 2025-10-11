@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
 using Rex.Application.DTOs.File;
 using Rex.Application.DTOs.Message;
 using Rex.Application.Interfaces.Repository;
@@ -9,16 +8,16 @@ using Rex.Application.Pagination;
 using Rex.Application.Utilities;
 using Rex.Enum;
 
-namespace Rex.Application.Modules.Messages.Queries.GetMessagesByUserId;
+namespace Rex.Application.Modules.Messages.Queries.GetMessagesByChatId;
 
-public class GetMessagesByUserIdQueryHandler(
-    ILogger<GetMessagesByUserIdQueryHandler> logger,
+public class GetMessagesByChatIdQueryHandler(
+    ILogger<GetMessagesByChatIdQueryHandler> logger,
     IMessageRepository messageRepository,
     IDistributedCache cache,
     IFileRepository fileRepository
-) : IQueryHandler<GetMessagesByUserIdQuery, PagedResult<MessageDto>>
+) : IQueryHandler<GetMessagesByChatIdQuery, PagedResult<MessageDto>>
 {
-    public async Task<ResultT<PagedResult<MessageDto>>> Handle(GetMessagesByUserIdQuery request,
+    public async Task<ResultT<PagedResult<MessageDto>>> Handle(GetMessagesByChatIdQuery request,
         CancellationToken cancellationToken)
     {
         if (request is null)

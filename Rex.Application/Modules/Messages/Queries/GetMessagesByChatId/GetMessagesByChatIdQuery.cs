@@ -4,7 +4,7 @@ using Rex.Application.Pagination;
 
 namespace Rex.Application.Modules.Messages.Queries.GetMessagesByChatId;
 
-public record GetMessagesByUserIdQuery(
+public record GetMessagesByChatIdQuery(
     Guid ChatId,
     int PageNumber,
     int PageSize

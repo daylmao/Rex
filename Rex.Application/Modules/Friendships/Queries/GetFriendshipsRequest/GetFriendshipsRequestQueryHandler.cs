@@ -53,7 +53,7 @@ public class GetFriendshipsRequestQueryHandler(
 
         var elements = friendship.Items.Select(c => new FriendshipRequestDto(
                 c.Id,
-                c.RequesterId,
+                c.Requester.Id,
                 $"{c.Requester.FirstName} {c.Requester.LastName}",
                 c.Status.ToString(),
                 c.Requester.ProfilePhoto,

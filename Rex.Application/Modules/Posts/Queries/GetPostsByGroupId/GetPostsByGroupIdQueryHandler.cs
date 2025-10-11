@@ -23,13 +23,6 @@ public class GetPostsByGroupIdQueryHandler(
     public async Task<ResultT<PagedResult<PostDetailsDto>>> Handle(GetPostsByGroupIdQuery request,
         CancellationToken cancellationToken)
     {
-        if (request is null)
-        {
-            logger.LogWarning("Received empty request for fetching posts by GroupId.");
-            return ResultT<PagedResult<PostDetailsDto>>.Failure(Error.Failure("400",
-                "Oops! We couldn't process your request. Please provide the necessary details."));
-        }
-
         var group = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
         if (group is null)
         {
@@ -39,7 +32,7 @@ public class GetPostsByGroupIdQueryHandler(
         }
 
         var posts = await cache.GetOrCreateAsync(
-            $"posts:group:{request.GroupId}:page:{request.PageNumber}:size:{request.PageSize}",
+            $"posts:group:{request.GroupId}:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}",
             async () => await postRepository.GetPostsByGroupIdAsync(
                 request.GroupId, request.PageNumber, request.PageSize, cancellationToken),
             logger,
@@ -57,9 +50,10 @@ public class GetPostsByGroupIdQueryHandler(
         var postIds = posts.Items.Select(p => p.Id).ToList();
 
         var commentCounts = await commentRepository.GetCommentsCountByPostIdsAsync(postIds, cancellationToken);
-        var likeCounts =
-            await reactionRepository.GetLikesCountByPostIdsAsync(postIds, TargetType.Post, cancellationToken);
+        var likeCounts = await reactionRepository.GetLikesCountByPostIdsAsync(postIds, TargetType.Post, cancellationToken);
         var files = await fileRepository.GetFilesByTargetIdsAsync(postIds, TargetType.Post, cancellationToken);
+        var userLikes = await reactionRepository.GetUserLikesForTargetsAsync(
+            request.UserId, postIds, ReactionTargetType.Post, cancellationToken);
 
         var filesByPostId = files
             .SelectMany(f => f.EntityFiles, (file, entityFile) =>
@@ -75,6 +69,7 @@ public class GetPostsByGroupIdQueryHandler(
         {
             commentCounts.TryGetValue(p.Id, out var commentCount);
             likeCounts.TryGetValue(p.Id, out var likeCount);
+            var hasUserLiked = userLikes.Contains(p.Id);
             var fileUrls = filesByPostId.GetValueOrDefault(p.Id) ?? [];
 
             var hasCompletedChallenge = p.ChallengeId.HasValue &&
@@ -82,6 +77,7 @@ public class GetPostsByGroupIdQueryHandler(
                                             uc.ChallengeId == p.ChallengeId &&
                                             uc.Status == UserChallengeStatus.Completed.ToString()
                                         );
+
             return new PostDetailsDto(
                 p.Id,
                 $"{p.User.FirstName} {p.User.LastName}",
@@ -90,6 +86,7 @@ public class GetPostsByGroupIdQueryHandler(
                 p.User.ProfilePhoto,
                 likeCount,
                 commentCount,
+                hasUserLiked,
                 p.CreatedAt,
                 hasCompletedChallenge,
                 fileUrls

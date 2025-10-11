@@ -57,7 +57,7 @@ public class CreateFriendshipRequestCommandHandler(
             logger.LogWarning("Friendship already exists between {RequesterId} and {TargetUserId}",
                 request.RequesterId, request.TargetUserId);
 
-            return ResultT<ResponseDto>.Failure(Error.Failure("409", "You are already friends with this user."));
+            return ResultT<ResponseDto>.Failure(Error.Failure("409", "You are already have sent a request to this user."));
         }
 
         var friendship = new FriendShip

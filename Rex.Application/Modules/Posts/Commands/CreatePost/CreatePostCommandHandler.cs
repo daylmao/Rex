@@ -122,6 +122,6 @@ public class CreatePostCommandHandler(
                 return filesResult;
         }
 
-        return ResultT<ResponseDto>.Success(new ResponseDto("Your post has been created successfully! 🎉"));
+        return ResultT<ResponseDto>.Success(new ResponseDto("Your post has been created successfully!"));
     }
 }

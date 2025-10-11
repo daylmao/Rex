@@ -47,6 +47,7 @@ public class GetChallengeByIdQueryHandler(
             challenge.Title,
             challenge.Description,
             challenge.Status,
+            challenge.CoverPhoto,
             challenge.Duration
         );
         

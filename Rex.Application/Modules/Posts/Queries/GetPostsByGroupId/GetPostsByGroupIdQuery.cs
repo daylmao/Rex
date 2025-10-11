@@ -6,6 +6,7 @@ namespace Rex.Application.Modules.Posts.Queries.GetPostsByGroupId;
 
 public record GetPostsByGroupIdQuery(
     Guid GroupId,
+    Guid UserId,
     int PageNumber,
     int PageSize
 ) : IQuery<PagedResult<PostDetailsDto>>;
