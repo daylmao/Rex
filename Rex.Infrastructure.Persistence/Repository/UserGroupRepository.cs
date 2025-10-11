@@ -83,6 +83,11 @@ public class UserGroupRepository(RexContext context) : GenericRepository<UserGro
         return new PagedResult<UserGroup>(items, count, pageNumber, pageSize);
     }
 
+    public async Task<UserGroup> GetMemberAsync(Guid userId, Guid groupId, CancellationToken cancellation) =>
+        await context.Set<UserGroup>()
+            .Include(ug => ug.GroupRole)
+            .FirstOrDefaultAsync(ug => ug.UserId == userId && ug.GroupId == groupId, cancellation);
+
     public async Task<PagedResult<UserGroup>> GetGroupRequestsAsync(Guid groupId, RequestStatus status, string? searchTerm,
         int pageNumber, int pageSize, CancellationToken cancellationToken)
     {

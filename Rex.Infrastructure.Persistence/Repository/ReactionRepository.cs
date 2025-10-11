@@ -32,4 +32,21 @@ public class ReactionRepository(RexContext context) : GenericRepository<Reaction
             .GroupBy(c => c.TargetId)
             .Select(g => new { targetId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.targetId, g => g.Count, cancellationToken);
+
+    public async Task<HashSet<Guid>> GetUserLikesForTargetsAsync(
+        Guid userId,
+        List<Guid> targetIds,
+        ReactionTargetType targetType,
+        CancellationToken cancellationToken)
+    {
+        var likes = await context.Set<Reaction>()
+            .Where(r => r.UserId == userId
+                        && targetIds.Contains(r.TargetId)
+                        && r.TargetType == targetType.ToString()
+                        && r.Like)
+            .Select(r => r.TargetId)
+            .ToListAsync(cancellationToken);
+
+        return new HashSet<Guid>(likes);
+    }
 }

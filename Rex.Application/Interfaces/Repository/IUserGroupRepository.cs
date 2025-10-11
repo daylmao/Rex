@@ -26,6 +26,8 @@ namespace Rex.Application.Interfaces.Repository
         Task<PagedResult<UserGroup>> GetMembersAsync(Guid groupId, GroupRole? roleFilter, string? searchTerm,
             int pageNumber, int pageSize, CancellationToken cancellationToken);
         
+        Task<UserGroup> GetMemberAsync(Guid userId, Guid groupId, CancellationToken cancellation);
+        
         Task<PagedResult<UserGroup>> GetGroupRequestsAsync(Guid groupId, RequestStatus status, string? searchTerm, int pageNumber, int pageSize,
             CancellationToken cancellationToken);
         

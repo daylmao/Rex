@@ -14,5 +14,8 @@ namespace Rex.Application.Interfaces.Repository
 
         Task<Dictionary<Guid, int>> GetLikesCountByPostIdsAsync(IEnumerable<Guid> Ids, TargetType targetType,
             CancellationToken cancellationToken);
+
+        Task<HashSet<Guid>> GetUserLikesForTargetsAsync( Guid userId, List<Guid> targetIds,
+            ReactionTargetType targetType, CancellationToken cancellationToken);
     }
 }
