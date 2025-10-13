@@ -855,6 +855,9 @@ public class RexContext: DbContext
         
         modelBuilder.Entity<User>()
             .HasQueryFilter(u => !u.Deleted);
+
+        modelBuilder.Entity<Group>()
+            .HasQueryFilter(g => !g.Deleted);
         
         modelBuilder.Entity<Challenge>()
             .HasQueryFilter(c => !c.Deleted);
