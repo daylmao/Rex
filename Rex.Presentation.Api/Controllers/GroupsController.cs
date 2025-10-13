@@ -6,6 +6,7 @@ using Rex.Application.DTOs.JWT;
 using Rex.Application.DTOs.User;
 using Rex.Application.Modules.Groups.Commands;
 using Rex.Application.Modules.Groups.Commands.AproveRequest;
+using Rex.Application.Modules.Groups.Commands.DeleteGroup;
 using Rex.Application.Modules.Groups.Commands.RejectRequest;
 using Rex.Application.Modules.Groups.Commands.RequestToJoinGroupCommand;
 using Rex.Application.Modules.Groups.Commands.UpdateGroup;
@@ -174,5 +175,20 @@ public class GroupsController(IMediator mediator) : ControllerBase
         CancellationToken cancellationToken)
     {
         return await mediator.Send(command, cancellationToken);
+    }
+
+    [HttpDelete("{groupId}")]
+    [SwaggerOperation(
+        Summary = "Delete a group",
+        Description = "Deletes a group if the request comes from the group leader"
+    )]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ResultT<ResponseDto>> DeleteGroupAsync([FromRoute] Guid groupId, [FromQuery] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return await mediator.Send(new DeleteGroupCommand(groupId, userId), cancellationToken);
     }
 }

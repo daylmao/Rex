@@ -19,9 +19,9 @@ public class ChatsController(IMediator mediator) : ControllerBase
         [FromRoute] Guid userId,
         [FromQuery] int page,
         [FromQuery] int pageSize,
-        CancellationToken cancellationToken)
+        [FromQuery] string? searchTerm = null,
+        CancellationToken cancellationToken = default)
     {
-        var query = new GetChatsByUserIdQuery(userId, page, pageSize);
-        return await mediator.Send(query, cancellationToken);
+        return await mediator.Send(new GetChatsByUserIdQuery(userId, page, pageSize, searchTerm), cancellationToken);
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.DTOs.Post;
 using Rex.Application.Modules.Posts.Commands;
+using Rex.Application.Modules.Posts.Commands.DeletePost;
 using Rex.Application.Modules.Posts.Queries.GetPostsByGroupId;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -41,7 +42,7 @@ public class PostsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<PagedResult<PostDetailsDto>>> GetPostsByGroupIdAsync(
         [FromRoute] Guid groupId,
-        [FromRoute] Guid userId, 
+        [FromRoute] Guid userId,
         [FromQuery] int pageNumber,
         [FromQuery] int pageSize,
         CancellationToken cancellationToken = default)
@@ -50,5 +51,22 @@ public class PostsController(IMediator mediator) : ControllerBase
             new GetPostsByGroupIdQuery(groupId, userId, pageNumber, pageSize),
             cancellationToken
         );
+    }
+
+    [HttpDelete("{postId}/user/{userId}")]
+    [SwaggerOperation(
+        Summary = "Delete a post",
+        Description = "Deletes a post if the user has permission"
+    )]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ResultT<ResponseDto>> DeletePostAsync(
+        [FromRoute] Guid postId,
+        [FromRoute] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return await mediator.Send(new DeletePostCommand(postId, userId), cancellationToken);
     }
 }
