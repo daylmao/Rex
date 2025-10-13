@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 using Rex.Enum;
@@ -13,7 +13,8 @@ public class ManageFriendshipRequestCommandHandler(
     IUserRepository userRepository
 ) : ICommandHandler<ManageFriendshipRequestCommand, ResponseDto>
 {
-    public async Task<ResultT<ResponseDto>> Handle(ManageFriendshipRequestCommand request, CancellationToken cancellationToken)
+    public async Task<ResultT<ResponseDto>> Handle(ManageFriendshipRequestCommand request,
+        CancellationToken cancellationToken)
     {
         if (request is null)
         {
@@ -26,38 +27,50 @@ public class ManageFriendshipRequestCommandHandler(
             logger.LogWarning("User {UserId} attempted to respond to their own friend request", request.RequesterId);
             return ResultT<ResponseDto>.Failure(Error.Failure("400", "You cannot respond to your own friend request."));
         }
-        
+
         if (request.Status == RequestStatus.Pending)
         {
-            logger.LogWarning("User {UserId} attempted to set a friendship request back to pending", request.RequesterId);
+            logger.LogWarning("User {UserId} attempted to set a friendship request back to pending",
+                request.RequesterId);
             return ResultT<ResponseDto>.Failure(Error.Failure("400", "Friend requests cannot be set back to pending."));
         }
 
         var requester = await userRepository.GetByIdAsync(request.RequesterId, cancellationToken);
+        var targetUser = await userRepository.GetByIdAsync(request.TargetUserId, cancellationToken);
+        
         if (requester is null)
         {
             logger.LogWarning("Requester user {UserId} not found", request.RequesterId);
             return ResultT<ResponseDto>.Failure(Error.Failure("404", "Your account could not be found."));
         }
 
-        var targetUser = await userRepository.GetByIdAsync(request.TargetUserId, cancellationToken);
         if (targetUser is null)
         {
             logger.LogWarning("Target user {UserId} not found", request.TargetUserId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("404", "The user you are trying to respond to could not be found."));
+            return ResultT<ResponseDto>.Failure(Error.Failure("404",
+                "The user you are trying to respond to could not be found."));
         }
 
-        var friendship = await friendShipRepository.GetFriendShipBetweenUsersAsync(request.RequesterId, request.TargetUserId, cancellationToken);
+        var friendship = await friendShipRepository.GetFriendShipBetweenUsersAsync(request.RequesterId,
+            request.TargetUserId,
+            cancellationToken
+        );
+
         if (friendship is null)
         {
-            logger.LogWarning("No pending friendship request found between requester {RequesterId} and target {TargetUserId}", request.RequesterId, request.TargetUserId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("404", "No pending friend request was found between these users."));
+            logger.LogWarning(
+                "No pending friendship request found between requester {RequesterId} and target {TargetUserId}",
+                request.RequesterId, request.TargetUserId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("404",
+                "No pending friend request was found between these users."));
         }
 
         if (friendship.Status != RequestStatus.Pending.ToString())
         {
-            logger.LogWarning("Friendship request between {RequesterId} and {TargetUserId} has already been processed", request.RequesterId, request.TargetUserId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("409", "This friend request has already been responded to."));
+            logger.LogWarning("Friendship request between {RequesterId} and {TargetUserId} has already been processed",
+                request.RequesterId, request.TargetUserId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("409",
+                "This friend request has already been responded to."));
         }
 
         friendship.Status = request.Status.ToString();
@@ -65,9 +78,9 @@ public class ManageFriendshipRequestCommandHandler(
         await friendShipRepository.UpdateAsync(friendship, cancellationToken);
 
         logger.LogInformation(
-            "Friendship request from {RequesterId} to {TargetUserId} was {Status}", 
-            request.RequesterId, 
-            request.TargetUserId, 
+            "Friendship request from {RequesterId} to {TargetUserId} was {Status}",
+            request.RequesterId,
+            request.TargetUserId,
             request.Status
         );
 

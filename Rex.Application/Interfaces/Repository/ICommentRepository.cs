@@ -38,5 +38,8 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>The total number of comments.</returns>
         Task<int> GetCommentsCountByPostIdAsync(Guid postId, CancellationToken cancellationToken);
+
+        Task<Dictionary<Guid, int>> GetCommentsCountByPostIdsAsync(IEnumerable<Guid> postIds,
+            CancellationToken cancellationToken);
     }
 }

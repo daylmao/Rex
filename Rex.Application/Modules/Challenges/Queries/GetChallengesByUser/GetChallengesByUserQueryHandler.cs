@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;  
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -35,7 +35,7 @@ public class GetChallengesByUserQueryHandler(
         }
 
         var result = await cache.GetOrCreateAsync(
-            $"get-challenges-by-user-{request.UserId}-{request.Status}-{request.PageNumber}-{request.PageSize}",
+            $"challenges:user:{request.UserId}:status:{request.Status}:page:{request.PageNumber}:size:{request.PageSize}",
             async () => await challengeRepository.GetChallengesPaginatedByUserIdAndStatusAsync(
                 request.UserId,
                 request.PageNumber,
@@ -47,30 +47,39 @@ public class GetChallengesByUserQueryHandler(
             cancellationToken: cancellationToken
         );
 
-        var elements = result.Items.Select(challenge => new ChallengeUserDetailsDto
-        (
-            challenge.Group.ProfilePhoto,
-            challenge.Group.ProfilePhoto,
-            challenge.Title,
-            challenge.Description,
-            challenge.UserChallenges!.FirstOrDefault(uc => uc.UserId == request.UserId)!.Status,
-            challenge.Duration,
-            challenge.Group.Title,
-            challenge.UserChallenges
-                .Select(c => c.User.ProfilePhoto)
-                .Where(photo => !string.IsNullOrEmpty(photo))
-                .Take(5)
-                .ToList(),
-            challenge.UserChallenges
-                .Count(c => c.Status == UserChallengeStatus.Enrolled.ToString())
-        )).ToList();
-
-        if (!elements.Any())
+        if (!result.Items.Any())
         {
-            logger.LogWarning("No challenges found for the user with the specified status.");
-            return ResultT<PagedResult<ChallengeUserDetailsDto>>.Failure(Error.NotFound("404",
-                "No challenges found for your account with the selected status."));
+            logger.LogInformation("No challenges found for user {UserId} with status {Status}", 
+                request.UserId, request.Status);
+            return ResultT<PagedResult<ChallengeUserDetailsDto>>.Success(
+                new PagedResult<ChallengeUserDetailsDto>([], result.TotalItems, result.ActualPage, result.TotalPages)
+            );
         }
+
+        var elements = result.Items.Select(challenge =>
+        {
+            var userChallenge = challenge.UserChallenges?.FirstOrDefault(uc => uc.UserId == request.UserId);
+            var userChallengeStatus = userChallenge?.Status ?? string.Empty;
+
+            return new ChallengeUserDetailsDto
+            (
+                challenge.Id,
+                challenge.Group.ProfilePhoto,
+                challenge.CoverPhoto,
+                challenge.Title,
+                challenge.Description,
+                userChallengeStatus,
+                challenge.Duration,
+                challenge.Group.Title,
+                challenge.UserChallenges?
+                    .Select(c => c.User.ProfilePhoto)
+                    .Where(photo => !string.IsNullOrEmpty(photo))
+                    .Take(5)
+                    .ToList() ?? [],
+                challenge.UserChallenges?
+                    .Count(c => c.Status == UserChallengeStatus.Enrolled.ToString()) ?? 0
+            );
+        }).ToList();
 
         var pagedResult = new PagedResult<ChallengeUserDetailsDto>(
             elements,
@@ -79,7 +88,8 @@ public class GetChallengesByUserQueryHandler(
             result.TotalPages
         );
 
-        logger.LogInformation("Challenges retrieved successfully.");
+        logger.LogInformation("Successfully retrieved {Count} challenges for user {UserId}", 
+            elements.Count, request.UserId);
         return ResultT<PagedResult<ChallengeUserDetailsDto>>.Success(pagedResult);
     }
 }

@@ -1,6 +1,5 @@
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
-using Rex.Application.Pagination;
+using Rex.Application.DTOs.Group;
 
 namespace Rex.Application.Modules.Groups.Queries.GetGroupById;
 

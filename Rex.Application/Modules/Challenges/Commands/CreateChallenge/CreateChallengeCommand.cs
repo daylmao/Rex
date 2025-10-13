@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 
 namespace Rex.Application.Modules.Challenges.CreateChallenge;
 

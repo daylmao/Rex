@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;  
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 
@@ -47,6 +47,7 @@ public class GetChallengeByIdQueryHandler(
             challenge.Title,
             challenge.Description,
             challenge.Status,
+            challenge.CoverPhoto,
             challenge.Duration
         );
         

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
@@ -44,6 +44,15 @@ public class CreateChallengeCommandHandler(
                 "We couldn't find your account. Please check your details."));
         }
 
+        string coverPhotoUrl = "";
+        if (request.CoverPhoto is not null)
+        {
+            await using var stream = request.CoverPhoto.OpenReadStream();
+            coverPhotoUrl =
+                await cloudinaryService.UploadImageAsync(stream, request.CoverPhoto.FileName, cancellationToken);
+            logger.LogInformation("Cover photo uploaded.");
+        }
+
         Challenge challenge = new()
         {
             Id = Guid.NewGuid(),
@@ -51,6 +60,7 @@ public class CreateChallengeCommandHandler(
             Description = request.Description,
             Duration = request.Duration,
             Status = ChallengeStatus.Active.ToString(),
+            CoverPhoto = coverPhotoUrl,
             CreatorId = request.UserId,
             GroupId = request.GroupId
         };

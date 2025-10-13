@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;  
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -13,7 +13,6 @@ public class GetChallengesByStatusQueryHandler(
     ILogger<GetChallengesByStatusQueryHandler> logger,
     IChallengeRepository challengeRepository,
     IGroupRepository groupRepository,
-    IFileRepository fileRepository,
     IDistributedCache distributedCache
 ) : IQueryHandler<GetChallengesByStatusQuery, PagedResult<ChallengeGroupDetailsDto>>
 {
@@ -40,7 +39,7 @@ public class GetChallengesByStatusQueryHandler(
             request.Status, request.PageNumber, request.PageSize);
 
         var result = await distributedCache.GetOrCreateAsync(
-            $"get-challenges-by-status-{request.GroupId}-{request.Status}-{request.PageNumber}-{request.PageSize}",
+            $"challenges:group:{request.GroupId}:status:{request.Status}:page:{request.PageNumber}:size:{request.PageSize}",
             async () => await challengeRepository.GetChallengesPaginatedByGroupIdAndStatusAsync(
                 request.GroupId,
                 request.PageNumber,
@@ -52,22 +51,22 @@ public class GetChallengesByStatusQueryHandler(
             cancellationToken: cancellationToken
         );
 
-        if (result is null)
+        if (!result.Items.Any())
         {
-            logger.LogWarning("No challenges found for the requested group and status.");
-            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.NotFound("404",
-                "No challenges available for the selected criteria."));
+            logger.LogInformation("No challenges found for group {GroupId} with status {Status}", 
+                request.GroupId, request.Status);
+            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Success(
+                new PagedResult<ChallengeGroupDetailsDto>([], result.TotalItems, result.ActualPage, result.TotalPages)
+            );
         }
-
-        var file = await fileRepository.GetFileByEntityAndTypeAsync(request.GroupId, TargetType.Challenge,
-            cancellationToken);
 
         var elements = result.Items
             .Select(c => new ChallengeGroupDetailsDto(
+                c.Id,
                 c.Title,
                 c.Description,
                 c.Status.ToString(),
-                file?.Url ?? string.Empty,
+                c.CoverPhoto,
                 c.Duration,
                 c.UserChallenges
                     .Select(uc => uc.User.ProfilePhoto)
@@ -75,14 +74,8 @@ public class GetChallengesByStatusQueryHandler(
                     .Take(5)
                     .ToList(),
                 c.UserChallenges.Count(uc => uc.Status == UserChallengeStatus.Enrolled.ToString())
-            ));
-
-        if (!elements.Any())
-        {
-            logger.LogWarning("Challenges retrieved but no detailed data is available.");
-            return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.NotFound("404",
-                "Challenges were found, but no detailed information is available."));
-        }
+            ))
+            .ToList();
 
         var pagedResult = new PagedResult<ChallengeGroupDetailsDto>(
             elements,
@@ -91,7 +84,8 @@ public class GetChallengesByStatusQueryHandler(
             result.TotalPages
         );
 
-        logger.LogInformation("Challenges retrieved successfully.");
+        logger.LogInformation("Successfully retrieved {Count} challenges for group {GroupId}", 
+            elements.Count, request.GroupId);
         return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Success(pagedResult);
     }
 }

@@ -1,4 +1,4 @@
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Configs;
 
 namespace Rex.Application.Interfaces;
 

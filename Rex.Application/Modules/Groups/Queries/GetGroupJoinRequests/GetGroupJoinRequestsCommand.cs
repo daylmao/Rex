@@ -1,5 +1,5 @@
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.User;
 using Rex.Application.Pagination;
 
 namespace Rex.Application.Modules.Groups.Queries.GetGroupJoinRequests;

@@ -36,6 +36,14 @@ public class RexContext: DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        #region Indexes
+
+        modelBuilder.Entity<Reaction>()
+            .HasIndex(r => new { r.TargetId, r.UserId })
+            .HasName("IX_TargetId_UserId");
+
+        #endregion
 
         #region Tables
 
@@ -224,6 +232,10 @@ public class RexContext: DbContext
         modelBuilder.Entity<Notification>()
             .Property(c => c.UserId)
             .HasColumnName("FkUserId");
+        
+        modelBuilder.Entity<Notification>()
+            .Property(c => c.RecipientId)
+            .HasColumnName("FkRecipientId");
 
         modelBuilder.Entity<Post>()
             .Property(c => c.UserId)
@@ -316,10 +328,16 @@ public class RexContext: DbContext
             .HasConstraintName("FkUserUserChat");
 
         modelBuilder.Entity<User>()
-            .HasMany(c => c.Notifications)
+            .HasMany(c => c.SentNotifications)
             .WithOne(c => c.User)
             .HasForeignKey(c => c.UserId)
-            .HasConstraintName("FkUserNotification");
+            .HasConstraintName("FkUserSentNotification");
+        
+        modelBuilder.Entity<User>()
+            .HasMany(c => c.ReceivedNotifications)
+            .WithOne(c => c.Recipient)
+            .HasForeignKey(c => c.RecipientId)
+            .HasConstraintName("FkUserReceivedNotification");
 
         modelBuilder.Entity<User>()
             .HasMany(c => c.SentFriendRequests)
@@ -557,6 +575,9 @@ public class RexContext: DbContext
                 .HasColumnName("PkChallengeId")
                 .IsRequired();
             
+            entity.Property(u => u.CoverPhoto)
+                .HasMaxLength(255);
+            
             entity.Property(c => c.Title)
                 .IsRequired()
                 .HasMaxLength(100);
@@ -587,6 +608,9 @@ public class RexContext: DbContext
             
             entity.Property(a => a.Name)
                 .HasMaxLength(100);
+            
+            entity.Property(a => a.GroupPhoto)
+                .HasMaxLength(255);
         });
 
         #endregion
@@ -831,6 +855,9 @@ public class RexContext: DbContext
         
         modelBuilder.Entity<User>()
             .HasQueryFilter(u => !u.Deleted);
+
+        modelBuilder.Entity<Group>()
+            .HasQueryFilter(g => !g.Deleted);
         
         modelBuilder.Entity<Challenge>()
             .HasQueryFilter(c => !c.Deleted);
@@ -858,5 +885,5 @@ public class RexContext: DbContext
 
         #endregion
     }
-
+    
 }

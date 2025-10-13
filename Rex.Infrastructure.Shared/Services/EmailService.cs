@@ -1,7 +1,7 @@
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Configs;
 using Rex.Application.Interfaces;
 using Rex.Configurations;
 

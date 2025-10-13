@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Interfaces.SignalR;
 using Rex.Application.Utilities;
@@ -28,11 +28,11 @@ public class CreatePrivateChatCommandHandler(
         var secondUser = await userRepository.GetByIdAsync(request.SecondUserId, cancellationToken);
 
         if (user is null || secondUser is null)
-            return ResultT<ResponseDto>.Failure(Error.Failure("404", "One or both users could not be found."));
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "One or both users could not be found."));
 
         var chatExists = await chatRepository.GetOneToOneChat(request.UserId, request.SecondUserId, cancellationToken);
         if (chatExists is not null)
-            return ResultT<ResponseDto>.Failure(Error.Failure("409", "A chat with this user already exists."));
+            return ResultT<ResponseDto>.Failure(Error.Conflict("409", "A chat with this user already exists."));
 
         var chat = new Models.Chat
         {

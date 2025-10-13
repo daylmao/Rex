@@ -2,7 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces;
 using Rex.Application.Modules.User.Commands.ConfirmAccount;
 using Rex.Application.Modules.User.Commands.Login;

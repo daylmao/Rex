@@ -52,4 +52,19 @@ public class CommentRepository(RexContext context): GenericRepository<Comment>(c
             .AsNoTracking()
             .Where(f => f.PostId == postId)
             .CountAsync(cancellationToken);
+
+    public async Task<int> GetCommentsCountByPostIdAsync(IEnumerable<Guid> postId, CancellationToken cancellationToken) =>
+        await context.Set<Comment>()
+            .AsNoTracking()
+            .Where(c => postId.Contains(c.PostId))
+            .CountAsync(cancellationToken);
+    
+    public async Task<Dictionary<Guid, int>> GetCommentsCountByPostIdsAsync(IEnumerable<Guid> postIds, CancellationToken cancellationToken) =>
+        await context.Set<Comment>()
+            .Where(c => postIds.Contains(c.PostId))
+            .AsNoTracking()
+            .GroupBy(c => c.PostId)
+            .Select(g => new { PostId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.PostId, g => g.Count, cancellationToken);
+    
 }

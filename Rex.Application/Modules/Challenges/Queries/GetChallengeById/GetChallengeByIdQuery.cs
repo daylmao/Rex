@@ -1,5 +1,5 @@
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;  
 
 namespace Rex.Application.Modules.Challenges.Queries.GetChallengeById;
 

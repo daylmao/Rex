@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Http;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Message;
 using Rex.Application.Utilities;
 
 namespace Rex.Application.Interfaces;

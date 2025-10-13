@@ -2,6 +2,7 @@ using Microsoft.OpenApi;
 using Rex.Application;
 using Rex.Infrastructure.Persistence;
 using Rex.Infrastructure.Shared;
+using Rex.Infrastructure.Shared.Services.SignalR.Hubs;
 using Rex.Presentation.Api.ServicesExtension;
 using Serilog;
 
@@ -60,6 +61,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<AppHub>("/hubs/app");
 
 app.Run();

@@ -1,9 +1,12 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Friendship;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Modules.Friendships.Commands;
 using Rex.Application.Modules.Friendships.Commands.ManageFriendshipRequest;
+using Rex.Application.Modules.Friendships.Queries.GetFriendshipsRequest;
+using Rex.Application.Pagination;
 using Rex.Application.Utilities;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -40,5 +43,12 @@ public class FriendshipsController(IMediator mediator) : ControllerBase
     public async Task<ResultT<ResponseDto>> ManageFriendshipRequest([FromBody] ManageFriendshipRequestCommand command , CancellationToken cancellationToken)
     {
         return await mediator.Send(command , cancellationToken);
+    }
+
+    [HttpGet("user/{userId}")]
+    public async Task<ResultT<PagedResult<FriendshipRequestDto>>> GetFriendshipRequests([FromRoute] Guid userId,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize, CancellationToken cancellationToken)
+    {
+        return await mediator.Send(new GetFriendshipsRequestQuery(userId, pageNumber, pageSize), cancellationToken);
     }
 }

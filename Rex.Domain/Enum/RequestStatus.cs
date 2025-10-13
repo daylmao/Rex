@@ -2,7 +2,7 @@ namespace Rex.Enum;
 
 public enum RequestStatus
 {
-    Pending,
     Accepted,
+    Pending,
     Rejected,
 }

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 using Rex.Enum;
@@ -11,7 +12,6 @@ namespace Rex.Application.Modules.Challenges.Commands.JoinChallenge;
 public class JoinChallengeCommandHandler(
     ILogger<JoinChallengeCommandHandler> logger,
     IChallengeRepository challengeRepository,
-    IGroupRepository groupRepository,
     IUserRepository userRepository,
     IUserChallengeRepository userChallengeRepository
 ) : ICommandHandler<JoinChallengeCommand, ResponseDto>

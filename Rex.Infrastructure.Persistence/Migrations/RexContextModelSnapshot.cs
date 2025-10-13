@@ -29,6 +29,11 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("PkChallengeId");
 
+                    b.Property<string>("CoverPhoto")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -92,6 +97,10 @@ namespace Rex.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GroupPhoto")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("Name")
                         .HasMaxLength(100)
@@ -487,6 +496,10 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<Guid>("RecipientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("FkRecipientId");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(125)
@@ -501,6 +514,8 @@ namespace Rex.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("PkNotificationId");
+
+                    b.HasIndex("RecipientId");
 
                     b.HasIndex("UserId");
 
@@ -600,6 +615,9 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasName("PkReactionId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("TargetId", "UserId")
+                        .HasDatabaseName("IX_TargetId_UserId");
 
                     b.ToTable("Reaction", (string)null);
                 });
@@ -1024,12 +1042,21 @@ namespace Rex.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Rex.Models.Notification", b =>
                 {
+                    b.HasOne("Rex.Models.User", "Recipient")
+                        .WithMany("ReceivedNotifications")
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FkUserReceivedNotification");
+
                     b.HasOne("Rex.Models.User", "User")
-                        .WithMany("Notifications")
+                        .WithMany("SentNotifications")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("FkUserNotification");
+                        .HasConstraintName("FkUserSentNotification");
+
+                    b.Navigation("Recipient");
 
                     b.Navigation("User");
                 });
@@ -1215,17 +1242,19 @@ namespace Rex.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("Notifications");
-
                     b.Navigation("Posts");
 
                     b.Navigation("Reactions");
 
                     b.Navigation("ReceivedFriendRequests");
 
+                    b.Navigation("ReceivedNotifications");
+
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("SentFriendRequests");
+
+                    b.Navigation("SentNotifications");
 
                     b.Navigation("UserChallenges");
 

@@ -16,9 +16,9 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="size">The number of items per page.</param>
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>A paginated list of chats with their last message.</returns>
-        Task<PagedResult<Chat>> GetChatsWithLastMessageByUserIdAsync(Guid userId, int page, int size,
-            CancellationToken cancellationToken);
-
+        Task<PagedResult<Chat>> GetChatsWithLastMessageByUserIdAsync(
+            Guid userId, int page, int size, string? searchTerm = null, CancellationToken cancellationToken = default);
+        
         /// <summary>
         /// Checks if a chat exists by its ID.
         /// </summary>

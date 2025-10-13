@@ -1,12 +1,11 @@
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 using Rex.Enum;
 using Rex.Models;
-using File = Rex.Models.File;
 using GroupRole = Rex.Enum.GroupRole;
 
 namespace Rex.Application.Modules.Groups.Commands;

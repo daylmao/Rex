@@ -1,7 +1,9 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;
+using Rex.Application.DTOs.JWT;
+using Rex.Application.Modules.Challenges.Commands.DeleteChallenge;
 using Rex.Application.Modules.Challenges.Commands.JoinChallenge;
 using Rex.Application.Modules.Challenges.Commands.UpdateChallenge;
 using Rex.Application.Modules.Challenges.CreateChallenge;
@@ -91,4 +93,21 @@ public class ChallengesController(IMediator mediator) : ControllerBase
         return await mediator.Send(new GetChallengesByUserQuery(userId, status, pageNumber, pageSize),
             cancellationToken);
     }
+    
+    [HttpDelete("{challengeId}/user/{userId}")]
+    [SwaggerOperation(
+        Summary = "Delete a challenge",
+        Description = "Deletes a challenge if the user is authorized (admin or higher)"
+    )]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ResultT<ResponseDto>> DeleteChallengeAsync(
+        [FromRoute] Guid challengeId,
+        [FromRoute] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return await mediator.Send(new DeleteChallengeCommand(challengeId, userId), cancellationToken);
+    }
+
 }

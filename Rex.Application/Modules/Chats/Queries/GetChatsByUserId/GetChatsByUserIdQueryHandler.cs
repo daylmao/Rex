@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.Challenge;
+using Rex.Application.DTOs.Message;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
@@ -34,14 +35,41 @@ public class GetChatsByUserIdQueryHandler(
                 Error.Failure("404", "The user could not be found."));
         }
 
-        var result = await chatRepository.GetChatsWithLastMessageByUserIdAsync(
-                request.UserId, request.PageNumber, request.PageSize, cancellationToken) ;
+        var searchTerm = request.SearchTerm ?? "all";
+        var result = await cache.GetOrCreateAsync(
+            $"chats:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}:searchTerm:{searchTerm}",
+            async () => await chatRepository.GetChatsWithLastMessageByUserIdAsync(
+                request.UserId, request.PageNumber, request.PageSize, request.SearchTerm, cancellationToken),
+            logger,
+            cancellationToken: cancellationToken
+        );
+
+        if (!result.Items.Any())
+        {
+            logger.LogInformation("No chats found for user ID {UserId}", request.UserId);
+            return ResultT<PagedResult<ChatLastMessageDto>>.Success(
+                new PagedResult<ChatLastMessageDto>([], result.TotalItems, result.ActualPage, result.TotalPages)
+            );
+        }
 
         var chatDtos = result.Items.Select(chat =>
         {
             var lastMessage = chat.Messages?
                 .OrderByDescending(m => m.CreatedAt)
                 .FirstOrDefault();
+
+            var lastMessageDto = lastMessage != null
+                ? new LastMessageDto(
+                    lastMessage.Id,
+                    lastMessage.Description,
+                    lastMessage.CreatedAt,
+                    lastMessage.SenderId,
+                    lastMessage.Sender != null 
+                        ? $"{lastMessage.Sender.FirstName} {lastMessage.Sender.LastName}" 
+                        : "Unknown sender",
+                    lastMessage.Sender?.ProfilePhoto ?? ""
+                )
+                : null;
 
             if (chat.Type == ChatType.Private.ToString())
             {
@@ -51,15 +79,7 @@ public class GetChatsByUserIdQueryHandler(
                     otherUser != null ? $"{otherUser.FirstName} {otherUser.LastName}" : "Unknown user",
                     chat.Type,
                     otherUser?.ProfilePhoto ?? "",
-                    lastMessage != null
-                        ? new LastMessageDto(
-                            lastMessage.Description,
-                            lastMessage.CreatedAt,
-                            lastMessage.SenderId,
-                            lastMessage.Sender != null ? $"{lastMessage.Sender.FirstName} {lastMessage.Sender.LastName}" : "Unknown sender",
-                            lastMessage.Sender?.ProfilePhoto ?? ""
-                        )
-                        : null
+                    lastMessageDto
                 );
             }
 
@@ -67,30 +87,20 @@ public class GetChatsByUserIdQueryHandler(
                 chat.Id,
                 chat.Name ?? "Unnamed Group",
                 chat.Type,
-                "",
-                lastMessage != null
-                    ? new LastMessageDto(
-                        lastMessage.Description,
-                        lastMessage.CreatedAt,
-                        lastMessage.SenderId,
-                        lastMessage.Sender != null ? $"{lastMessage.Sender.FirstName} {lastMessage.Sender.LastName}" : "Unknown sender",
-                        lastMessage.Sender?.ProfilePhoto ?? ""
-                    )
-                    : null
+                chat.GroupPhoto ?? "", 
+                lastMessageDto
             );
         }).ToList();
 
-        if (!chatDtos.Any())
-        {
-            logger.LogWarning("No chats found for user ID {UserId}", request.UserId);
-            return ResultT<PagedResult<ChatLastMessageDto>>.Failure(
-                Error.Failure("404", "No chats were found for this user."));
-        }
-
-        
         var pagedResult = new PagedResult<ChatLastMessageDto>(
-            chatDtos, result.TotalItems, request.PageNumber, request.PageSize);
+            chatDtos, 
+            result.TotalItems, 
+            result.ActualPage, 
+            result.TotalPages
+        );
         
+        logger.LogInformation("Successfully retrieved {Count} chats for user {UserId}", 
+            chatDtos.Count, request.UserId);
         return ResultT<PagedResult<ChatLastMessageDto>>.Success(pagedResult);
     }
 }

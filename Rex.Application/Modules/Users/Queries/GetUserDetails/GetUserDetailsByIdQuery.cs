@@ -1,5 +1,5 @@
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
+using Rex.Application.DTOs.User;
 
 namespace Rex.Application.Modules.User.Queries.GetUserDetails;
 
