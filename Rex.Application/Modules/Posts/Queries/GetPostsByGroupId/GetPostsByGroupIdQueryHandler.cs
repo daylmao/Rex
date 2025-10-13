@@ -80,6 +80,8 @@ public class GetPostsByGroupIdQueryHandler(
 
             return new PostDetailsDto(
                 p.Id,
+                p.UserId,
+                p.GroupId,
                 $"{p.User.FirstName} {p.User.LastName}",
                 p.Title,
                 p.Description,

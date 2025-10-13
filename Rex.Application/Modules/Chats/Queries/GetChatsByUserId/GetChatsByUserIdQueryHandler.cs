@@ -35,10 +35,11 @@ public class GetChatsByUserIdQueryHandler(
                 Error.Failure("404", "The user could not be found."));
         }
 
+        var searchTerm = request.SearchTerm ?? "all";
         var result = await cache.GetOrCreateAsync(
-            $"chats:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}",
+            $"chats:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}:searchTerm:{searchTerm}",
             async () => await chatRepository.GetChatsWithLastMessageByUserIdAsync(
-                request.UserId, request.PageNumber, request.PageSize, cancellationToken),
+                request.UserId, request.PageNumber, request.PageSize, request.SearchTerm, cancellationToken),
             logger,
             cancellationToken: cancellationToken
         );

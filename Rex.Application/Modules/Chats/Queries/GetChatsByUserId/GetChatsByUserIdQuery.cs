@@ -7,5 +7,6 @@ namespace Rex.Application.Modules.Chats.Queries.GetChatsByUserId;
 public record GetChatsByUserIdQuery(
     Guid UserId,
     int PageNumber,
-    int PageSize
+    int PageSize,
+    string? SearchTerm = null
     ): IQuery<PagedResult<ChatLastMessageDto>>;
