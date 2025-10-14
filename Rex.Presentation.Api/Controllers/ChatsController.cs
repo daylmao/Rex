@@ -15,6 +15,9 @@ public class ChatsController(IMediator mediator) : ControllerBase
 {
 
     [HttpGet("user/{userId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<PagedResult<ChatLastMessageDto>>> GetChatsByUserId(
         [FromRoute] Guid userId,
         [FromQuery] int page,
