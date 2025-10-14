@@ -28,7 +28,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="parentCommentId">The ID of the parent comment.</param>
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>A paginated list of comment replies.</returns>
-        Task<PagedResult<Comment>> GetCommentsRepliedPaginatedByPostIdAsync(Guid postId, int page, int size,
+        Task<PagedResult<Comment>> GetCommentsRepliedPaginatedByParentCommentIdAsync(Guid postId, int page, int size,
             Guid parentCommentId, CancellationToken cancellationToken);
 
         /// <summary>
