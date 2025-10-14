@@ -5,6 +5,5 @@ public record UserGroupRequestDto(
     string LastName,
     string ProfilePicture,
     string Status,
-    
     TimeSpan TimeSinceRequested 
     );
