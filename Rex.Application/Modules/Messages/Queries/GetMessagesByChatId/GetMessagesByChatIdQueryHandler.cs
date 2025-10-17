@@ -50,7 +50,7 @@ public class GetMessagesByChatIdQueryHandler(
             .SelectMany(f => f.EntityFiles, (file, entityFile) => new
             {
                 entityFile.TargetId,
-                File = new FileDetailDto(file.Url, file.Type)
+                File = new FileDetailDto(file.Id, file.Url, file.Type)
             })
             .GroupBy(x => x.TargetId)
             .ToDictionary(g => g.Key, g => g.Select(x => x.File).ToList());
