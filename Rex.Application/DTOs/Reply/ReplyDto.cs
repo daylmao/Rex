@@ -1,3 +1,4 @@
+using Rex.Application.DTOs.File;
 using Rex.Application.DTOs.User;
 
 namespace Rex.Application.DTOs.Reply;
@@ -7,7 +8,7 @@ public record ReplyDto(
     Guid ParentCommentId,
     string Description,
     bool Edited,
-    bool HasReplies,
+    bool? HasReplies,
     UserCommentDetailsDto User,
-    DateTime CreatedAt
-);
+    DateTime CreatedAt,
+    IEnumerable<FileDetailDto>? Files = null);
