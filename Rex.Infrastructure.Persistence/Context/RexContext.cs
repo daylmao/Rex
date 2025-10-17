@@ -882,6 +882,12 @@ public class RexContext: DbContext
 
         modelBuilder.Entity<UserChat>()
             .HasQueryFilter(uc => !uc.Deleted && !uc.Chat.Deleted);
+        
+        modelBuilder.Entity<File>()
+            .HasQueryFilter(c => !c.Deleted);
+        
+        modelBuilder.Entity<EntityFile>()
+            .HasQueryFilter(c => !c.Deleted);
 
         #endregion
     }
