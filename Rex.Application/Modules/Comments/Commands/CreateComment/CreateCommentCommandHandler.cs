@@ -1,8 +1,11 @@
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.Comment;
+using Rex.Application.Helpers;
+using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
+using Rex.Enum;
 using Rex.Models;
 
 namespace Rex.Application.Modules.Comments.Commands.CreateComment;
@@ -11,7 +14,10 @@ public class CreateCommentCommandHandler(
     ILogger<CreateCommentCommandHandler> logger,
     IUserRepository userRepository,
     ICommentRepository commentRepository,
-    IPostRepository postRepository
+    IPostRepository postRepository,
+    IFileRepository fileRepository,
+    IEntityFileRepository entityFileRepository,
+    ICloudinaryService cloudinaryService
 ) : ICommandHandler<CreateCommentCommand, CommentDto>
 {
     public async Task<ResultT<CommentDto>> Handle(CreateCommentCommand request, CancellationToken cancellationToken)
@@ -50,7 +56,19 @@ public class CreateCommentCommandHandler(
         };
 
         await commentRepository.CreateAsync(comment, cancellationToken);
+        
+        if (request.Files is not null && request.Files.Any())
+        {
+            var filesResult = await ProcessFiles.ProcessFilesAsync(logger, request.Files, comment.Id,
+                fileRepository, entityFileRepository, cloudinaryService, TargetType.Comment, cancellationToken);
 
+            if (!filesResult.IsSuccess)
+            {
+                return filesResult.Error;
+            }
+        }
+
+        var files = await fileRepository.GetFilesByTargetIdAsync(comment.Id, TargetType.Comment, cancellationToken);
         logger.LogInformation("Comment persisted successfully with ID: {CommentId}", comment.Id);
 
         CommentDto commentDto = new CommentDto(
@@ -59,7 +77,8 @@ public class CreateCommentCommandHandler(
             comment.UserId,
             comment.Description,
             comment.IsPinned,
-            comment.Edited
+            comment.Edited,
+            files
         );
 
         logger.LogInformation("Comment successfully created with ID '{CommentId}' by user '{UserId}' on post '{PostId}'.",
