@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace Rex.Application.DTOs.Comment;
 
 public record CommentDto(
@@ -6,5 +8,6 @@ public record CommentDto(
     Guid UserId,
     string Description,
     bool IsPinned,
-    bool Edited
-    );
+    bool Edited,
+    IEnumerable<Models.File>? Files = null
+        );
