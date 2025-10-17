@@ -1,3 +1,3 @@
 namespace Rex.Application.DTOs.File;
 
-public record FileDetailDto(string Url, string Type);
+public record FileDetailDto(Guid Id, string Url, string Type);

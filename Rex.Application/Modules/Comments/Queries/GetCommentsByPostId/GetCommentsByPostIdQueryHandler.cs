@@ -2,17 +2,20 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.Comment;
+using Rex.Application.DTOs.File;
 using Rex.Application.DTOs.Reply;
 using Rex.Application.DTOs.User;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
+using Rex.Enum;
 
 namespace Rex.Application.Modules.Comments.Queries.GetCommentsByPostId;
 
 public class GetCommentsByPostIdQueryHandler(
     ILogger<GetCommentsByPostIdQueryHandler> logger,
     ICommentRepository commentRepository,
+    IFileRepository fileRepository,
     IDistributedCache cache
 ) : IQueryHandler<GetCommentsByPostIdQuery, PagedResult<CommentDetailsDto>>
 {
@@ -41,10 +44,20 @@ public class GetCommentsByPostIdQueryHandler(
                 new PagedResult<CommentDetailsDto>([], comments.TotalItems, comments.ActualPage, comments.TotalPages));
         }
 
+        var files = await cache.GetOrCreateAsync(
+            $"Get:Comment:Files:Replies:{request.PostId}:{request.PageNumber}:{request.PageSize}",
+            async () => await fileRepository.GetFilesByTargetIdsAsync(comments.Items.Select(c => c.Id), TargetType.Comment, cancellationToken),
+            logger,
+            cancellationToken: cancellationToken
+        );
+        
         logger.LogInformation("Mapping {Count} comments to DTOs for PostId: {PostId}", comments.Items.Count(), request.PostId);
 
         var elements = comments.Items.Select(c =>
         {
+            var commentFiles = files.Where(f => f.EntityFiles.Any(e => e.TargetId == c.Id))
+                .Select(f => new FileDetailDto(f.Id, f.Url, f.Type));
+
             return new CommentDetailsDto(
                 c.Id,
                 c.PostId,
@@ -57,7 +70,9 @@ public class GetCommentsByPostIdQueryHandler(
                     c.User.FirstName,
                     c.User.LastName,
                     c.User.ProfilePhoto),
-                c.CreatedAt);
+                c.CreatedAt,
+                commentFiles
+            );
         });
 
         var result = new PagedResult<CommentDetailsDto>(

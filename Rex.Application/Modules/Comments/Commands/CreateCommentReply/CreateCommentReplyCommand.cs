@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.Reply;
 
@@ -7,5 +8,6 @@ public record CreateCommentReplyCommand(
     Guid ParentCommentId,
     Guid PostId,
     Guid UserId,
-    string Description
-) : ICommand<ReplyDto>;
+    string Description,
+    IEnumerable<IFormFile>? Files = null 
+        ) : ICommand<ReplyDto>;

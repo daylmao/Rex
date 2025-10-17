@@ -1,18 +1,20 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs.Comment;
+using Rex.Application.DTOs.File;
 using Rex.Application.DTOs.Reply;
 using Rex.Application.DTOs.User;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
+using Rex.Enum;
 
 namespace Rex.Application.Modules.Comments.Queries.GetCommentReplies;
 
 public class GetCommentRepliesQueryHandler(
     ILogger<GetCommentRepliesQueryHandler> logger,
     ICommentRepository commentRepository,
+    IFileRepository fileRepository,
     IDistributedCache cache
 ) : IQueryHandler<GetCommentRepliesQuery, PagedResult<ReplyDto>>
 {
@@ -44,16 +46,29 @@ public class GetCommentRepliesQueryHandler(
             );
 
             return ResultT<PagedResult<ReplyDto>>.Failure(Error.NotFound(
-                "404", 
+                "404",
                 "We couldn't find any replies for this comment. It may not exist or hasn't received any replies yet."
             ));
         }
 
+        var files = await cache.GetOrCreateAsync(
+            $"Get:Comment:Files:Replies:{request.ParentCommentId}:{request.PageNumber}:{request.PageSize}",
+            async () => await fileRepository.GetFilesByTargetIdsAsync(
+                comments.Items.Select(c => c.Id), 
+                TargetType.Comment, 
+                cancellationToken),
+            logger,
+            cancellationToken: cancellationToken
+        );
+
         var elements = comments.Items.Select(c =>
         {
+            var commentFiles = files.Where(f => f.EntityFiles.Any(e => e.TargetId == c.Id))
+                .Select(f => new FileDetailDto(f.Id, f.Url, f.Type));
+
             return new ReplyDto(
                 c.Id,
-                c.PostId,
+                c.ParentCommentId!.Value, 
                 c.Description,
                 c.Edited,
                 c.Replies.Any(),
@@ -62,7 +77,9 @@ public class GetCommentRepliesQueryHandler(
                     c.User.FirstName,
                     c.User.LastName,
                     c.User.ProfilePhoto),
-                c.CreatedAt);
+                c.CreatedAt,
+                commentFiles
+            );
         });
 
         logger.LogInformation(
@@ -76,7 +93,7 @@ public class GetCommentRepliesQueryHandler(
             comments.ActualPage,
             comments.TotalPages
         );
-        
+
         return ResultT<PagedResult<ReplyDto>>.Success(result);
     }
 }

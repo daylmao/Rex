@@ -45,7 +45,7 @@ public class CommentsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<CommentDto>> CreateCommentAsync(
-        [FromBody] CreateCommentCommand command,
+        [FromForm] CreateCommentCommand command,
         CancellationToken cancellationToken)
     {
         return await mediator.Send(command, cancellationToken);
@@ -60,7 +60,7 @@ public class CommentsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<ReplyDto>> CreateCommentReplyAsync(
-        [FromBody] CreateCommentReplyCommand command,
+        [FromForm] CreateCommentReplyCommand command,
         CancellationToken cancellationToken)
     {
         return await mediator.Send(command, cancellationToken);
@@ -117,7 +117,7 @@ public class CommentsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ResultT<CommentUpdatedDto>>> UpdateCommentAsync(
-        [FromBody] UpdateCommentCommand command,
+        [FromForm] UpdateCommentCommand command,
         CancellationToken cancellationToken)
     {
         return Ok(await mediator.Send(command, cancellationToken));
