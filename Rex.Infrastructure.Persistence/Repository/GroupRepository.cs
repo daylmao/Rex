@@ -86,6 +86,7 @@ public class GroupRepository(RexContext context) : GenericRepository<Group>(cont
             .Where(c => c.Id == groupId)
             .Select(c => new Group
             {
+                Id = c.Id,
                 Title = c.Title,
                 Description = c.Description,
                 Visibility = c.Visibility,
