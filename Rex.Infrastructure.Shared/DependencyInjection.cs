@@ -109,7 +109,9 @@ public static class DependencyInjection
         services.AddScoped<IChatNotifier, ChatNotifier>();
         services.AddScoped<IReactionNotifier, ReactionNotifier>();
         services.AddScoped<IFriendshipNotifier, FriendshipNotifier>();
-
+        services.AddScoped<ICommentsNotifier, CommentsNotifier>();
+        services.AddScoped<IChallengeNotifier, ChallengeNotifier>();
+        
         #endregion
 
         #region SignalR

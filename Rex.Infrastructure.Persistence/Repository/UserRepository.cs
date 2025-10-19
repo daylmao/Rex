@@ -157,6 +157,9 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
             .Where(uc => uc.Id == userId)
             .ExecuteUpdateAsync(s => s.SetProperty(uc => uc.LastConnection, DateTime.UtcNow)
                 .SetProperty(uc => uc.IsActive, isActive), cancellationToken);
-    
 
+    public async Task<User> GetUserByCommentIdAsync(Guid parentCommentId, CancellationToken cancellationToken) =>
+        await context.Set<User>()
+            .Where(c => c.Comments.Any(p => p.ParentCommentId == parentCommentId))
+            .FirstOrDefaultAsync(cancellationToken);
 }

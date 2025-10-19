@@ -4,6 +4,7 @@ using Rex.Application.DTOs.Comment;
 using Rex.Application.Helpers;
 using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
+using Rex.Application.Interfaces.SignalR;
 using Rex.Application.Utilities;
 using Rex.Enum;
 using Rex.Models;
@@ -17,7 +18,8 @@ public class CreateCommentCommandHandler(
     IPostRepository postRepository,
     IFileRepository fileRepository,
     IEntityFileRepository entityFileRepository,
-    ICloudinaryService cloudinaryService
+    ICloudinaryService cloudinaryService,
+    ICommentsNotifier commentsNotifier
 ) : ICommandHandler<CreateCommentCommand, CommentDto>
 {
     public async Task<ResultT<CommentDto>> Handle(CreateCommentCommand request, CancellationToken cancellationToken)
@@ -83,7 +85,21 @@ public class CreateCommentCommandHandler(
 
         logger.LogInformation("Comment successfully created with ID '{CommentId}' by user '{UserId}' on post '{PostId}'.",
             comment.Id, comment.UserId, comment.PostId);
+        
+        var notification = new Notification
+        {
+            Title = "New Comment",
+            Description = $"{user.FirstName} {user.LastName} commented on your post!",
+            UserId = user.Id,
+            RecipientId = post.UserId,
+            Read = false,
+            CreatedAt = DateTime.UtcNow
+        };
 
+        await commentsNotifier.SendCommentNotification(notification, cancellationToken);
+        logger.LogInformation("Notification sent to UserId: {RecipientId} about CommentId: {CommentId}", 
+            post.UserId, comment.Id);
+        
         return ResultT<CommentDto>.Success(commentDto);
     }
 }

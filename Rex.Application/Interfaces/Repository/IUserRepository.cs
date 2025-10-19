@@ -122,5 +122,8 @@ namespace Rex.Application.Interfaces.Repository
             CancellationToken cancellationToken);
 
         Task UpdateLastTimeConnectionAsync(Guid userId, bool isActive, CancellationToken cancellationToken);
+        
+        Task<User> GetUserByCommentIdAsync(Guid parentCommentId, CancellationToken cancellationToken);
+
     }
 }

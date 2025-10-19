@@ -9,6 +9,7 @@ using Rex.Enum;
 using Rex.Models;
 using Rex.Application.Helpers;
 using Rex.Application.Interfaces;
+using Rex.Application.Interfaces.SignalR;
 
 namespace Rex.Application.Modules.Comments.Commands.CreateCommentReply;
 
@@ -16,6 +17,7 @@ public class CreateCommentReplyCommandHandler(
     ILogger<CreateCommentReplyCommandHandler> logger,
     IUserRepository userRepository,
     ICommentRepository commentRepository,
+    ICommentsNotifier commentsNotifier,
     IPostRepository postRepository,
     IEntityFileRepository entityFileRepository,
     IFileRepository fileRepository,
@@ -43,6 +45,13 @@ public class CreateCommentReplyCommandHandler(
         {
             logger.LogWarning("Create reply failed: Parent comment with ID '{ParentCommentId}' not found.", request.ParentCommentId);
             return ResultT<ReplyDto>.Failure(Error.NotFound("404", "Parent comment not found."));
+        }
+
+        var userComment = await userRepository.GetUserByCommentIdAsync(request.ParentCommentId, cancellationToken);
+        if (userComment is null)
+        {
+            logger.LogWarning("Failed to notify reply: Original comment's user not found for ParentCommentId '{ParentCommentId}'", request.ParentCommentId);
+            return ResultT<ReplyDto>.Failure(Error.NotFound("404", "Original comment's user not found."));
         }
 
         var reply = new Comment
@@ -101,7 +110,19 @@ public class CreateCommentReplyCommandHandler(
             "Reply created successfully with ID '{ReplyId}', parent comment '{ParentCommentId}', by user '{UserId}' on post '{PostId}'.",
             reply.Id, reply.ParentCommentId, reply.UserId, reply.PostId
         );
+        
+        var notification = new Notification
+        {
+            Title = "New Reply",
+            Description = $"{user.FirstName} {user.LastName} replied to your comment!",
+            UserId = user.Id,
+            RecipientId = userComment.Id,
+            Read = false,
+            CreatedAt = DateTime.UtcNow
+        };
 
+        await commentsNotifier.SendReplyNotification(notification, cancellationToken);
+        
         return ResultT<ReplyDto>.Success(replyDto);
     }
 }
