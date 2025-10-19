@@ -30,6 +30,9 @@ namespace Rex.Application.Interfaces.Repository
         /// <returns>True if the friendship exists; otherwise false.</returns>
         Task<bool> FriendShipExistAsync(Guid requesterId, Guid targetUserId, CancellationToken cancellationToken);
         
-        Task<FriendShip> GetFriendShipBetweenUsersAsync(Guid RequesterId, Guid TargetUserId, CancellationToken cancellationToken);
+        Task<FriendShip> GetFriendShipInPendingAsync(Guid requesterId, Guid targetUserId, CancellationToken cancellationToken);
+
+        Task<FriendShip> GetFriendShipBetweenUsersAsync(Guid requesterId, Guid targetUserId,
+            CancellationToken cancellationToken);
     }
 }

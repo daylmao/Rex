@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Rex.Application.Helpers;
 using Rex.Application.Interfaces.SignalR;
 using Rex.Application.Modules.Chats.Commands.CreatePrivateChat;
+using Rex.Application.Modules.Friendships.Commands;
 using Rex.Application.Modules.Messages.Commands.SendMessage;
 using Rex.Application.Modules.Reactions.Commands.AddLike;
 using Rex.Application.Modules.Reactions.Commands.RemoveLike;
@@ -59,6 +60,23 @@ public class AppHub(
 
         var result = await mediator.Send(new CreatePrivateChatCommand(userId.Value, otherUserId));
 
+        if (!result.IsSuccess)
+        {
+            await Clients.Caller.ReceiveError(result.Error!.Description);
+            return;
+        }
+    }
+
+    public async Task CreateFriendshipRequest(Guid otherUserId)
+    {
+        var userId = UserClaims.GetUserId(Context.User);
+        if (userId is null)
+        {
+            await Clients.Caller.ReceiveError("Authentication required");
+            return;
+        }
+        
+        var result = await mediator.Send(new CreateFriendshipRequestCommand(userId.Value, otherUserId));
         if (!result.IsSuccess)
         {
             await Clients.Caller.ReceiveError(result.Error!.Description);

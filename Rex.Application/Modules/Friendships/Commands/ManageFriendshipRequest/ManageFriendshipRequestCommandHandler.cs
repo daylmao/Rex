@@ -51,7 +51,7 @@ public class ManageFriendshipRequestCommandHandler(
                 "The user you are trying to respond to could not be found."));
         }
 
-        var friendship = await friendShipRepository.GetFriendShipBetweenUsersAsync(request.RequesterId,
+        var friendship = await friendShipRepository.GetFriendShipInPendingAsync(request.RequesterId,
             request.TargetUserId,
             cancellationToken
         );
