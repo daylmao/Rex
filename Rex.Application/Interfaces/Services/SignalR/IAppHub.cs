@@ -12,6 +12,7 @@ public interface IAppHub
     Task ReceiveReactionNotification(NotificationDto notification);
     Task ReceiveCommentNotification(NotificationDto notification);
     Task ReceiveReplyNotification(NotificationDto notification);
+    Task ReceiveChallengeNotification(NotificationDto notification);
     
     Task ReceiveChatCreated(ChatDto chat);
     Task ReceiveError(string error);
