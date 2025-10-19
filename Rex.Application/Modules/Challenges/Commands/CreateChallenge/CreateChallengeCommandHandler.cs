@@ -3,6 +3,7 @@ using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
+using Rex.Application.Interfaces.SignalR;
 using Rex.Application.Utilities;
 using Rex.Enum;
 using Rex.Models;
@@ -17,7 +18,8 @@ public class CreateChallengeCommandHandler(
     IFileRepository fileRepository,
     IUserRepository userRepository,
     ICloudinaryService cloudinaryService,
-    IGroupRepository groupRepository
+    IGroupRepository groupRepository,
+    IChallengeNotifier challengeNotifier
 ) : ICommandHandler<CreateChallengeCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(CreateChallengeCommand request, CancellationToken cancellationToken)
@@ -68,22 +70,10 @@ public class CreateChallengeCommandHandler(
         await challengeRepository.CreateAsync(challenge, cancellationToken);
         logger.LogInformation("Challenge '{ChallengeTitle}' saved successfully.", request.Title);
 
-        string coverPhoto = string.Empty;
-        if (request.CoverPhoto != null)
-        {
-            await using var stream = request.CoverPhoto.OpenReadStream();
-            coverPhoto = await cloudinaryService.UploadImageAsync(
-                stream,
-                request.CoverPhoto.FileName,
-                cancellationToken
-            );
-            logger.LogInformation("Cover photo uploaded successfully for challenge '{ChallengeTitle}'.", request.Title);
-        }
-
         File file = new()
         {
             Id = Guid.NewGuid(),
-            Url = coverPhoto,
+            Url = coverPhotoUrl,
             Type = FileType.Image.ToString(),
             UploadedAt = DateTime.UtcNow
         };
@@ -99,8 +89,20 @@ public class CreateChallengeCommandHandler(
             TargetType = TargetType.Challenge.ToString()
         };
 
-        await entityFileRepository.CreateAsync(entityFile, cancellationToken);
         logger.LogInformation("Cover photo linked successfully to challenge '{ChallengeTitle}'.", request.Title);
+        await entityFileRepository.CreateAsync(entityFile, cancellationToken);
+        
+        var notification = new Notification
+        {
+            Title = "New Challenge",
+            Description = $"{user.FirstName} {user.LastName} gave an impulse to your post in '{group.Title}'",
+            UserId = user.Id,
+            RecipientId = group.Id,
+            Read = false,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await challengeNotifier.SendChallengeNotification(notification, cancellationToken);
 
         logger.LogInformation("Challenge '{ChallengeTitle}' created successfully.", request.Title);
         return ResultT<ResponseDto>.Success(new ResponseDto("Your challenge has been created successfully!"));
