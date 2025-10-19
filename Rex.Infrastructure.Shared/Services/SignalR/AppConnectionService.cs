@@ -20,7 +20,8 @@ public class AppConnectionService(
             context.Abort();
             return;
         }
-
+        
+        await groups.AddToGroupAsync(context.ConnectionId, userId.Value.ToString());
         logger.LogInformation("User {UserId} connected with ConnectionId {ConnectionId}", userId, context.ConnectionId);
 
         var chats = await userChatRepository.GetUserChatsAsync(userId.Value, CancellationToken.None);
