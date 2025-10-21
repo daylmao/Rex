@@ -109,7 +109,7 @@ public class RegisterUserCommandHandler(
             CoverPhoto: user.CoverPhoto,
             Biography: user.Biography,
             Gender: user.Gender,
-            Birthday: user.Birthday
+            Birthday: user.Birthday.Value
         );
 
         return ResultT<RegisterUserDto>.Success(userDto);

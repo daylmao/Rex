@@ -43,7 +43,7 @@ public class GetUserDetailsByIdQueryHandler(
             userCache.UserName,
             userCache.ProfilePhoto,
             userCache.CoverPhoto,
-            userCache.Birthday,
+            userCache.Birthday ?? DateTime.MinValue,
             userCache.CreatedAt,
             userCache.Biography,
             userCache.Gender,
