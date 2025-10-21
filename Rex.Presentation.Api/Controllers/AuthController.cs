@@ -81,6 +81,12 @@ public class AuthController(
     }
 
     [HttpGet("github-login")]
+    [SwaggerOperation(
+        Summary = "Login with GitHub",
+        Description = "Redirects the user to the GitHub authentication page for OAuth login."
+    )]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IActionResult Login(string returnUrl)
     {
         var properties = new AuthenticationProperties
@@ -93,6 +99,13 @@ public class AuthController(
     }
 
     [HttpGet("callback")]
+    [SwaggerOperation(
+        Summary = "GitHub authentication callback",
+        Description = "Handles the GitHub OAuth callback, verifies authentication, and redirects the user with the generated tokens."
+    )]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Callback(string returnUrl, CancellationToken cancellationToken = default)
     {
         var authenticateResult = await HttpContext.AuthenticateAsync("GitHub");

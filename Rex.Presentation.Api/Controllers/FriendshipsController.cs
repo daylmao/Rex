@@ -33,8 +33,18 @@ public class FriendshipsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("user/{userId}")]
-    public async Task<ResultT<PagedResult<FriendshipRequestDto>>> GetFriendshipRequests([FromRoute] Guid userId,
-        [FromQuery] int pageNumber, [FromQuery] int pageSize, CancellationToken cancellationToken)
+    [SwaggerOperation(
+        Summary = "Get friendship requests by user",
+        Description = "Retrieves a paginated list of friendship requests received by the specified user."
+    )]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ResultT<PagedResult<FriendshipRequestDto>>> GetFriendshipRequests(
+        [FromRoute] Guid userId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken)
     {
         return await mediator.Send(new GetFriendshipsRequestQuery(userId, pageNumber, pageSize), cancellationToken);
     }
