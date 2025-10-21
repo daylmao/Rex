@@ -162,4 +162,9 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
         await context.Set<User>()
             .Where(c => c.Comments.Any(p => p.ParentCommentId == parentCommentId))
             .FirstOrDefaultAsync(cancellationToken);
+    
+    public async Task<User> GetByGitHubIdAsync(string githubId, CancellationToken cancellationToken) =>
+        await context.Set<User>()
+            .FirstOrDefaultAsync(u => u.GitHubId == githubId, cancellationToken);
+    
 }
