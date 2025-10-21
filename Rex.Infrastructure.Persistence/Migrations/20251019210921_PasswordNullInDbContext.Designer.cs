@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rex.Infrastructure.Persistence.Context;
@@ -11,9 +12,11 @@ using Rex.Infrastructure.Persistence.Context;
 namespace Rex.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(RexContext))]
-    partial class RexContextModelSnapshot : ModelSnapshot
+    [Migration("20251019210921_PasswordNullInDbContext")]
+    partial class PasswordNullInDbContext
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -617,8 +620,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.HasIndex("TargetId", "UserId")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_Reaction_TargetId_UserId");
+                        .HasDatabaseName("IX_TargetId_UserId");
 
                     b.ToTable("Reaction", (string)null);
                 });
@@ -681,7 +683,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                     b.Property<string>("Biography")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("Birthday")
+                    b.Property<DateTime>("Birthday")
                         .HasColumnType("date");
 
                     b.Property<bool>("ConfirmedAccount")
@@ -703,28 +705,27 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Gender")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.Property<string>("GitHubId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                        .HasDefaultValue(false);
 
-                    b.Property<DateTime?>("LastConnection")
+                    b.Property<DateTime>("LastConnection")
                         .HasColumnType("timestamptz");
 
                     b.Property<DateTime?>("LastLoginAt")
@@ -740,6 +741,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("ProfilePhoto")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -748,6 +750,7 @@ namespace Rex.Infrastructure.Persistence.Migrations
                         .HasColumnName("FkRoleId");
 
                     b.Property<string>("Status")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
@@ -764,17 +767,13 @@ namespace Rex.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique()
-                        .HasDatabaseName("UQ_User_Email");
-
-                    b.HasIndex("GitHubId")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_User_GitHubId");
+                        .HasDatabaseName("UQEmail");
 
                     b.HasIndex("RoleId");
 
                     b.HasIndex("UserName")
                         .IsUnique()
-                        .HasDatabaseName("UQ_User_UserName");
+                        .HasDatabaseName("UQUsername");
 
                     b.ToTable("User", (string)null);
                 });

@@ -39,9 +39,27 @@ public class RexContext: DbContext
         
         #region Indexes
 
-        modelBuilder.Entity<Reaction>()
-            .HasIndex(r => new { r.TargetId, r.UserId })
-            .HasName("IX_TargetId_UserId");
+        modelBuilder.Entity<Reaction>(entity =>
+        {
+            entity.HasIndex(r => new { r.TargetId, r.UserId })
+                .IsUnique()
+                .HasDatabaseName("UQ_Reaction_TargetId_UserId");
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasIndex(u => u.Email)
+                .IsUnique()
+                .HasDatabaseName("UQ_User_Email");
+
+            entity.HasIndex(u => u.UserName)
+                .IsUnique()
+                .HasDatabaseName("UQ_User_UserName");
+
+            entity.HasIndex(u => u.GitHubId)
+                .IsUnique()
+                .HasDatabaseName("UQ_User_GitHubId");
+        });
 
         #endregion
 
@@ -426,10 +444,10 @@ public class RexContext: DbContext
             entity.Property(a => a.Id)
                 .HasColumnName("PkUserId")
                 .IsRequired();
-            
+    
             entity.Property(u => u.FirstName)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(100);
 
             entity.Property(u => u.LastName)
                 .IsRequired()
@@ -438,54 +456,55 @@ public class RexContext: DbContext
             entity.Property(u => u.UserName)
                 .IsRequired()
                 .HasMaxLength(50);
-            
-            entity.HasIndex(u => u.UserName)
-                .IsUnique()
-                .HasDatabaseName("UQUsername");
 
             entity.Property(a => a.Email)
-                .IsRequired(false);
-            
-            entity.HasIndex(u => u.Email)
-                .IsUnique()
-                .HasDatabaseName("UQEmail");
+                .IsRequired();
 
             entity.Property(u => u.Password)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(255);
 
             entity.Property(u => u.ProfilePhoto)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(255);
 
             entity.Property(u => u.CoverPhoto)
+                .IsRequired(false)
                 .HasMaxLength(255);
 
             entity.Property(u => u.Biography)
+                .IsRequired(false)
                 .HasColumnType("text");
 
             entity.Property(u => u.ConfirmedAccount)
                 .HasDefaultValue(false);
-            
+    
             entity.Property(u => u.IsActive)
-                .HasDefaultValue(false);
+                .HasDefaultValue(true);
 
             entity.Property(u => u.Birthday)
+                .IsRequired(false)
                 .HasColumnType("date");
 
             entity.Property(u => u.LastLoginAt)
+                .IsRequired(false)
                 .HasColumnType("timestamptz");
-            
+    
             entity.Property(u => u.LastConnection)
+                .IsRequired(false)
                 .HasColumnType("timestamptz");
 
             entity.Property(u => u.Status)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(50);
-            
+    
             entity.Property(u => u.Gender)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(50);
+    
+            entity.Property(u => u.GitHubId)
+                .IsRequired(false)
+                .HasMaxLength(100);
         });
 
         #endregion
