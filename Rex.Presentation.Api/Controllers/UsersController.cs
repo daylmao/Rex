@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rex.Application.DTOs.Group;
 using Rex.Application.DTOs.JWT;
@@ -24,6 +25,7 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
+[Authorize]
 [Route("api/v{version:apiVersion}/users")]
 public class UsersController(
     IMediator mediator, IUserClaims userClaims)
