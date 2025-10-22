@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rex.Application.DTOs.Message;
+using Rex.Application.Interfaces;
 using Rex.Application.Modules.Messages.Commands.SendFileMessage;
 using Rex.Application.Modules.Messages.Queries.GetMessagesByChatId;
 using Rex.Application.Pagination;
@@ -13,7 +14,7 @@ namespace Rex.Presentation.Api.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class MessagesController(IMediator mediator) : ControllerBase
+public class MessagesController(IMediator mediator, IUserClaims userClaims) : ControllerBase
 {
     [HttpGet("chat/{chatId}")]
     [SwaggerOperation(
@@ -42,9 +43,12 @@ public class MessagesController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
     public async Task<ResultT<MessageDto>> SendFileMessageAsync(
-        [FromForm] SendFileMessageCommand command,
+        [FromForm] SendFileMessageDto sendFileMessage,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(command, cancellationToken);
+        var userId = userClaims.GetUserId(User);
+        return await mediator.Send(
+            new SendFileMessageCommand(sendFileMessage.ChatId, userId, sendFileMessage.Message, sendFileMessage.Files),
+            cancellationToken);
     }
 }

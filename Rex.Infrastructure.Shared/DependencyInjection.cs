@@ -206,6 +206,7 @@ public static class DependencyInjection
         services.AddScoped<ICommentsNotifier, CommentsNotifier>();
         services.AddScoped<IChallengeNotifier, ChallengeNotifier>();
         services.AddScoped<IGithubAuthService, GitHubAuthService>();
+        services.AddScoped<IUserClaims, UserClaims>();
 
         #endregion
 

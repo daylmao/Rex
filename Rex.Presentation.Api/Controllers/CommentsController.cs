@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rex.Application.DTOs.Comment;
 using Rex.Application.DTOs.Reply;
+using Rex.Application.Interfaces;
 using Rex.Application.Modules.Comments.Commands.CreateComment;
 using Rex.Application.Modules.Comments.Commands.CreateCommentReply;
 using Rex.Application.Modules.Comments.Commands.PinComment;
@@ -18,7 +19,7 @@ namespace Rex.Presentation.Api.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class CommentsController(IMediator mediator) : ControllerBase
+public class CommentsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
 {
     [HttpGet("post/{postId}")]
     [SwaggerOperation(
@@ -28,9 +29,7 @@ public class CommentsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ResultT<PagedResult<CommentDetailsDto>>> GetCommentsByPostIdAsync(
-        [FromRoute] Guid postId,
-        [FromQuery] int pageNumber,
-        [FromQuery] int pageSize,
+        [FromRoute] Guid postId, [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         return await mediator.Send(new GetCommentsByPostIdQuery(postId, pageNumber, pageSize), cancellationToken);
@@ -45,10 +44,13 @@ public class CommentsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<CommentDto>> CreateCommentAsync(
-        [FromForm] CreateCommentCommand command,
+        [FromForm] CreateCommentDto createComment,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(command, cancellationToken);
+        var userId = userClaims.GetUserId(User);
+        return await mediator.Send(
+            new CreateCommentCommand(createComment.PostId, userId, createComment.Description, createComment.Files),
+            cancellationToken);
     }
 
     [HttpPost("reply")]
@@ -60,10 +62,13 @@ public class CommentsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<ReplyDto>> CreateCommentReplyAsync(
-        [FromForm] CreateCommentReplyCommand command,
+        [FromForm] CreateCommentReplyDto createCommentReply,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(command, cancellationToken);
+        var userId = userClaims.GetUserId(User);
+        return await mediator.Send(
+            new CreateCommentReplyCommand(createCommentReply.ParentCommentId, createCommentReply.PostId, userId,
+                createCommentReply.Description, createCommentReply.Files), cancellationToken);
     }
 
     [HttpGet("replies/{parentCommentId}")]
@@ -75,10 +80,8 @@ public class CommentsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<PagedResult<ReplyDto>>> GetRepliesByCommentIdAsync(
-        [FromRoute] Guid parentCommentId,
-        [FromQuery] Guid postId,
-        [FromQuery] int pageNumber,
-        [FromQuery] int pageSize,
+        [FromRoute] Guid parentCommentId, [FromQuery] Guid postId,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         return await mediator.Send(
@@ -102,10 +105,11 @@ public class CommentsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ResultT<CommentUpdatedDto>>> PinCommentAsync(
-        [FromBody] PinCommentCommand command,
-        CancellationToken cancellationToken)
+        [FromBody] PinCommentDto pinComment, CancellationToken cancellationToken)
     {
-        return Ok(await mediator.Send(command, cancellationToken));
+        var userId = userClaims.GetUserId(User);
+        return Ok(await mediator.Send(
+            new PinCommentCommand(pinComment.CommentId, userId, pinComment.PostId, pinComment.Pin), cancellationToken));
     }
 
     [HttpPut]
@@ -117,8 +121,7 @@ public class CommentsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ResultT<CommentUpdatedDto>>> UpdateCommentAsync(
-        [FromForm] UpdateCommentCommand command,
-        CancellationToken cancellationToken)
+        [FromForm] UpdateCommentCommand command, CancellationToken cancellationToken)
     {
         return Ok(await mediator.Send(command, cancellationToken));
     }

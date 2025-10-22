@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Rex.Application.Helpers;
+using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.SignalR;
 using Rex.Application.Modules.Chats.Commands.CreatePrivateChat;
 using Rex.Application.Modules.Friendships.Commands;
@@ -13,6 +14,7 @@ namespace Rex.Infrastructure.Shared.Services.SignalR.Hubs;
 
 public class AppHub(
     IAppConnectionService connectionService,
+    IUserClaims userClaims,
     IMediator mediator) : Hub<IAppHub>
 {
     public override async Task OnConnectedAsync()
@@ -33,90 +35,58 @@ public class AppHub(
 
     public async Task SendMessage(Guid chatId, string message)
     {
-        var userId = UserClaims.GetUserId(Context.User);
-        if (userId is null)
-        {
-            await Clients.Caller.ReceiveError("Authentication required");
-            return;
-        }
-
-        var result = await mediator.Send(new SendMessageCommand(chatId, message, userId.Value));
+        var userId = userClaims.GetUserId(Context.User);
+        var result = await mediator.Send(new SendMessageCommand(chatId, message, userId));
 
         if (!result.IsSuccess)
         {
             await Clients.Caller.ReceiveError(result.Error!.Description);
-            return;
         }
     }
 
     public async Task CreatePrivateChat(Guid otherUserId)
     {
-        var userId = UserClaims.GetUserId(Context.User);
-        if (userId is null)
-        {
-            await Clients.Caller.ReceiveError("Authentication required");
-            return;
-        }
-
-        var result = await mediator.Send(new CreatePrivateChatCommand(userId.Value, otherUserId));
+        var userId = userClaims.GetUserId(Context.User);
+        var result = await mediator.Send(new CreatePrivateChatCommand(userId, otherUserId));
 
         if (!result.IsSuccess)
         {
             await Clients.Caller.ReceiveError(result.Error!.Description);
-            return;
         }
     }
 
     public async Task CreateFriendshipRequest(Guid otherUserId)
     {
-        var userId = UserClaims.GetUserId(Context.User);
-        if (userId is null)
-        {
-            await Clients.Caller.ReceiveError("Authentication required");
-            return;
-        }
+        var userId = userClaims.GetUserId(Context.User);
         
-        var result = await mediator.Send(new CreateFriendshipRequestCommand(userId.Value, otherUserId));
+        var result = await mediator.Send(new CreateFriendshipRequestCommand(userId, otherUserId));
         if (!result.IsSuccess)
         {
             await Clients.Caller.ReceiveError(result.Error!.Description);
-            return;
         }
     }
 
     public async Task AddLike(Guid postId)
     {
-        var userId = UserClaims.GetUserId(Context.User);
-        if (userId is null)
-        {
-            await Clients.Caller.ReceiveError("Authentication required");
-            return;
-        }
+        var userId = userClaims.GetUserId(Context.User);
 
-        var result = await mediator.Send(new AddLikeCommand(userId.Value, postId, ReactionTargetType.Post));
+        var result = await mediator.Send(new AddLikeCommand(userId, postId, ReactionTargetType.Post));
 
         if (!result.IsSuccess)
         {
             await Clients.Caller.ReceiveError(result.Error!.Description);
-            return;
         }
     }
 
     public async Task RemoveLike(Guid postId)
     {
-        var userId = UserClaims.GetUserId(Context.User);
-        if (userId is null)
-        {
-            await Clients.Caller.ReceiveError("Authentication required");
-            return;
-        }
+        var userId = userClaims.GetUserId(Context.User);
 
-        var result = await mediator.Send(new RemoveLikeCommand(userId.Value, postId, ReactionTargetType.Post));
+        var result = await mediator.Send(new RemoveLikeCommand(userId, postId, ReactionTargetType.Post));
 
         if (!result.IsSuccess)
         {
             await Clients.Caller.ReceiveError(result.Error!.Description);
-            return;
         }
     }
 }
