@@ -1,6 +1,4 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Rex.Application;
 using Rex.Infrastructure.Persistence;
@@ -35,12 +33,12 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("CorsPolicy", policy =>
+    options.AddPolicy("AllowAllOrigins", policy =>
     {
-        policy.WithOrigins("http://localhost:5500","http://localhost:5501", "http://127.0.0.1:5501", "http://127.0.0.1:5500", "https://localhost:5500")
-            .AllowAnyMethod()
+        policy
             .AllowAnyHeader()
-            .AllowCredentials();
+            .AllowAnyMethod()
+            .AllowAnyOrigin(); 
     });
 });
 
@@ -60,12 +58,11 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-
 app.UseWebSockets();
 
 app.UseRouting(); 
 
-app.UseCors("CorsPolicy");
+app.UseCors("AllowAllOrigins");
 
 app.UseAuthentication();
 app.UseAuthorization();

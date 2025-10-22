@@ -31,16 +31,16 @@ public static class ServiceExtensions
 
             options.EnableAnnotations();
 
+            options.DescribeAllParametersInCamelCase();
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
-                Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer",
-                BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "Enter 'Bearer' followed by your JWT token."
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = "Input your Bearer token in this format - Bearer {your token here}"
             });
-
             options.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
                 {
@@ -50,11 +50,14 @@ public static class ServiceExtensions
                         {
                             Type = ReferenceType.SecurityScheme,
                             Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
-            });
+                        },
+                        Scheme = "Bearer",
+                        Name = "Bearer",
+                        In = ParameterLocation.Header
+                    }, 
+                    new List<string>()
+                }     
+            }); 
         });
     }
 

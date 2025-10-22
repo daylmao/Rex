@@ -8,11 +8,12 @@ public class UserClaims(): IUserClaims
 {
     public Guid GetUserId(ClaimsPrincipal user)
     {
-        if (user == null) 
+        if (user == null)
             throw new UnauthorizedAccessException("You are not authenticated. Please log in.");
 
-        var claim = user.FindFirst(JwtRegisteredClaimNames.Sub);
-        if (claim == null || !Guid.TryParse(claim.Value, out var id))
+        var claim = user.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (claim is null || !Guid.TryParse(claim.Value, out var id))
             throw new UnauthorizedAccessException("Unable to identify your user. Please try logging in again.");
 
         return id;

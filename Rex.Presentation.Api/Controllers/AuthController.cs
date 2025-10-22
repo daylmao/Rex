@@ -16,13 +16,11 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Authorize]
 [Route("api/v{version:apiVersion}/auth")]
 public class AuthController(
     IMediator mediator,
     IAuthenticationService authenticationService,
-    IGithubAuthService gitHubAuthService,
-    IUserClaims userClaims)
+    IGithubAuthService gitHubAuthService)
     : ControllerBase
 {
     [HttpPost("confirm-account")]

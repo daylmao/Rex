@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rex.Application.DTOs.Group;
 using Rex.Application.DTOs.JWT;
@@ -26,6 +27,7 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
+[Authorize]
 [Route("api/v{version:apiVersion}/groups")]
 public class GroupsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
 {
@@ -41,8 +43,8 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     {
         var userId = userClaims.GetUserId(User);
         return await mediator.Send(
-            new CreatePostCommand(createGroup.GroupId, userId, createGroup.ChallengeId, createGroup.Title,
-                createGroup.Description, createGroup.Files), cancellationToken);
+            new CreateGroupCommand(userId, createGroup.ProfilePhoto, createGroup.CoverPhoto, createGroup.Title,
+                createGroup.Description, createGroup.Visibility), cancellationToken);
     }
 
     [HttpGet("{groupId}/membership")]

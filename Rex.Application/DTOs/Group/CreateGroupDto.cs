@@ -4,9 +4,9 @@ using Rex.Enum;
 namespace Rex.Application.DTOs.Group;
 
 public record CreateGroupDto(
-    Guid GroupId,
-    Guid? ChallengeId,
+    IFormFile ProfilePhoto,
+    IFormFile? CoverPhoto,
     string Title,
     string Description,
-    List<IFormFile>? Files = null
+    GroupVisibility Visibility
     );
