@@ -46,17 +46,27 @@ public class FrienshipRepository(RexContext context) : GenericRepository<FriendS
         return new PagedResult<FriendShip>(friendships, total, page, size);
     }
 
-    public async Task<bool> FriendShipExistAsync(Guid requesterId, Guid targetUserId,
-        CancellationToken cancellationToken) =>
+    public async Task<bool> FriendShipExistAsync(Guid requesterId, Guid targetUserId, CancellationToken cancellationToken) =>
         await ValidateAsync(
-            f => f.RequesterId == requesterId && f.TargetUserId == targetUserId &&
-                f.Status == RequestStatus.Pending.ToString() || f.Status == RequestStatus.Accepted.ToString(),
+            f => f.RequesterId == requesterId &&
+                 f.TargetUserId == targetUserId &&
+                 (f.Status == RequestStatus.Pending.ToString() || f.Status == RequestStatus.Accepted.ToString()) &&
+                 f.Deleted == false,
             cancellationToken);
 
-    public async Task<FriendShip> GetFriendShipBetweenUsersAsync(Guid RequesterId, Guid TargetUserId,
+    public async Task<FriendShip> GetFriendShipInPendingAsync(Guid requesterId, Guid targetUserId,
         CancellationToken cancellationToken) =>
         await context.Set<FriendShip>()
-            .Where(c => c.RequesterId == RequesterId && c.TargetUserId == TargetUserId &&
+            .Where(c => c.RequesterId == requesterId && c.TargetUserId == targetUserId &&
                         c.Status == RequestStatus.Pending.ToString())
             .FirstOrDefaultAsync(cancellationToken);
+    
+    public async Task<FriendShip> GetFriendShipBetweenUsersAsync(Guid requesterId, Guid targetUserId, CancellationToken cancellationToken) =>
+        await context.Set<FriendShip>()
+            .Where(f =>
+                (f.RequesterId == requesterId && f.TargetUserId == targetUserId) ||
+                (f.RequesterId == targetUserId && f.TargetUserId == requesterId))
+            .FirstOrDefaultAsync(cancellationToken);
+
+
 }

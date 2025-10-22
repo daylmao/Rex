@@ -33,6 +33,12 @@ public class MessageService(
             return ResultT<MessageDto>.Failure(Error.Failure("404", "Chat not found."));
         }
 
+        if (chat.Deleted)
+        {
+            logger.LogWarning("User {UserId} attempted to send a message to deleted chat {ChatId}.", userId, chatId);
+            return ResultT<MessageDto>.Failure(Error.Failure("403", "You cannot send messages to a chat that has been deactivated."));
+        }
+
         var belongs = await userChatRepository.IsUserInChatAsync(userId, chatId, cancellationToken);
         if (!belongs)
             return ResultT<MessageDto>.Failure(Error.Failure("403", "You don't have access to this chat."));

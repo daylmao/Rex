@@ -1,9 +1,11 @@
 using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rex.Application.DTOs.Group;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.DTOs.User;
+using Rex.Application.Interfaces;
 using Rex.Application.Modules.Groups.Commands;
 using Rex.Application.Modules.Groups.Commands.AproveRequest;
 using Rex.Application.Modules.Groups.Commands.DeleteGroup;
@@ -15,6 +17,7 @@ using Rex.Application.Modules.Groups.Queries.GetGroupById;
 using Rex.Application.Modules.Groups.Queries.GetGroupJoinRequests;
 using Rex.Application.Modules.Groups.Queries.GetGroupMembers;
 using Rex.Application.Modules.Groups.Queries.GetGroupsByUserId;
+using Rex.Application.Modules.Posts.Commands;
 using Rex.Application.Pagination;
 using Rex.Application.Utilities;
 using Rex.Enum;
@@ -24,8 +27,9 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
+[Authorize]
 [Route("api/v{version:apiVersion}/groups")]
-public class GroupsController(IMediator mediator) : ControllerBase
+public class GroupsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
 {
     [HttpPost]
     [SwaggerOperation(
@@ -34,13 +38,16 @@ public class GroupsController(IMediator mediator) : ControllerBase
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ResultT<ResponseDto>> CreateGroupsAsync([FromForm] CreateGroupCommand command,
+    public async Task<ResultT<ResponseDto>> CreateGroupsAsync([FromForm] CreateGroupDto createGroup,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(command, cancellationToken);
+        var userId = userClaims.GetUserId(User);
+        return await mediator.Send(
+            new CreateGroupCommand(userId, createGroup.ProfilePhoto, createGroup.CoverPhoto, createGroup.Title,
+                createGroup.Description, createGroup.Visibility), cancellationToken);
     }
 
-    [HttpGet("{groupId}/membership/{userId}")]
+    [HttpGet("{groupId}/membership")]
     [SwaggerOperation(
         Summary = "Get group by ID",
         Description = "Returns detailed information of a group for a specific user"
@@ -48,27 +55,22 @@ public class GroupsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<GroupDetailsDto>> GetGroupById([FromRoute] Guid groupId, [FromRoute] Guid userId,
+    public async Task<ResultT<GroupDetailsDto>> GetGroupById([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
+        var userId = userClaims.GetUserId(User);
         return await mediator.Send(new GetGroupByGroupIdQuery(groupId, userId), cancellationToken);
     }
 
-    [HttpGet("by-user/{userId}")]
-    [SwaggerOperation(
-        Summary = "Get groups by user",
-        Description = "Returns paginated groups associated with a specific user"
-    )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<PagedResult<GroupDetailsDto>>> GetGroupsByUserId([FromRoute] Guid userId,
+    [HttpGet("my-groups")]
+    public async Task<ResultT<PagedResult<GroupDetailsDto>>> GetGroupsByUserId(
         [FromQuery] int pageNumber,
-        int pageSize, CancellationToken cancellationToken)
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken)
     {
+        var userId = userClaims.GetUserId(User);
         return await mediator.Send(new GetGroupsByUserIdQuery(userId, pageNumber, pageSize), cancellationToken);
     }
-
 
     [HttpPut]
     [SwaggerOperation(
@@ -93,8 +95,8 @@ public class GroupsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<PagedResult<UserGroupDetailsDto>>> GetGroupMembers([FromRoute] Guid groupId,
-        [FromQuery] int pageNumber,
-        [FromQuery] int pageSize, [FromQuery] string? searchTerm = null, [FromQuery] GroupRole? roleFilter = null)
+        [FromQuery] int pageNumber, [FromQuery] int pageSize, [FromQuery] string? searchTerm = null,
+        [FromQuery] GroupRole? roleFilter = null)
     {
         return await mediator.Send(new GetGroupMembersQuery(groupId, pageNumber, pageSize,
             searchTerm, roleFilter));
@@ -127,13 +129,13 @@ public class GroupsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ResultT<ResponseDto>> RequestToJoinGroup([FromRoute] Guid groupId,
-        [FromBody] RequestToJoinGroupDto request,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(new RequestToJoinGroupCommand(request.UserId, groupId), cancellationToken);
+        var userId = userClaims.GetUserId(User);
+        return await mediator.Send(new RequestToJoinGroupCommand(userId, groupId), cancellationToken);
     }
 
-    [HttpPost("{groupId}/join-requests/{userId}/approve")]
+    [HttpPost("{groupId}/join-requests/approve")]
     [SwaggerOperation(
         Summary = "Approve join request",
         Description = "Approves a user's request to join a specific group"
@@ -142,13 +144,14 @@ public class GroupsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ResultT<ResponseDto>> ApproveRequest([FromRoute] Guid groupId, [FromRoute] Guid userId,
+    public async Task<ResultT<ResponseDto>> ApproveRequest([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
+        var userId = userClaims.GetUserId(User);
         return await mediator.Send(new ApproveRequestCommand(userId, groupId), cancellationToken);
     }
-
-    [HttpPost("{groupId}/join-requests/{userId}/reject")]
+    
+    [HttpPost("{groupId}/join-requests/reject")]
     [SwaggerOperation(
         Summary = "Reject join request",
         Description = "Rejects a user's request to join a specific group"
@@ -157,11 +160,13 @@ public class GroupsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ResultT<ResponseDto>> RejectRequest([FromRoute] Guid groupId, [FromRoute] Guid userId,
+    public async Task<ResultT<ResponseDto>> RejectRequest([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
+        var userId = userClaims.GetUserId(User);
         return await mediator.Send(new RejectRequestCommand(userId, groupId), cancellationToken);
     }
+
 
     [HttpPut("role")]
     [SwaggerOperation(
@@ -171,13 +176,17 @@ public class GroupsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<ResponseDto>> UpdateGroupMemberRole([FromBody] UpdateGroupRoleMemberCommand command,
+    public async Task<ResultT<ResponseDto>> UpdateGroupMemberRole(
+        [FromBody] UpdateGroupRoleMemberDto updateGroupRoleMember,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(command, cancellationToken);
+        var userId = userClaims.GetUserId(User);
+        return await mediator.Send(
+            new UpdateGroupRoleMemberCommand(userId, updateGroupRoleMember.GroupId, updateGroupRoleMember.Role),
+            cancellationToken);
     }
 
-    [HttpDelete("{groupId}")]
+    [HttpDelete]
     [SwaggerOperation(
         Summary = "Delete a group",
         Description = "Deletes a group if the request comes from the group leader"
@@ -186,9 +195,10 @@ public class GroupsController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ResultT<ResponseDto>> DeleteGroupAsync([FromRoute] Guid groupId, [FromQuery] Guid userId,
+    public async Task<ResultT<ResponseDto>> DeleteGroupAsync([FromBody] DeleteGroupDto deleteGroup,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(new DeleteGroupCommand(groupId, userId), cancellationToken);
+        var userId = userClaims.GetUserId(User);
+        return await mediator.Send(new DeleteGroupCommand(deleteGroup.GroupId, userId), cancellationToken);
     }
 }

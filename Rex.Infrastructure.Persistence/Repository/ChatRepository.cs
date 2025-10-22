@@ -86,10 +86,10 @@ public class ChatRepository(RexContext context) : GenericRepository<Chat>(contex
     public async Task<bool> ChatExistsAsync(Guid chatId, CancellationToken cancellationToken) =>
         await ValidateAsync(c => c.Id == chatId, cancellationToken);
 
-    public Task<Chat?> GetOneToOneChat(Guid firstUser, Guid secondUser, CancellationToken cancellationToken) =>
+    public Task<Chat> GetOneToOneChat(Guid firstUser, Guid secondUser, CancellationToken cancellationToken) =>
         context.Set<Chat>()
-            .AsNoTracking()
             .Where(c => c.Type == ChatType.Private.ToString() &&
+                        c.UserChats.Count == 2 &&
                         c.UserChats.Any(uc => uc.UserId == firstUser) &&
                         c.UserChats.Any(uc => uc.UserId == secondUser))
             .FirstOrDefaultAsync(cancellationToken);

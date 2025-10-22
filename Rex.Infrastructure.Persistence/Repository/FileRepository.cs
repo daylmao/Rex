@@ -3,6 +3,7 @@ using Rex.Application.Interfaces.Repository;
 using Rex.Application.Pagination;
 using Rex.Enum;
 using Rex.Infrastructure.Persistence.Context;
+using Rex.Models;
 using File = Rex.Models.File;
 
 namespace Rex.Infrastructure.Persistence.Repository;
@@ -36,7 +37,7 @@ public class FileRepository(RexContext context) : GenericRepository<File>(contex
     
     public async Task<IEnumerable<File>> GetFilesByTargetIdsAsync(IEnumerable<Guid> ids, TargetType targetType, CancellationToken ct)
     {
-        return await context.File
+        return await context.Set<File>()
             .Include(f => f.EntityFiles)
             .Select(c => new File
             {
@@ -46,6 +47,19 @@ public class FileRepository(RexContext context) : GenericRepository<File>(contex
                 EntityFiles = c.EntityFiles.Where(e => ids.Contains(e.TargetId) && e.TargetType == targetType.ToString()).ToList()
             })
             .ToListAsync(ct);
+    }
+
+    public async Task<IEnumerable<File>> GetFilesByTargetIdAsync(Guid targetId, TargetType targetType, CancellationToken cancellationToken)
+    {
+        return await context.Set<EntityFile>()
+            .Where(e => e.TargetId == targetId && e.TargetType == targetType.ToString())
+            .Select(e => new File
+            {
+                Id = e.File.Id,
+                Url = e.File.Url,
+                Type = e.File.Type,
+                UploadedAt = e.File.UploadedAt
+            }).ToListAsync(cancellationToken);
     }
 
 }

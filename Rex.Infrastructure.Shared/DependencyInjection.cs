@@ -9,6 +9,9 @@ using Rex.Application.Interfaces.SignalR;
 using Rex.Configurations;
 using Rex.Infrastructure.Shared.Services;
 using Rex.Infrastructure.Shared.Services.SignalR;
+using Microsoft.AspNetCore.Authentication;
+using AuthenticationService = Rex.Infrastructure.Shared.Services.AuthenticationService;
+using IAuthenticationService = Rex.Application.Interfaces.IAuthenticationService;
 
 namespace Rex.Infrastructure.Shared;
 
@@ -35,6 +38,7 @@ public static class DependencyInjection
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = "Cookies";
             })
             .AddJwtBearer(options =>
             {
@@ -96,6 +100,96 @@ public static class DependencyInjection
                         return Task.CompletedTask;
                     }
                 };
+            })
+            .AddCookie("Cookies", options =>
+            {
+                options.LoginPath = "/api/v1/auth/github-login";
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(5); 
+            })
+            .AddOAuth("GitHub", options =>
+            {
+                var githubConfig = configuration.GetSection("GitHubAuthentication");
+
+                var clientId = githubConfig["ClientId"];
+                var clientSecret = githubConfig["ClientSecret"];
+
+                if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+                {
+                    throw new InvalidOperationException(
+                        "GitHub OAuth configuration is missing. Please ensure ClientId and ClientSecret are set in GitHubAuthentication section."
+                    );
+                }
+
+                options.ClientId = clientId;
+                options.ClientSecret = clientSecret;
+
+                options.CallbackPath = "/signin-github";
+
+                options.AuthorizationEndpoint = "https://github.com/login/oauth/authorize";
+                options.TokenEndpoint = "https://github.com/login/oauth/access_token";
+                options.UserInformationEndpoint = "https://api.github.com/user";
+
+                options.Scope.Add("user:email");
+                options.Scope.Add("read:user");
+
+                options.ClaimActions.MapJsonKey("urn:github:id", "id");
+                options.ClaimActions.MapJsonKey("urn:github:login", "login");
+                options.ClaimActions.MapJsonKey("urn:github:name", "name");
+                options.ClaimActions.MapJsonKey("urn:github:email", "email");
+                options.ClaimActions.MapJsonKey("urn:github:avatar", "avatar_url");
+
+                options.SignInScheme = "Cookies";
+
+                options.Events = new Microsoft.AspNetCore.Authentication.OAuth.OAuthEvents
+                {
+                    OnCreatingTicket = async context =>
+                    {
+                        var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                        request.Headers.Accept.Add(
+                            new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                        request.Headers.Authorization =
+                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.AccessToken);
+
+                        var response = await context.Backchannel.SendAsync(request,
+                            HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
+                        response.EnsureSuccessStatusCode();
+
+                        var user = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                        context.RunClaimActions(user.RootElement);
+
+                        if (!context.Identity.HasClaim(c => c.Type == "urn:github:email"))
+                        {
+                            var emailRequest =
+                                new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/user/emails");
+                            emailRequest.Headers.Accept.Add(
+                                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                            emailRequest.Headers.Authorization =
+                                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.AccessToken);
+
+                            var emailResponse = await context.Backchannel.SendAsync(emailRequest,
+                                HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
+
+                            if (emailResponse.IsSuccessStatusCode)
+                            {
+                                var emails =
+                                    System.Text.Json.JsonDocument.Parse(await emailResponse.Content
+                                        .ReadAsStringAsync());
+                                var primaryEmail = emails.RootElement.EnumerateArray()
+                                    .FirstOrDefault(e => e.GetProperty("primary").GetBoolean());
+
+                                if (primaryEmail.ValueKind != System.Text.Json.JsonValueKind.Undefined)
+                                {
+                                    var email = primaryEmail.GetProperty("email").GetString();
+                                    if (!string.IsNullOrEmpty(email))
+                                    {
+                                        context.Identity.AddClaim(
+                                            new System.Security.Claims.Claim("urn:github:email", email));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
             });
 
         #endregion
@@ -109,6 +203,10 @@ public static class DependencyInjection
         services.AddScoped<IChatNotifier, ChatNotifier>();
         services.AddScoped<IReactionNotifier, ReactionNotifier>();
         services.AddScoped<IFriendshipNotifier, FriendshipNotifier>();
+        services.AddScoped<ICommentsNotifier, CommentsNotifier>();
+        services.AddScoped<IChallengeNotifier, ChallengeNotifier>();
+        services.AddScoped<IGithubAuthService, GitHubAuthService>();
+        services.AddScoped<IUserClaims, UserClaims>();
 
         #endregion
 

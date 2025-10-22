@@ -54,6 +54,7 @@ public static class ProcessFiles
                 Type = fileType.ToString(),
                 UploadedAt = DateTime.UtcNow
             };
+            
             await fileRepository.CreateAsync(newFile, cancellationToken);
 
             var entityFile = new EntityFile

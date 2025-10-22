@@ -1,8 +1,10 @@
 using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rex.Application.DTOs.Challenge;
 using Rex.Application.DTOs.JWT;
+using Rex.Application.Interfaces;
 using Rex.Application.Modules.Challenges.Commands.DeleteChallenge;
 using Rex.Application.Modules.Challenges.Commands.JoinChallenge;
 using Rex.Application.Modules.Challenges.Commands.UpdateChallenge;
@@ -18,8 +20,9 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class ChallengesController(IMediator mediator) : ControllerBase
+public class ChallengesController(IMediator mediator, IUserClaims userClaims) : ControllerBase
 {
     [HttpPost]
     [SwaggerOperation(
@@ -29,10 +32,13 @@ public class ChallengesController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<ResponseDto>> CreateChallengeAsync([FromForm] CreateChallengeCommand command,
+    public async Task<ResultT<ResponseDto>> CreateChallengeAsync([FromForm] CreateChallengeDto createChallenge,
         CancellationToken cancellation)
     {
-        return await mediator.Send(command, cancellation);
+        var userId = userClaims.GetUserId(User);
+        return await mediator.Send(
+            new CreateChallengeCommand(userId, createChallenge.GroupId, createChallenge.Title,
+                createChallenge.Description, createChallenge.Duration, createChallenge.CoverPhoto), cancellation);
     }
 
     [HttpGet("{groupId}/status/{status}")]
@@ -43,24 +49,25 @@ public class ChallengesController(IMediator mediator) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<PagedResult<ChallengeGroupDetailsDto>>> GetChallengesByStatusAsync(
-        [FromRoute] Guid groupId, [FromRoute] ChallengeStatus status,
-        [FromQuery] int pageNumber, [FromQuery] int pageSize, CancellationToken cancellation)
+    public async Task<ResultT<PagedResult<ChallengeGroupDetailsDto>>> GetChallengesByStatusAsync([FromRoute] Guid groupId, 
+        [FromRoute] ChallengeStatus status, [FromQuery] int pageNumber, 
+        [FromQuery] int pageSize, CancellationToken cancellation)
     {
         return await mediator.Send(new GetChallengesByStatusQuery(groupId, status, pageNumber, pageSize), cancellation);
     }
 
-    [HttpPost("{challengeId}/join/user/{userId}")]
+    [HttpPost("{challengeId}/join")]
     [SwaggerOperation(
         Summary = "Join a challenge",
-        Description = "Allows a user to join an existing challenge"
+        Description = "Allows the authenticated user to join an existing challenge"
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<ResponseDto>> JoinChallengeAsync([FromRoute] Guid challengeId, [FromRoute] Guid userId
-        , CancellationToken cancellation)
+    public async Task<ResultT<ResponseDto>> JoinChallengeAsync([FromRoute] Guid challengeId,
+        CancellationToken cancellation)
     {
+        var userId = userClaims.GetUserId(User);
         return await mediator.Send(new JoinChallengeCommand(challengeId, userId), cancellation);
     }
 
@@ -78,36 +85,35 @@ public class ChallengesController(IMediator mediator) : ControllerBase
         return await mediator.Send(command, cancellation);
     }
 
-    [HttpGet("user/{userId}")]
+    [HttpGet("user")]
     [SwaggerOperation(
-        Summary = "Get challenges by user",
-        Description = "Returns the challenges associated with a user filtered by status"
+        Summary = "Get challenges of the authenticated user",
+        Description = "Returns the challenges associated with the authenticated user filtered by status"
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<PagedResult<ChallengeUserDetailsDto>>> GetChallengesByUserAsync([FromRoute] Guid userId,
-        [FromQuery] UserChallengeStatus status,
-        [FromQuery] int pageNumber, [FromQuery] int pageSize, CancellationToken cancellationToken)
+    public async Task<ResultT<PagedResult<ChallengeUserDetailsDto>>> GetChallengesByUserAsync(
+        [FromQuery] UserChallengeStatus status, [FromQuery] int pageNumber, [FromQuery] int pageSize, 
+        CancellationToken cancellationToken)
     {
+        var userId = userClaims.GetUserId(User);
         return await mediator.Send(new GetChallengesByUserQuery(userId, status, pageNumber, pageSize),
             cancellationToken);
     }
-    
-    [HttpDelete("{challengeId}/user/{userId}")]
+
+    [HttpDelete("{challengeId}")]
     [SwaggerOperation(
         Summary = "Delete a challenge",
-        Description = "Deletes a challenge if the user is authorized (admin or higher)"
+        Description = "Deletes a challenge if the authenticated user is authorized (admin or higher)"
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<ResponseDto>> DeleteChallengeAsync(
-        [FromRoute] Guid challengeId,
-        [FromRoute] Guid userId,
+    public async Task<ResultT<ResponseDto>> DeleteChallengeAsync([FromRoute] Guid challengeId,
         CancellationToken cancellationToken)
     {
+        var userId = userClaims.GetUserId(User);
         return await mediator.Send(new DeleteChallengeCommand(challengeId, userId), cancellationToken);
     }
-
 }

@@ -13,6 +13,7 @@ public class CreatePrivateChatCommandHandler(
     IUserChatRepository userChatRepository,
     IChatRepository chatRepository,
     IUserRepository userRepository,
+    IFriendShipRepository friendShipRepository,
     IChatNotifier chatNotifier
     ) : ICommandHandler<CreatePrivateChatCommand, ResponseDto>
 {
@@ -29,6 +30,16 @@ public class CreatePrivateChatCommandHandler(
 
         if (user is null || secondUser is null)
             return ResultT<ResponseDto>.Failure(Error.NotFound("404", "One or both users could not be found."));
+        
+        var friendshipExists = await friendShipRepository.FriendShipExistAsync(request.UserId, secondUser.Id, cancellationToken);
+        if (!friendshipExists)
+        {
+            logger.LogWarning("Failed to create chat between users {UserId} and {SecondUserId} because the friendship is inactive or deleted.", 
+                request.UserId, request.SecondUserId);
+    
+            return ResultT<ResponseDto>.Failure(Error.Failure("403", 
+                "You cannot create a chat because the friendship is no longer active."));
+        }
 
         var chatExists = await chatRepository.GetOneToOneChat(request.UserId, request.SecondUserId, cancellationToken);
         if (chatExists is not null)

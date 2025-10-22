@@ -10,8 +10,14 @@ public interface IAppHub
     Task ReceiveMessage(MessageDto message);
     Task ReceiveFriendRequestNotification(NotificationDto notification);
     Task ReceiveReactionNotification(NotificationDto notification);
+    Task ReceiveCommentNotification(NotificationDto notification);
+    Task ReceiveReplyNotification(NotificationDto notification);
+    Task ReceiveChallengeNotification(NotificationDto notification);
+    
     Task ReceiveChatCreated(ChatDto chat);
     Task ReceiveError(string error);
+
+    Task CreateFriendshipRequest(Guid otherUserId);
     
     Task ReceiveLikeUpdate(LikeChangedDto update);
 }

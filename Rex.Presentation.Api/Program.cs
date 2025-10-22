@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi;
 using Rex.Application;
 using Rex.Infrastructure.Persistence;
@@ -16,21 +17,28 @@ builder.Host.UseSerilog((context, LoggerConfiguration) =>
 builder.Services.AddControllers().AddFilters();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 builder.Services.AddPersistenceLayer(builder.Configuration);
 builder.Services.AddApplicationLayer(builder.Configuration);
 builder.Services.AddSharedLayer(builder.Configuration);
 builder.Services.AddSwaggerExtension();
 builder.Services.AddVersioning();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+});
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("CorsPolicy", policy =>
+    options.AddPolicy("AllowAllOrigins", policy =>
     {
-        policy.WithOrigins("http://localhost:5500","http://localhost:5501", "http://127.0.0.1:5501", "http://127.0.0.1:5500", "https://localhost:5500")
-            .AllowAnyMethod()
+        policy
             .AllowAnyHeader()
-            .AllowCredentials();
+            .AllowAnyMethod()
+            .AllowAnyOrigin(); 
     });
 });
 
@@ -50,12 +58,11 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-
 app.UseWebSockets();
 
 app.UseRouting(); 
 
-app.UseCors("CorsPolicy");
+app.UseCors("AllowAllOrigins");
 
 app.UseAuthentication();
 app.UseAuthorization();

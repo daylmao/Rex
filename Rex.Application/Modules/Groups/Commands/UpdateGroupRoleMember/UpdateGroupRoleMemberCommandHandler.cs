@@ -32,7 +32,7 @@ public class UpdateGroupRoleMemberCommandHandler(
         if (user is null)
         {
             logger.LogWarning("User with ID {UserId} was not found.", request.UserId);
-            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "The user you're trying to modify was not found."));
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "The user was not found."));
         }
 
         var member = await userGroupRepository.GetMemberAsync(request.UserId, request.GroupId, cancellationToken);
@@ -42,7 +42,7 @@ public class UpdateGroupRoleMemberCommandHandler(
             return ResultT<ResponseDto>.Failure(Error.NotFound("404", "This user is not part of the selected group."));
         }
 
-        if (member.GroupRole == null)
+        if (member.GroupRole is null)
         {
             logger.LogWarning("GroupRole is null for member {UserId} in group {GroupId}.", request.UserId, request.GroupId);
             return ResultT<ResponseDto>.Failure(Error.Failure("500", "We couldn't retrieve the user's role in the group. Please try again later."));

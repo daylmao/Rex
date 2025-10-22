@@ -38,6 +38,9 @@ namespace Rex.Application.Interfaces.Repository
 
         Task<IEnumerable<File>> GetFilesByTargetIdsAsync(IEnumerable<Guid> ids, TargetType targetType,
             CancellationToken cancellationToken);
+        
+        Task<IEnumerable<File>> GetFilesByTargetIdAsync(Guid targetId, TargetType targetType,
+            CancellationToken cancellationToken);
 
     }
 }
