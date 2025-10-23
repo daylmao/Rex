@@ -15,15 +15,25 @@ public class CreateGroupCommandHandler(
     IGroupRepository groupRepository,
     ICloudinaryService cloudinaryService,
     IGroupRoleRepository groupRoleRepository,
-    IUserGroupRepository userGroupRepository
+    IUserGroupRepository userGroupRepository,
+    IUserRepository userRepository
 ) : ICommandHandler<CreateGroupCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(CreateGroupCommand request, CancellationToken cancellationToken)
     {
-        if (request is null)
+
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (user is null)
         {
-            logger.LogWarning("CreateGroupCommand request is null.");
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "No information received to create the group."));
+            logger.LogWarning("User with ID {UserId} not found.", request.UserId);
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "The user does not exist or could not be found."));
+        }
+
+        var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.UserId, cancellationToken);
+        if (!accountConfirmed)
+        {
+            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.UserId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
         }
 
         string profileUrl = "";

@@ -51,6 +51,13 @@ public class ManageFriendshipRequestCommandHandler(
                 "The user you are trying to respond to could not be found."));
         }
 
+        var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.RequesterId, cancellationToken);
+        if (!accountConfirmed)
+        {
+            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.RequesterId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+        }
+        
         var friendship = await friendShipRepository.GetFriendShipInPendingAsync(request.RequesterId,
             request.TargetUserId,
             cancellationToken

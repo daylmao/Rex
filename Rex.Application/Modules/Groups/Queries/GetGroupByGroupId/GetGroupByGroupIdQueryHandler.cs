@@ -34,6 +34,13 @@ public class GetGroupByGroupIdQueryHandler(
                 Error.NotFound("404", "We couldn't find the user making the request."));
         }
 
+        var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.UserId, cancellationToken);
+        if (!accountConfirmed)
+        {
+            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.UserId);
+            return ResultT<GroupDetailsDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+        }
+        
         var isUserBanned =
             await userGroupRepository.IsUserBannedAsync(request.UserId, request.GroupId, cancellationToken);
         if (isUserBanned)
