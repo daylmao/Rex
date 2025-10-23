@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rex.Application.DTOs.Code;
 using Rex.Application.DTOs.Group;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.DTOs.User;
@@ -69,11 +70,11 @@ public class UsersController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<ResponseDto>> ConfirmEmailAsync([FromBody] ConfirmEmailChangeDto confirmEmailChange,
+    public async Task<ResultT<ResponseDto>> ConfirmEmailAsync([FromBody] ConfirmEmailCodeDto code,
         CancellationToken cancellationToken)
     {
         var userId = userClaims.GetUserId(User);
-        return await mediator.Send(new ConfirmEmailChangeCommand(userId, confirmEmailChange.Code), cancellationToken);
+        return await mediator.Send(new ConfirmEmailChangeCommand(userId, code.Code), cancellationToken);
     }
 
     [HttpPut("change-email")]

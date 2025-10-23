@@ -80,7 +80,6 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
         
         return new PagedResult<User>(users, total, page, size);
     }
-        
 
     public async Task<PagedResult<User>> GetAdministrativeMembersByGroupIdAsync(Guid groupId, int page, int size,
         CancellationToken cancellationToken)
@@ -106,7 +105,6 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
         
         return new PagedResult<User>(users, total, page, size);
     }
-    
 
     public async Task<PagedResult<User>> GetPendingRequestsByGroupIdAsync(Guid groupId, int page, int size, 
         CancellationToken cancellationToken)
@@ -166,5 +164,4 @@ public class UserRepository(RexContext context): GenericRepository<User>(context
     public async Task<User> GetByGitHubIdAsync(string githubId, CancellationToken cancellationToken) =>
         await context.Set<User>()
             .FirstOrDefaultAsync(u => u.GitHubId == githubId, cancellationToken);
-    
 }
