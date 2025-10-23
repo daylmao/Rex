@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rex.Application.DTOs.Code;
 using Swashbuckle.AspNetCore.Annotations;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces;
@@ -20,7 +21,8 @@ namespace Rex.Presentation.Api.Controllers;
 public class AuthController(
     IMediator mediator,
     IAuthenticationService authenticationService,
-    IGithubAuthService gitHubAuthService)
+    IGithubAuthService gitHubAuthService,
+    IUserClaims userClaims)
     : ControllerBase
 {
     [HttpPost("confirm-account")]
@@ -31,10 +33,11 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<ResponseDto>> ConfirmAccountAsync([FromBody] ConfirmAccountCommand command,
+    public async Task<ResultT<ResponseDto>> ConfirmAccountAsync([FromBody] ConfirmAccountDto code,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(command, cancellationToken);
+        var userId = userClaims.GetUserId(User);
+        return await mediator.Send(new ConfirmAccountCommand(userId, code.Code ), cancellationToken);
     }
 
     [HttpPost("resend-code")]
@@ -74,10 +77,10 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<TokenResponseDto>> RefreshTokenAsync([FromBody] string refreshToken,
+    public async Task<ResultT<TokenResponseDto>> RefreshTokenAsync([FromBody] RefreshTokenDto refreshToken,
         CancellationToken cancellationToken)
     {
-        return await authenticationService.RefreshTokenAsync(refreshToken, cancellationToken);
+        return await authenticationService.RefreshTokenAsync(refreshToken.refreshToken, cancellationToken);
     }
 
     [HttpGet("github-login")]
