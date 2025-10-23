@@ -24,6 +24,8 @@ namespace Rex.Presentation.Api.Controllers;
 [Route("api/v{version:apiVersion}/[controller]")]
 public class ChallengesController(IMediator mediator, IUserClaims userClaims) : ControllerBase
 {
+    
+    [Authorize]
     [HttpPost]
     [SwaggerOperation(
         Summary = "Create a new challenge",
@@ -56,6 +58,8 @@ public class ChallengesController(IMediator mediator, IUserClaims userClaims) : 
         return await mediator.Send(new GetChallengesByStatusQuery(groupId, status, pageNumber, pageSize), cancellation);
     }
 
+    
+    [Authorize]
     [HttpPost("{challengeId}/join")]
     [SwaggerOperation(
         Summary = "Join a challenge",
@@ -85,6 +89,8 @@ public class ChallengesController(IMediator mediator, IUserClaims userClaims) : 
         return await mediator.Send(command, cancellation);
     }
 
+    
+    [Authorize]
     [HttpGet("user")]
     [SwaggerOperation(
         Summary = "Get challenges of the authenticated user",
@@ -102,6 +108,7 @@ public class ChallengesController(IMediator mediator, IUserClaims userClaims) : 
             cancellationToken);
     }
 
+    [Authorize]
     [HttpDelete("{challengeId}")]
     [SwaggerOperation(
         Summary = "Delete a challenge",

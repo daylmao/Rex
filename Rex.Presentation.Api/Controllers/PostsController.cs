@@ -16,10 +16,10 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
-[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class PostsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
 {
+    [Authorize]
     [HttpPost]
     [SwaggerOperation(
         Summary = " Create a new post",
@@ -38,6 +38,7 @@ public class PostsController(IMediator mediator, IUserClaims userClaims) : Contr
                 createPost.Description, createPost.Files), cancellationToken);
     }
 
+    [Authorize]
     [HttpGet("group/{groupId}/user")]
     [SwaggerOperation(
         Summary = "Get posts by group ID",
@@ -57,6 +58,7 @@ public class PostsController(IMediator mediator, IUserClaims userClaims) : Contr
         );
     }
 
+    [Authorize]
     [HttpDelete("{postId}/user")]
     [SwaggerOperation(
         Summary = "Delete a post",

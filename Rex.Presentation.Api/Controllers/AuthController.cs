@@ -25,6 +25,8 @@ public class AuthController(
     IUserClaims userClaims)
     : ControllerBase
 {
+    
+    [Authorize]
     [HttpPost("confirm-account")]
     [SwaggerOperation(
         Summary = "Confirm account",

@@ -26,12 +26,12 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
-[Authorize]
 [Route("api/v{version:apiVersion}/users")]
 public class UsersController(
     IMediator mediator, IUserClaims userClaims)
     : ControllerBase
 {
+    [Authorize]
     [HttpPut("password")]
     [SwaggerOperation(
         Summary = "Update user password",
@@ -64,6 +64,7 @@ public class UsersController(
         return await mediator.Send(command, cancellationToken);
     }
 
+    [Authorize]
     [HttpPut("confirm-email-change")]
     [SwaggerOperation(Summary = "Confirm email change",
         Description = "Confirms a pending email change request for the user")]
@@ -77,6 +78,7 @@ public class UsersController(
         return await mediator.Send(new ConfirmEmailChangeCommand(userId, code.Code), cancellationToken);
     }
 
+    [Authorize]
     [HttpPut("change-email")]
     [SwaggerOperation(
         Summary = "Update user email",
@@ -94,6 +96,7 @@ public class UsersController(
             cancellationToken);
     }
 
+    [Authorize]
     [HttpPatch("username")]
     [SwaggerOperation(
         Summary = "Update username",
@@ -110,6 +113,7 @@ public class UsersController(
         return await mediator.Send(new UpdateUsernameCommand(userId, updateUsername.Username), cancellationToken);
     }
 
+    [Authorize]
     [HttpPut]
     [SwaggerOperation(
         Summary = "Update user information",
@@ -129,6 +133,7 @@ public class UsersController(
             cancellationToken);
     }
 
+    [Authorize]
     [HttpGet("me")]
     [SwaggerOperation(
         Summary = "Get user profile by ID",
@@ -143,6 +148,7 @@ public class UsersController(
         return await mediator.Send(new GetUserDetailsByIdQuery(userId), cancellationToken);
     }
 
+    [Authorize]
     [HttpGet("groups/recommended")]
     [SwaggerOperation(
         Summary = "Get recommended groups for user",

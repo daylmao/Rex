@@ -19,7 +19,6 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class CommentsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
 {
@@ -37,6 +36,7 @@ public class CommentsController(IMediator mediator, IUserClaims userClaims) : Co
         return await mediator.Send(new GetCommentsByPostIdQuery(postId, pageNumber, pageSize), cancellationToken);
     }
 
+    [Authorize]
     [HttpPost]
     [SwaggerOperation(
         Summary = "Create a new comment",
@@ -55,6 +55,7 @@ public class CommentsController(IMediator mediator, IUserClaims userClaims) : Co
             cancellationToken);
     }
 
+    [Authorize]
     [HttpPost("reply")]
     [SwaggerOperation(
         Summary = "Create a new reply to a comment",
@@ -97,6 +98,7 @@ public class CommentsController(IMediator mediator, IUserClaims userClaims) : Co
         );
     }
 
+    [Authorize]
     [HttpPost("pin")]
     [SwaggerOperation(
         Summary = "Pin or unpin a comment",

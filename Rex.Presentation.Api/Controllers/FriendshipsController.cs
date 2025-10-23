@@ -18,10 +18,11 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
-[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class FriendshipsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
 {
+    
+    [Authorize]
     [HttpPut("{targetUserId}/status")]
     [SwaggerOperation(
         Summary = "Manage friendship request",
@@ -41,6 +42,7 @@ public class FriendshipsController(IMediator mediator, IUserClaims userClaims) :
             cancellationToken);
     }
 
+    [Authorize]
     [HttpGet("requests")]
     [SwaggerOperation(
         Summary = "Get friendship requests by user",
@@ -50,14 +52,14 @@ public class FriendshipsController(IMediator mediator, IUserClaims userClaims) :
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<PagedResult<FriendshipRequestDto>>> GetFriendshipRequests(
-        [FromQuery] int pageNumber,
-        [FromQuery] int pageSize,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         var userId = userClaims.GetUserId(User);
         return await mediator.Send(new GetFriendshipsRequestQuery(userId, pageNumber, pageSize), cancellationToken);
     }
 
+    [Authorize]
     [HttpDelete("{targetUserId}")]
     [SwaggerOperation(
         Summary = "Delete a friendship",

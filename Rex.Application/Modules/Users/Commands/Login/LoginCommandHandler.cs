@@ -44,6 +44,13 @@ public class LoginCommandHandler(
             return ResultT<TokenResponseDto>.Failure(Error.Failure("403",
                 "Your account is deactivated. Please contact support to reactivate your account."));
         }
+      
+        if (user.Password is null)
+        {
+            logger.LogWarning("User {UserId} tried to log in with email/password but registered using GitHub.", user.Id);
+            return ResultT<TokenResponseDto>.Failure(Error.Failure("400",
+                "It looks like you signed up using GitHub. Please continue with GitHub to log in."));
+        }
 
         var verifiedPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
         if (!verifiedPassword)

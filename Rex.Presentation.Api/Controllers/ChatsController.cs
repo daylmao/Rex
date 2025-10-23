@@ -13,10 +13,11 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
-[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class ChatsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
 {
+    
+    [Authorize]
     [HttpGet] 
     [SwaggerOperation(
         Summary = "Get user chats",
