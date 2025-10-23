@@ -1,18 +1,16 @@
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs.Configs;
 using Rex.Application.DTOs.User;
 using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
+using Rex.Application.Modules.User.Commands.RegisterUser;
 using Rex.Application.Utilities;
 using Rex.Enum;
 
-namespace Rex.Application.Modules.User.Commands.RegisterUser;
+namespace Rex.Application.Modules.Users.Commands.RegisterUser;
 
 public class RegisterUserCommandHandler(
     ILogger<RegisterUserCommandHandler> logger,
-    ICodeService codeService,
-    IEmailService emailService,
     IUserRepository userRepository,
     IUserRoleRepository roleRepository,
     ICloudinaryService cloudinaryService
@@ -82,23 +80,7 @@ public class RegisterUserCommandHandler(
 
         await userRepository.CreateAsync(user, cancellationToken);
         logger.LogInformation("User created successfully in database.");
-
-        var code = await codeService.CreateCodeAsync(user.Id, CodeType.ConfirmAccount, cancellationToken);
-        if (!code.IsSuccess)
-        {
-            logger.LogError("Failed to create confirmation code.");
-            return ResultT<RegisterUserDto>.Failure(Error.Failure("400",
-                "Oops! Something went wrong while generating your confirmation code. Try again later."));
-        }
-
-        await emailService.SendEmailAsync(new EmailDto(
-            User: request.Email,
-            Body: EmailTemplate.ConfirmAccountTemplate(user.FirstName, user.LastName, code.Value),
-            Subject: "Confirm Your Account"
-        ));
-
-        logger.LogInformation("Confirmation email sent.");
-
+        
         RegisterUserDto userDto = new(
             UserId: user.Id,
             FirstName: user.FirstName,
