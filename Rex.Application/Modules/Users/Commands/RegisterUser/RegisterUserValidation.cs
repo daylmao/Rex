@@ -32,22 +32,5 @@ public class RegisterUserValidation: AbstractValidator<RegisterUserCommand>
                 .Must(n => n.Length <= 5 * 1024 * 1024)
                 .WithMessage("Profile photo size is too big");
         });
-        
-        When(n => n.CoverPhoto is not null, () =>
-        {
-            RuleFor(n => n.CoverPhoto)
-                .Must(n => n.Length > 0).WithMessage("Cover Photo is required")
-                .Must(n => _allowedExtensions.Contains(Path.GetExtension(n.FileName).ToLower()))
-                .WithMessage("Cover Photo extension is not supported")
-                .Must(n => n.Length <= 5 * 1024 * 1024)
-                .WithMessage("Cover Photo size is too big");
-        });
-
-        
-        RuleFor(n => n.Gender)
-            .NotEmpty().WithMessage("Gender is required");
-        
-        RuleFor(n => n.Birthday)
-            .NotEmpty().WithMessage("Birthday is required");
     }
 }
