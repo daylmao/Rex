@@ -1,10 +1,9 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Rex.Application.Interfaces;
 
 namespace Rex.Infrastructure.Shared.Services;
 
-public class UserClaims(): IUserClaims
+public class UserClaimService(): IUserClaimService
 {
     public Guid GetUserId(ClaimsPrincipal user)
     {
