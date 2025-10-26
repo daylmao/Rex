@@ -128,6 +128,8 @@ public class CreatePostCommandHandler(
             if (!filesResult.IsSuccess)
                 return filesResult;
         }
+        
+        await userGroupRepository.ResetWarningStatus(post.UserId, post.GroupId, cancellationToken);
 
         return ResultT<ResponseDto>.Success(new ResponseDto("Your post has been created successfully!"));
     }
