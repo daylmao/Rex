@@ -3,5 +3,5 @@ using Rex.Enum;
 namespace Rex.Application.DTOs.Friendship;
 
 public record UpdateFriendshipStatusDto(
-    RequestStatus Status
+    FriendshipStatus Status
     );

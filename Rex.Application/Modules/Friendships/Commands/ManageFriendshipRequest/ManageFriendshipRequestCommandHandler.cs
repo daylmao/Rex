@@ -28,13 +28,6 @@ public class ManageFriendshipRequestCommandHandler(
             return ResultT<ResponseDto>.Failure(Error.Failure("400", "You cannot respond to your own friend request."));
         }
 
-        if (request.Status == RequestStatus.Pending)
-        {
-            logger.LogWarning("User {UserId} attempted to set a friendship request back to pending",
-                request.RequesterId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Friend requests cannot be set back to pending."));
-        }
-
         var requester = await userRepository.GetByIdAsync(request.RequesterId, cancellationToken);
         var targetUser = await userRepository.GetByIdAsync(request.TargetUserId, cancellationToken);
         
@@ -91,7 +84,7 @@ public class ManageFriendshipRequestCommandHandler(
             request.Status
         );
 
-        var message = request.Status == RequestStatus.Accepted
+        var message = request.Status == FriendshipStatus.Accepted
             ? "Friend request accepted successfully."
             : "Friend request rejected successfully.";
 
