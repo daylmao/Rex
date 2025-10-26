@@ -2,5 +2,6 @@ namespace Rex.Enum;
 
 public enum UserRole
 {
-    User
+    User,
+    Admin
 }
