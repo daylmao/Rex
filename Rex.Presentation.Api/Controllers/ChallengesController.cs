@@ -22,7 +22,7 @@ namespace Rex.Presentation.Api.Controllers;
 [ApiVersion("1.0")]
 [Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class ChallengesController(IMediator mediator, IUserClaims userClaims) : ControllerBase
+public class ChallengesController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
     
     [Authorize]
@@ -37,7 +37,7 @@ public class ChallengesController(IMediator mediator, IUserClaims userClaims) : 
     public async Task<ResultT<ResponseDto>> CreateChallengeAsync([FromForm] CreateChallengeDto createChallenge,
         CancellationToken cancellation)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new CreateChallengeCommand(userId, createChallenge.GroupId, createChallenge.Title,
                 createChallenge.Description, createChallenge.Duration, createChallenge.CoverPhoto), cancellation);
@@ -71,7 +71,7 @@ public class ChallengesController(IMediator mediator, IUserClaims userClaims) : 
     public async Task<ResultT<ResponseDto>> JoinChallengeAsync([FromRoute] Guid challengeId,
         CancellationToken cancellation)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new JoinChallengeCommand(challengeId, userId), cancellation);
     }
 
@@ -103,7 +103,7 @@ public class ChallengesController(IMediator mediator, IUserClaims userClaims) : 
         [FromQuery] UserChallengeStatus status, [FromQuery] int pageNumber, [FromQuery] int pageSize, 
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetChallengesByUserQuery(userId, status, pageNumber, pageSize),
             cancellationToken);
     }
@@ -120,7 +120,7 @@ public class ChallengesController(IMediator mediator, IUserClaims userClaims) : 
     public async Task<ResultT<ResponseDto>> DeleteChallengeAsync([FromRoute] Guid challengeId,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new DeleteChallengeCommand(challengeId, userId), cancellationToken);
     }
 }

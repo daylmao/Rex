@@ -15,7 +15,7 @@ namespace Rex.Presentation.Api.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class MessagesController(IMediator mediator, IUserClaims userClaims) : ControllerBase
+public class MessagesController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
     [HttpGet("chat/{chatId}")]
     [SwaggerOperation(
@@ -48,7 +48,7 @@ public class MessagesController(IMediator mediator, IUserClaims userClaims) : Co
         [FromForm] SendFileMessageDto sendFileMessage,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new SendFileMessageCommand(sendFileMessage.ChatId, userId, sendFileMessage.Message, sendFileMessage.Files),
             cancellationToken);

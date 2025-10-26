@@ -14,7 +14,7 @@ namespace Rex.Presentation.Api.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class ChatsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
+public class ChatsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
     
     [Authorize]
@@ -32,7 +32,7 @@ public class ChatsController(IMediator mediator, IUserClaims userClaims) : Contr
         [FromQuery] string? searchTerm = null,
         CancellationToken cancellationToken = default)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetChatsByUserIdQuery(userId, page, pageSize, searchTerm), cancellationToken);
     }
 }

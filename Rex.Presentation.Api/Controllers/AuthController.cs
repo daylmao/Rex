@@ -22,7 +22,7 @@ public class AuthController(
     IMediator mediator,
     IAuthenticationService authenticationService,
     IGithubAuthService gitHubAuthService,
-    IUserClaims userClaims)
+    IUserClaimService userClaimService)
     : ControllerBase
 {
     
@@ -38,7 +38,7 @@ public class AuthController(
     public async Task<ResultT<ResponseDto>> ConfirmAccountAsync([FromBody] ConfirmAccountDto code,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new ConfirmAccountCommand(userId, code.Code ), cancellationToken);
     }
 

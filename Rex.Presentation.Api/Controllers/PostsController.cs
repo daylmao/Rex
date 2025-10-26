@@ -17,7 +17,7 @@ namespace Rex.Presentation.Api.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class PostsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
+public class PostsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
     [Authorize]
     [HttpPost]
@@ -32,7 +32,7 @@ public class PostsController(IMediator mediator, IUserClaims userClaims) : Contr
     public async Task<ResultT<ResponseDto>> CreatePostAsync([FromForm] CreatePostDto createPost,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new CreatePostCommand(createPost.GroupId, userId, createPost.ChallengeId, createPost.Title,
                 createPost.Description, createPost.Files), cancellationToken);
@@ -51,7 +51,7 @@ public class PostsController(IMediator mediator, IUserClaims userClaims) : Contr
         [FromRoute] Guid groupId, [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new GetPostsByGroupIdQuery(groupId, userId, pageNumber, pageSize),
             cancellationToken
@@ -71,7 +71,7 @@ public class PostsController(IMediator mediator, IUserClaims userClaims) : Contr
     public async Task<ResultT<ResponseDto>> DeletePostAsync(
         [FromRoute] Guid postId, CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new DeletePostCommand(postId, userId), cancellationToken);
     }
 }

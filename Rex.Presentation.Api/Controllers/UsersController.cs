@@ -28,7 +28,7 @@ namespace Rex.Presentation.Api.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/users")]
 public class UsersController(
-    IMediator mediator, IUserClaims userClaims)
+    IMediator mediator, IUserClaimService userClaimService)
     : ControllerBase
 {
     [Authorize]
@@ -43,7 +43,7 @@ public class UsersController(
     public async Task<ResultT<ResponseDto>> UpdatePassword([FromBody] UpdatePasswordDto updatePassword,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new UpdatePasswordCommand(userId, updatePassword.CurrentPassword, updatePassword.NewPassword),
             cancellationToken);
@@ -74,7 +74,7 @@ public class UsersController(
     public async Task<ResultT<ResponseDto>> ConfirmEmailAsync([FromBody] ConfirmEmailCodeDto code,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new ConfirmEmailChangeCommand(userId, code.Code), cancellationToken);
     }
 
@@ -91,7 +91,7 @@ public class UsersController(
     public async Task<ResultT<ResponseDto>> UpdateEmailAsync([FromBody] UpdateEmailDto updateEmail,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new UpdateEmailCommand(userId, updateEmail.Email, updateEmail.NewEmail),
             cancellationToken);
     }
@@ -109,7 +109,7 @@ public class UsersController(
     public async Task<ResultT<ResponseDto>> UpdateUsernameAsync([FromBody] UpdateUsernameDto updateUsername ,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new UpdateUsernameCommand(userId, updateUsername.Username), cancellationToken);
     }
 
@@ -126,7 +126,7 @@ public class UsersController(
         [FromForm] UpdateUserInformationDto updateUserInformation,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new UpdateUserInformationCommand(userId, updateUserInformation.ProfilePhoto,
                 updateUserInformation.Firstname, updateUserInformation.Lastname, updateUserInformation.Biography),
@@ -144,7 +144,7 @@ public class UsersController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<UserProfileDto>> GetUserProfileById(CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetUserDetailsByIdQuery(userId), cancellationToken);
     }
 
@@ -161,7 +161,7 @@ public class UsersController(
         [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetGroupsPaginatedQuery(userId, pageNumber, pageSize), cancellationToken);
     }
     
@@ -175,7 +175,7 @@ public class UsersController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ResultT<ResponseDto>> InactivateAccountAsync(CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new InactiveAccountCommand(userId), cancellationToken);
     }
     

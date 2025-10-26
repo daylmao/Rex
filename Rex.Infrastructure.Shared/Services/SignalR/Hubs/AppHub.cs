@@ -14,7 +14,7 @@ namespace Rex.Infrastructure.Shared.Services.SignalR.Hubs;
 
 public class AppHub(
     IAppConnectionService connectionService,
-    IUserClaims userClaims,
+    IUserClaimService userClaimService,
     IMediator mediator) : Hub<IAppHub>
 {
     public override async Task OnConnectedAsync()
@@ -35,7 +35,7 @@ public class AppHub(
 
     public async Task SendMessage(Guid chatId, string message)
     {
-        var userId = userClaims.GetUserId(Context.User);
+        var userId = userClaimService.GetUserId(Context.User);
         var result = await mediator.Send(new SendMessageCommand(chatId, message, userId));
 
         if (!result.IsSuccess)
@@ -46,7 +46,7 @@ public class AppHub(
 
     public async Task CreatePrivateChat(Guid otherUserId)
     {
-        var userId = userClaims.GetUserId(Context.User);
+        var userId = userClaimService.GetUserId(Context.User);
         var result = await mediator.Send(new CreatePrivateChatCommand(userId, otherUserId));
 
         if (!result.IsSuccess)
@@ -57,7 +57,7 @@ public class AppHub(
 
     public async Task CreateFriendshipRequest(Guid otherUserId)
     {
-        var userId = userClaims.GetUserId(Context.User);
+        var userId = userClaimService.GetUserId(Context.User);
         
         var result = await mediator.Send(new CreateFriendshipRequestCommand(userId, otherUserId));
         if (!result.IsSuccess)
@@ -68,7 +68,7 @@ public class AppHub(
 
     public async Task AddLike(Guid postId)
     {
-        var userId = userClaims.GetUserId(Context.User);
+        var userId = userClaimService.GetUserId(Context.User);
 
         var result = await mediator.Send(new AddLikeCommand(userId, postId, ReactionTargetType.Post));
 
@@ -80,7 +80,7 @@ public class AppHub(
 
     public async Task RemoveLike(Guid postId)
     {
-        var userId = userClaims.GetUserId(Context.User);
+        var userId = userClaimService.GetUserId(Context.User);
 
         var result = await mediator.Send(new RemoveLikeCommand(userId, postId, ReactionTargetType.Post));
 

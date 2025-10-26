@@ -28,7 +28,7 @@ namespace Rex.Presentation.Api.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/groups")]
-public class GroupsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
+public class GroupsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
     
     [Authorize]
@@ -42,7 +42,7 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<ResponseDto>> CreateGroupsAsync([FromForm] CreateGroupDto createGroup,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new CreateGroupCommand(userId, createGroup.ProfilePhoto, createGroup.CoverPhoto, createGroup.Title,
                 createGroup.Description, createGroup.Visibility), cancellationToken);
@@ -60,7 +60,7 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<GroupDetailsDto>> GetGroupById([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetGroupByGroupIdQuery(groupId, userId), cancellationToken);
     }
 
@@ -71,7 +71,7 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
         [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetGroupsByUserIdQuery(userId, pageNumber, pageSize), cancellationToken);
     }
 
@@ -135,7 +135,7 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<ResponseDto>> RequestToJoinGroup([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new RequestToJoinGroupCommand(userId, groupId), cancellationToken);
     }
 
@@ -152,7 +152,7 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<ResponseDto>> ApproveRequest([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new ApproveRequestCommand(userId, groupId), cancellationToken);
     }
     
@@ -169,7 +169,7 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<ResponseDto>> RejectRequest([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new RejectRequestCommand(userId, groupId), cancellationToken);
     }
     
@@ -186,7 +186,7 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
         [FromBody] UpdateGroupRoleMemberDto updateGroupRoleMember,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new UpdateGroupRoleMemberCommand(userId, updateGroupRoleMember.GroupId, updateGroupRoleMember.Role),
             cancellationToken);
@@ -205,7 +205,7 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<ResponseDto>> DeleteGroupAsync([FromBody] DeleteGroupDto deleteGroup,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new DeleteGroupCommand(deleteGroup.GroupId, userId), cancellationToken);
     }
 }
