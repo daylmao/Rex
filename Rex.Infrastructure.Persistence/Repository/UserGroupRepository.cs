@@ -140,4 +140,72 @@ public class UserGroupRepository(RexContext context) : GenericRepository<UserGro
         await ValidateAsync(u => u.UserId == userId 
                                  && u.GroupId == groupId
                                  && u.Status == RequestStatus.Pending.ToString(), cancellationToken);
+
+    public async Task<IEnumerable<UserGroup>> GetInactiveUserGroupsForWarning(
+        int inactiveDays,
+        CancellationToken cancellationToken)
+    {
+        var warningDate = DateTime.UtcNow.AddDays(-inactiveDays);
+
+        return await context.Set<UserGroup>()
+            .Include(ug => ug.User)
+            .Include(ug => ug.Group)
+            .Include(ug => ug.GroupRole)
+            .Where(ug => !ug.HasBeenWarned && ug.Status == RequestStatus.Accepted.ToString() && 
+                         ug.GroupRole.Role == GroupRole.Member.ToString() &&
+                         !context.Set<Post>().Any(p =>
+                             p.UserId == ug.UserId &&
+                             p.GroupId == ug.GroupId &&
+                             p.CreatedAt >= warningDate
+                         )
+            )
+            .ToListAsync(cancellationToken);
+    }
+
+
+    public async Task<IEnumerable<UserGroup>> GetInactiveUserGroupsForRemoval(
+        int inactiveDays,
+        CancellationToken cancellationToken)
+    {
+        var removalDate = DateTime.UtcNow.AddDays(-inactiveDays); 
+
+        return await context.Set<UserGroup>()
+            .Include(ug => ug.User)
+            .Include(ug => ug.Group)
+            .Include(ug => ug.GroupRole)
+            .Where(ug =>
+                ug.HasBeenWarned &&
+                ug.Status == RequestStatus.Accepted.ToString() &&
+                ug.GroupRole.Role == GroupRole.Member.ToString() &&
+                ug.LastWarningAt.HasValue &&
+                ug.LastWarningAt.Value <= removalDate &&
+            
+                !context.Set<Post>().Any(p =>
+                    p.UserId == ug.UserId &&
+                    p.GroupId == ug.GroupId &&
+                    p.CreatedAt > ug.LastWarningAt.Value
+                )
+            )
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task MarkAsWarned(Guid userGroupId, CancellationToken cancellationToken)
+    {
+        var userGroup = await context.Set<UserGroup>()
+            .FirstOrDefaultAsync(ug => ug.Id == userGroupId, cancellationToken);
+        
+        userGroup.HasBeenWarned = true;
+        userGroup.LastWarningAt = DateTime.UtcNow;
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ResetWarningStatus(Guid userId, Guid groupId, CancellationToken cancellationToken)
+    {
+        var userGroup = await context.Set<UserGroup>()
+            .FirstOrDefaultAsync(ug => ug.UserId == userId && ug.GroupId == groupId, cancellationToken);
+
+        userGroup.HasBeenWarned = false;
+        userGroup.LastWarningAt = null;
+        await context.SaveChangesAsync(cancellationToken);
+    }
 }

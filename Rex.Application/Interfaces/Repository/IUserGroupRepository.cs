@@ -34,5 +34,13 @@ namespace Rex.Application.Interfaces.Repository
         Task<UserGroup> GetGroupRequestAsync(Guid userId, Guid groupId, CancellationToken cancellationToken);
 
         Task<bool> RequestExistsAsync(Guid userId, Guid groupId, CancellationToken cancellationToken);
+
+        Task<IEnumerable<UserGroup>> GetInactiveUserGroupsForWarning(int inactiveDays, CancellationToken cancellationToken);
+
+        Task<IEnumerable<UserGroup>> GetInactiveUserGroupsForRemoval(int inactiveDays, CancellationToken cancellationToken);
+
+        Task ResetWarningStatus(Guid userId, Guid groupId, CancellationToken cancellationToken);
+
+        Task MarkAsWarned(Guid userGroupId, CancellationToken cancellationToken);
     }
 }
