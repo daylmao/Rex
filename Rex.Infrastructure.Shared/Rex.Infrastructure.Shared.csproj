@@ -8,6 +8,9 @@
 
     <ItemGroup>
       <PackageReference Include="CloudinaryDotNet" Version="1.27.0" />
+      <PackageReference Include="Hangfire.AspNetCore" Version="1.8.0" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.0" />
+      <PackageReference Include="Hangfire.PostgreSql" Version="1.20.0" />
       <PackageReference Include="MailKit" Version="4.12.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.OAuth" Version="2.3.0" />
