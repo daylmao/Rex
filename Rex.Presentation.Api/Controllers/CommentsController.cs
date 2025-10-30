@@ -19,9 +19,8 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class CommentsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
+public class CommentsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
     [HttpGet("post/{postId}")]
     [SwaggerOperation(
@@ -37,6 +36,7 @@ public class CommentsController(IMediator mediator, IUserClaims userClaims) : Co
         return await mediator.Send(new GetCommentsByPostIdQuery(postId, pageNumber, pageSize), cancellationToken);
     }
 
+    [Authorize]
     [HttpPost]
     [SwaggerOperation(
         Summary = "Create a new comment",
@@ -49,12 +49,13 @@ public class CommentsController(IMediator mediator, IUserClaims userClaims) : Co
         [FromForm] CreateCommentDto createComment,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new CreateCommentCommand(createComment.PostId, userId, createComment.Description, createComment.Files),
             cancellationToken);
     }
 
+    [Authorize]
     [HttpPost("reply")]
     [SwaggerOperation(
         Summary = "Create a new reply to a comment",
@@ -67,7 +68,7 @@ public class CommentsController(IMediator mediator, IUserClaims userClaims) : Co
         [FromForm] CreateCommentReplyDto createCommentReply,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new CreateCommentReplyCommand(createCommentReply.ParentCommentId, createCommentReply.PostId, userId,
                 createCommentReply.Description, createCommentReply.Files), cancellationToken);
@@ -97,6 +98,7 @@ public class CommentsController(IMediator mediator, IUserClaims userClaims) : Co
         );
     }
 
+    [Authorize]
     [HttpPost("pin")]
     [SwaggerOperation(
         Summary = "Pin or unpin a comment",
@@ -109,7 +111,7 @@ public class CommentsController(IMediator mediator, IUserClaims userClaims) : Co
     public async Task<ActionResult<ResultT<CommentUpdatedDto>>> PinCommentAsync(
         [FromBody] PinCommentDto pinComment, CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return Ok(await mediator.Send(
             new PinCommentCommand(pinComment.CommentId, userId, pinComment.PostId, pinComment.Pin), cancellationToken));
     }

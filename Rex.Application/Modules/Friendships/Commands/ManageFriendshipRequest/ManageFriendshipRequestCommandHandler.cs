@@ -28,13 +28,6 @@ public class ManageFriendshipRequestCommandHandler(
             return ResultT<ResponseDto>.Failure(Error.Failure("400", "You cannot respond to your own friend request."));
         }
 
-        if (request.Status == RequestStatus.Pending)
-        {
-            logger.LogWarning("User {UserId} attempted to set a friendship request back to pending",
-                request.RequesterId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("400", "Friend requests cannot be set back to pending."));
-        }
-
         var requester = await userRepository.GetByIdAsync(request.RequesterId, cancellationToken);
         var targetUser = await userRepository.GetByIdAsync(request.TargetUserId, cancellationToken);
         
@@ -51,6 +44,13 @@ public class ManageFriendshipRequestCommandHandler(
                 "The user you are trying to respond to could not be found."));
         }
 
+        var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.RequesterId, cancellationToken);
+        if (!accountConfirmed)
+        {
+            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.RequesterId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+        }
+        
         var friendship = await friendShipRepository.GetFriendShipInPendingAsync(request.RequesterId,
             request.TargetUserId,
             cancellationToken
@@ -84,7 +84,7 @@ public class ManageFriendshipRequestCommandHandler(
             request.Status
         );
 
-        var message = request.Status == RequestStatus.Accepted
+        var message = request.Status == FriendshipStatus.Accepted
             ? "Friend request accepted successfully."
             : "Friend request rejected successfully.";
 

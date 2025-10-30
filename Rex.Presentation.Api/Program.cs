@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi;
 using Rex.Application;
@@ -6,12 +7,13 @@ using Rex.Infrastructure.Shared;
 using Rex.Infrastructure.Shared.Services.SignalR.Hubs;
 using Rex.Presentation.Api.ServicesExtension;
 using Serilog;
+using Trivo.Presentation.API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog((context, LoggerConfiguration) =>
+builder.Host.UseSerilog((context, loggerConfig) =>
 {
-    LoggerConfiguration.ReadFrom.Configuration(context.Configuration);
+    loggerConfig.ReadFrom.Configuration(context.Configuration);
 });
 
 builder.Services.AddControllers().AddFilters();
@@ -22,6 +24,7 @@ builder.Services.AddApplicationLayer(builder.Configuration);
 builder.Services.AddSharedLayer(builder.Configuration);
 builder.Services.AddSwaggerExtension();
 builder.Services.AddVersioning();
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -35,17 +38,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins", policy =>
     {
-        policy
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowAnyOrigin(); 
+        policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
     });
 });
 
 var app = builder.Build();
 
 app.UseExceptionHandling();
-
 app.UseSerilogRequestLogging();
 
 if (app.Environment.IsDevelopment())
@@ -59,15 +58,24 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseWebSockets();
-
-app.UseRouting(); 
+app.UseRouting();
 
 app.UseCors("AllowAllOrigins");
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = new[] { new HangfireAuthorizationFilter(builder.Environment.EnvironmentName) },
+        DashboardTitle = "Rex - Background Jobs"
+    });
+});
+
+app.ConfigureHangfireJobs();
+
 app.MapHub<AppHub>("/hubs/app");
 
 app.Run();

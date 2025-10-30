@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rex.Application.DTOs.Code;
 using Rex.Application.DTOs.Group;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.DTOs.User;
@@ -25,12 +26,12 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
-[Authorize]
 [Route("api/v{version:apiVersion}/users")]
 public class UsersController(
-    IMediator mediator, IUserClaims userClaims)
+    IMediator mediator, IUserClaimService userClaimService)
     : ControllerBase
 {
+    [Authorize]
     [HttpPut("password")]
     [SwaggerOperation(
         Summary = "Update user password",
@@ -42,7 +43,7 @@ public class UsersController(
     public async Task<ResultT<ResponseDto>> UpdatePassword([FromBody] UpdatePasswordDto updatePassword,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new UpdatePasswordCommand(userId, updatePassword.CurrentPassword, updatePassword.NewPassword),
             cancellationToken);
@@ -63,19 +64,21 @@ public class UsersController(
         return await mediator.Send(command, cancellationToken);
     }
 
+    [Authorize]
     [HttpPut("confirm-email-change")]
     [SwaggerOperation(Summary = "Confirm email change",
         Description = "Confirms a pending email change request for the user")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ResultT<ResponseDto>> ConfirmEmailAsync([FromBody] ConfirmEmailChangeDto confirmEmailChange,
+    public async Task<ResultT<ResponseDto>> ConfirmEmailAsync([FromBody] ConfirmEmailCodeDto code,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
-        return await mediator.Send(new ConfirmEmailChangeCommand(userId, confirmEmailChange.Code), cancellationToken);
+        var userId = userClaimService.GetUserId(User);
+        return await mediator.Send(new ConfirmEmailChangeCommand(userId, code.Code), cancellationToken);
     }
 
+    [Authorize]
     [HttpPut("change-email")]
     [SwaggerOperation(
         Summary = "Update user email",
@@ -88,11 +91,12 @@ public class UsersController(
     public async Task<ResultT<ResponseDto>> UpdateEmailAsync([FromBody] UpdateEmailDto updateEmail,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new UpdateEmailCommand(userId, updateEmail.Email, updateEmail.NewEmail),
             cancellationToken);
     }
 
+    [Authorize]
     [HttpPatch("username")]
     [SwaggerOperation(
         Summary = "Update username",
@@ -105,10 +109,11 @@ public class UsersController(
     public async Task<ResultT<ResponseDto>> UpdateUsernameAsync([FromBody] UpdateUsernameDto updateUsername ,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new UpdateUsernameCommand(userId, updateUsername.Username), cancellationToken);
     }
 
+    [Authorize]
     [HttpPut]
     [SwaggerOperation(
         Summary = "Update user information",
@@ -121,13 +126,14 @@ public class UsersController(
         [FromForm] UpdateUserInformationDto updateUserInformation,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new UpdateUserInformationCommand(userId, updateUserInformation.ProfilePhoto,
                 updateUserInformation.Firstname, updateUserInformation.Lastname, updateUserInformation.Biography),
             cancellationToken);
     }
 
+    [Authorize]
     [HttpGet("me")]
     [SwaggerOperation(
         Summary = "Get user profile by ID",
@@ -138,10 +144,11 @@ public class UsersController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<UserProfileDto>> GetUserProfileById(CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetUserDetailsByIdQuery(userId), cancellationToken);
     }
 
+    [Authorize]
     [HttpGet("groups/recommended")]
     [SwaggerOperation(
         Summary = "Get recommended groups for user",
@@ -154,7 +161,7 @@ public class UsersController(
         [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetGroupsPaginatedQuery(userId, pageNumber, pageSize), cancellationToken);
     }
     
@@ -168,7 +175,7 @@ public class UsersController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ResultT<ResponseDto>> InactivateAccountAsync(CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new InactiveAccountCommand(userId), cancellationToken);
     }
     

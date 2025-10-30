@@ -39,6 +39,13 @@ public class CreatePostCommandHandler(
             return ResultT<ResponseDto>.Failure(Error.NotFound("404",
                 "We couldn't find your account. Please log in again."));
         }
+        
+        var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.UserId, cancellationToken);
+        if (!accountConfirmed)
+        {
+            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.UserId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+        }
 
         var group = await groupRepository.GetGroupByIdAsync(request.GroupId, cancellationToken);
         if (group is null)
@@ -121,6 +128,8 @@ public class CreatePostCommandHandler(
             if (!filesResult.IsSuccess)
                 return filesResult;
         }
+        
+        await userGroupRepository.ResetWarningStatus(post.UserId, post.GroupId, cancellationToken);
 
         return ResultT<ResponseDto>.Success(new ResponseDto("Your post has been created successfully!"));
     }

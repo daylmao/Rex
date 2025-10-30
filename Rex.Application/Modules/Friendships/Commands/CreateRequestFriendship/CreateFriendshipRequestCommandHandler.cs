@@ -45,6 +45,13 @@ public class CreateFriendshipRequestCommandHandler(
             logger.LogWarning("Target user not found: {UserId}", request.TargetUserId);
             return ResultT<ResponseDto>.Failure(Error.Failure("404", "The user you want to add was not found."));
         }
+        
+        var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.RequesterId, cancellationToken);
+        if (!accountConfirmed)
+        {
+            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.RequesterId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+        }
 
         var friendshipExists = await friendShipRepository.FriendShipExistAsync(
             request.RequesterId,

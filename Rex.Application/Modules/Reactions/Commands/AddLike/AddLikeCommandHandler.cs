@@ -25,6 +25,13 @@ public class AddLikeCommandHandler(
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
             return ResultT<ResponseDto>.Failure(Error.NotFound("404", "User not found."));
+        
+        var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.UserId, cancellationToken);
+        if (!accountConfirmed)
+        {
+            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.UserId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+        }
 
         var post = await postRepository.GetByIdAsync(request.PostId, cancellationToken);
         if (post is null)

@@ -22,6 +22,13 @@ public class PinCommentCommandHandler(
             return ResultT<CommentUpdatedDto>.Failure(Error.NotFound("404", "We couldn't find a user with that ID."));
         }
 
+        var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.UserId, cancellationToken);
+        if (!accountConfirmed)
+        {
+            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.UserId);
+            return ResultT<CommentUpdatedDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+        }
+        
         var post = await postRepository.GetByIdAsync(request.PostId, cancellationToken);
         if (post is null)
         {
@@ -33,7 +40,7 @@ public class PinCommentCommandHandler(
         if (comment is null)
         {
             logger.LogWarning("We couldn't find the comment with ID {CommentId}.", request.CommentId);
-            return ResultT<CommentUpdatedDto>.Failure(Error.NotFound("404", "The comment with that ID doesn't exist."));
+            return ResultT<CommentUpdatedDto>.Failure(Error.NotFound("404", "The comment doesn't exist."));
         }
 
         if (post.UserId != request.UserId)

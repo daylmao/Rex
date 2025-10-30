@@ -1,4 +1,6 @@
 ﻿using System.Text;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +12,7 @@ using Rex.Configurations;
 using Rex.Infrastructure.Shared.Services;
 using Rex.Infrastructure.Shared.Services.SignalR;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Builder;
 using AuthenticationService = Rex.Infrastructure.Shared.Services.AuthenticationService;
 using IAuthenticationService = Rex.Application.Interfaces.IAuthenticationService;
 
@@ -25,6 +28,23 @@ public static class DependencyInjection
         services.Configure<JWTConfiguration>(configuration.GetSection("JWTConfigurations"));
         services.Configure<CloudinaryConfiguration>(configuration.GetSection("CloudinaryConfigurations"));
 
+        #endregion
+
+        #region Hangfire
+
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(configuration.GetConnectionString("HangfireConnection")));
+        
+        services.AddHangfireServer(options =>
+        {
+            options.ServerName = $"Rex-{Environment.MachineName}";
+            options.WorkerCount = 3;
+            options.Queues = new[] { "critical", "default" };
+        });
+        
         #endregion
 
         #region JWT
@@ -205,8 +225,9 @@ public static class DependencyInjection
         services.AddScoped<IFriendshipNotifier, FriendshipNotifier>();
         services.AddScoped<ICommentsNotifier, CommentsNotifier>();
         services.AddScoped<IChallengeNotifier, ChallengeNotifier>();
+        services.AddScoped<IInactiveUserNotifier, InactiveUserNotifier>();
         services.AddScoped<IGithubAuthService, GitHubAuthService>();
-        services.AddScoped<IUserClaims, UserClaims>();
+        services.AddScoped<IUserClaimService, UserClaimService>();
 
         #endregion
 
@@ -215,5 +236,30 @@ public static class DependencyInjection
         services.AddSignalR();
 
         #endregion
+    }
+
+    public static void ConfigureHangfireJobs(this IApplicationBuilder app)
+    {
+        RecurringJob.AddOrUpdate<IWarnUserService>(
+            recurringJobId: "warn-inactive-users",
+            queue: "default",
+            methodCall: service => service.ProcessWarning(CancellationToken.None),
+            cronExpression: Cron.Minutely,
+            options: new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            }
+        );
+
+        RecurringJob.AddOrUpdate<IRemoveUserService>(
+            recurringJobId: "remove-inactive-users",
+            queue: "critical",
+            methodCall: service => service.ProcessRemoval(CancellationToken.None),
+            cronExpression: Cron.Daily(4),
+            options: new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            }
+        );
     }
 }

@@ -1,9 +1,7 @@
 namespace Rex.Enum;
 
-public enum RequestStatus
+public enum FriendshipStatus
 {
     Accepted,
-    Pending,
     Rejected,
-    Removed
 }

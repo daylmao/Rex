@@ -27,10 +27,11 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Authorize]
 [Route("api/v{version:apiVersion}/groups")]
-public class GroupsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
+public class GroupsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
+    
+    [Authorize]
     [HttpPost]
     [SwaggerOperation(
         Summary = "Create a new group",
@@ -41,12 +42,13 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<ResponseDto>> CreateGroupsAsync([FromForm] CreateGroupDto createGroup,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new CreateGroupCommand(userId, createGroup.ProfilePhoto, createGroup.CoverPhoto, createGroup.Title,
                 createGroup.Description, createGroup.Visibility), cancellationToken);
     }
 
+    [Authorize]
     [HttpGet("{groupId}/membership")]
     [SwaggerOperation(
         Summary = "Get group by ID",
@@ -58,17 +60,18 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<GroupDetailsDto>> GetGroupById([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetGroupByGroupIdQuery(groupId, userId), cancellationToken);
     }
 
+    [Authorize]
     [HttpGet("my-groups")]
     public async Task<ResultT<PagedResult<GroupDetailsDto>>> GetGroupsByUserId(
         [FromQuery] int pageNumber,
         [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetGroupsByUserIdQuery(userId, pageNumber, pageSize), cancellationToken);
     }
 
@@ -119,6 +122,7 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
             groupId, pageNumber, pageSize, searchTerm), cancellationToken);
     }
 
+    [Authorize]
     [HttpPost("{groupId}/join-requests")]
     [SwaggerOperation(
         Summary = "Request to join a group",
@@ -131,10 +135,11 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<ResponseDto>> RequestToJoinGroup([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new RequestToJoinGroupCommand(userId, groupId), cancellationToken);
     }
 
+    [Authorize]
     [HttpPost("{groupId}/join-requests/approve")]
     [SwaggerOperation(
         Summary = "Approve join request",
@@ -147,10 +152,11 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<ResponseDto>> ApproveRequest([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new ApproveRequestCommand(userId, groupId), cancellationToken);
     }
     
+    [Authorize]
     [HttpPost("{groupId}/join-requests/reject")]
     [SwaggerOperation(
         Summary = "Reject join request",
@@ -163,11 +169,11 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<ResponseDto>> RejectRequest([FromRoute] Guid groupId,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new RejectRequestCommand(userId, groupId), cancellationToken);
     }
-
-
+    
+    [Authorize]
     [HttpPut("role")]
     [SwaggerOperation(
         Summary = "Update group member role",
@@ -180,12 +186,13 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
         [FromBody] UpdateGroupRoleMemberDto updateGroupRoleMember,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(
             new UpdateGroupRoleMemberCommand(userId, updateGroupRoleMember.GroupId, updateGroupRoleMember.Role),
             cancellationToken);
     }
 
+    [Authorize]
     [HttpDelete]
     [SwaggerOperation(
         Summary = "Delete a group",
@@ -198,7 +205,7 @@ public class GroupsController(IMediator mediator, IUserClaims userClaims) : Cont
     public async Task<ResultT<ResponseDto>> DeleteGroupAsync([FromBody] DeleteGroupDto deleteGroup,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new DeleteGroupCommand(deleteGroup.GroupId, userId), cancellationToken);
     }
 }

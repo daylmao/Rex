@@ -18,10 +18,11 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
-[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class FriendshipsController(IMediator mediator, IUserClaims userClaims) : ControllerBase
+public class FriendshipsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
+    
+    [Authorize]
     [HttpPut("{targetUserId}/status")]
     [SwaggerOperation(
         Summary = "Manage friendship request",
@@ -36,11 +37,12 @@ public class FriendshipsController(IMediator mediator, IUserClaims userClaims) :
         [FromBody] UpdateFriendshipStatusDto dto,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new ManageFriendshipRequestCommand(userId, targetUserId, dto.Status),
             cancellationToken);
     }
 
+    [Authorize]
     [HttpGet("requests")]
     [SwaggerOperation(
         Summary = "Get friendship requests by user",
@@ -50,14 +52,14 @@ public class FriendshipsController(IMediator mediator, IUserClaims userClaims) :
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ResultT<PagedResult<FriendshipRequestDto>>> GetFriendshipRequests(
-        [FromQuery] int pageNumber,
-        [FromQuery] int pageSize,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new GetFriendshipsRequestQuery(userId, pageNumber, pageSize), cancellationToken);
     }
 
+    [Authorize]
     [HttpDelete("{targetUserId}")]
     [SwaggerOperation(
         Summary = "Delete a friendship",
@@ -70,7 +72,7 @@ public class FriendshipsController(IMediator mediator, IUserClaims userClaims) :
     public async Task<ResultT<ResponseDto>> DeleteFriendship([FromRoute] Guid targetUserId,
         CancellationToken cancellationToken)
     {
-        var userId = userClaims.GetUserId(User);
+        var userId = userClaimService.GetUserId(User);
         return await mediator.Send(new DeleteFriendshipCommand(userId, targetUserId), cancellationToken);
     }
 }

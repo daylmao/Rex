@@ -7,5 +7,5 @@ namespace Rex.Application.Modules.Friendships.Commands.ManageFriendshipRequest;
 public record ManageFriendshipRequestCommand(
     Guid RequesterId,
     Guid TargetUserId,
-    RequestStatus Status
+    FriendshipStatus Status
     ): ICommand<ResponseDto>;
