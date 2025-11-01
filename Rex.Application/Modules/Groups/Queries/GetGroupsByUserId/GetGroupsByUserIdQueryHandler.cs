@@ -33,8 +33,11 @@ public class GetGroupsByUserIdQueryHandler(
                 Error.Failure("404", "We couldn't find your user account."));
         }
 
+        var version = await distributedCache.GetVersionAsync("groups-user", request.UserId, cancellationToken);
+        var cacheKey = $"groups:user:{request.UserId}:page:{request.pageNumber}:size:{request.pageSize}:version:{version}";
+        
         var result = await distributedCache.GetOrCreateAsync(
-            $"groups:user:{request.UserId}:page:{request.pageNumber}:size:{request.pageSize}",
+            cacheKey,
             async () => await groupRepository.GetGroupsByUserIdAsync(
                 request.UserId,
                 request.pageNumber,

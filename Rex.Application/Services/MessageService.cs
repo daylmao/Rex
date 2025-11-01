@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.DTOs.Message;
 using Rex.Application.Helpers;
@@ -20,7 +21,8 @@ public class MessageService(
     IChatNotifier chatNotifier,
     IFileRepository fileRepository,
     IEntityFileRepository entityFileRepository,
-    ICloudinaryService cloudinaryService
+    ICloudinaryService cloudinaryService,
+    IDistributedCache cache
 ) : IMessageService
 {
     public async Task<ResultT<MessageDto>> SendMessageAsync(Guid chatId, Guid userId, string messageText,
@@ -55,6 +57,9 @@ public class MessageService(
         };
 
         await messageRepository.CreateAsync(message, cancellationToken);
+        
+        await cache.IncrementVersionAsync("chat-messages", chatId, logger, cancellationToken);
+        logger.LogInformation("Cache invalidated for chat messages of ChatId: {ChatId}", chatId);
 
         if (files is not null)
         {

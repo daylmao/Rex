@@ -25,8 +25,10 @@ public class GetCommentsByPostIdQueryHandler(
         logger.LogInformation("Handling GetCommentsByPostIdQuery for PostId: {PostId}, Page: {Page}, Size: {Size}",
             request.PostId, request.PageNumber, request.PageSize);
 
+        var version = await cache.GetVersionAsync("comments", request.PostId, cancellationToken);
+
         var comments = await cache.GetOrCreateAsync(
-            $"Get:Comments:By:Post:{request.PostId}:{request.PageNumber}:{request.PageSize}",
+            $"Get:Comments:By:Post:{request.PostId}:{request.PageNumber}:{request.PageSize}:version:{version}:",
             async () =>
             {
                 logger.LogInformation("Cache miss: fetching comments from repository for PostId: {PostId}", request.PostId);

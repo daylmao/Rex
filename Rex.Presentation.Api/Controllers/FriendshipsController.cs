@@ -18,20 +18,19 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class FriendshipsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
-    
-    [Authorize]
     [HttpPut("{targetUserId}/status")]
     [SwaggerOperation(
         Summary = "Manage friendship request",
         Description = "Accept or reject a friendship request"
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(ResultT<ResponseDto>))]
     public async Task<ResultT<ResponseDto>> ManageFriendshipRequest(
         [FromRoute] Guid targetUserId,
         [FromBody] UpdateFriendshipStatusDto dto,
@@ -42,15 +41,14 @@ public class FriendshipsController(IMediator mediator, IUserClaimService userCla
             cancellationToken);
     }
 
-    [Authorize]
     [HttpGet("requests")]
     [SwaggerOperation(
         Summary = "Get friendship requests by user",
         Description = "Retrieves a paginated list of friendship requests received by the specified user."
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<PagedResult<FriendshipRequestDto>>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<PagedResult<FriendshipRequestDto>>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<PagedResult<FriendshipRequestDto>>))]
     public async Task<ResultT<PagedResult<FriendshipRequestDto>>> GetFriendshipRequests(
         [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
@@ -59,16 +57,15 @@ public class FriendshipsController(IMediator mediator, IUserClaimService userCla
         return await mediator.Send(new GetFriendshipsRequestQuery(userId, pageNumber, pageSize), cancellationToken);
     }
 
-    [Authorize]
     [HttpDelete("{targetUserId}")]
     [SwaggerOperation(
         Summary = "Delete a friendship",
         Description =
             "Deletes a friendship between the authenticated user and the specified target user and deactivates the associated chat"
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<ResponseDto>))]
     public async Task<ResultT<ResponseDto>> DeleteFriendship([FromRoute] Guid targetUserId,
         CancellationToken cancellationToken)
     {

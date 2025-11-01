@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs;
@@ -13,7 +14,8 @@ public class JoinChallengeCommandHandler(
     ILogger<JoinChallengeCommandHandler> logger,
     IChallengeRepository challengeRepository,
     IUserRepository userRepository,
-    IUserChallengeRepository userChallengeRepository
+    IUserChallengeRepository userChallengeRepository,
+    IDistributedCache cache
 ) : ICommandHandler<JoinChallengeCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(JoinChallengeCommand request, CancellationToken cancellationToken)
@@ -61,6 +63,8 @@ public class JoinChallengeCommandHandler(
         };
 
         await userChallengeRepository.CreateAsync(userChallenge, cancellationToken);
+        
+        await cache.IncrementVersionAsync("challenge", challenge.GroupId, logger, cancellationToken);
 
         logger.LogInformation("User joined the challenge successfully.");
         return ResultT<ResponseDto>.Success(new ResponseDto("You've successfully joined the challenge! Good luck!"));

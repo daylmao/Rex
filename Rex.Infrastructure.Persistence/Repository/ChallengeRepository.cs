@@ -135,4 +135,11 @@ public class ChallengeRepository(RexContext context) : GenericRepository<Challen
 
     public async Task<bool> ChallengeBelongsToGroup(Guid groupId, Guid challengeId, CancellationToken cancellationToken) =>
         await ValidateAsync(c => c.Id == challengeId && c.GroupId == groupId, cancellationToken);
+
+    public async Task<IEnumerable<Challenge>> GetExpiredChallenges(CancellationToken cancellationToken) =>
+        await context.Set<Challenge>()
+            .Where(c => !c.Deleted && c.Status == ChallengeStatus.Active.ToString())
+            .Where(c => DateTime.UtcNow - c.CreatedAt > c.Duration)
+            .ToListAsync(cancellationToken);
+
 }

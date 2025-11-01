@@ -27,6 +27,9 @@ public static class DependecyInjection
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IWarnUserService, WarnUserService>();
         services.AddScoped<IRemoveUserService, RemoveUserService>();
+        services.AddScoped<IChallengeExpirationService, ChallengeExpirationService>();
+        services.AddScoped<IUserInGroupService, UserInGroupService>();
+        
         #endregion
 
         services.AddHttpContextAccessor();

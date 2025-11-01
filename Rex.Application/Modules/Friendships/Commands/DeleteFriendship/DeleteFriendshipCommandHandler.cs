@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -9,7 +10,8 @@ namespace Rex.Application.Modules.Friendships.Commands.DeleteFriendship;
 public class DeleteFriendshipCommandHandler(
     ILogger<DeleteFriendshipCommandHandler> logger,
     IChatRepository chatRepository,
-    IFriendShipRepository friendShipRepository
+    IFriendShipRepository friendShipRepository,
+    IDistributedCache cache
 ) : ICommandHandler<DeleteFriendshipCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(DeleteFriendshipCommand request, CancellationToken cancellationToken)
@@ -62,6 +64,10 @@ public class DeleteFriendshipCommandHandler(
 
         await friendShipRepository.UpdateAsync(friendship, cancellationToken);
         await chatRepository.UpdateAsync(chat, cancellationToken);
+
+        await cache.IncrementVersionAsync("friends", request.RequesterId, logger, cancellationToken);
+        await cache.IncrementVersionAsync("friends", request.TargetUserId, logger, cancellationToken);
+        logger.LogInformation("Cache invalidated for friends of UserIds: {RequesterId}, {TargetUserId}", request.RequesterId, request.TargetUserId);
 
         logger.LogInformation(
             "Friendship and associated chat between users {RequesterId} and {TargetUserId} marked as deleted.",

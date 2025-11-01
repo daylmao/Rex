@@ -1,6 +1,7 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs.Challenge;  
+using Rex.Application.DTOs.Challenge;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 
@@ -8,9 +9,10 @@ namespace Rex.Application.Modules.Challenges.Queries.GetChallengeById;
 
 public class GetChallengeByIdQueryHandler(
     ILogger<GetChallengeByIdQueryHandler> logger,
+    IDistributedCache cache,
     IGroupRepository groupRepository,
     IChallengeRepository challengeRepository
-    ): IQueryHandler<GetChallengeByIdQuery, ChallengeDetailsDto>
+) : IQueryHandler<GetChallengeByIdQuery, ChallengeDetailsDto>
 {
     public async Task<ResultT<ChallengeDetailsDto>> Handle(GetChallengeByIdQuery request, CancellationToken cancellationToken)
     {
@@ -27,10 +29,35 @@ public class GetChallengeByIdQueryHandler(
             return ResultT<ChallengeDetailsDto>.Failure(Error.NotFound("404", "The specified group was not found"));
         }
 
-        var challenge = await challengeRepository.GetByIdAsync(request.ChallengeId, cancellationToken);
-        if (challenge is null || challenge.GroupId != request.GroupId)
+        var version = await cache.GetVersionAsync("challenge", request.GroupId, cancellationToken);
+        var cacheKey = $"challenge:details:{request.ChallengeId}:group:{request.GroupId}:version:{version}";
+
+        var challengeDetails = await cache.GetOrCreateAsync(
+            cacheKey,
+            async () =>
+            {
+                var challenge = await challengeRepository.GetByIdAsync(request.ChallengeId, cancellationToken);
+                if (challenge is null || challenge.GroupId != request.GroupId)
+                {
+                    logger.LogWarning("Challenge {ChallengeId} does not exist in group {GroupId}", request.ChallengeId, request.GroupId);
+                    return null!;
+                }
+
+                return new ChallengeDetailsDto(
+                    challenge.Id,
+                    challenge.Title,
+                    challenge.Description,
+                    challenge.Status,
+                    challenge.CoverPhoto,
+                    challenge.Duration
+                );
+            },
+            logger,
+            cancellationToken: cancellationToken
+        );
+
+        if (challengeDetails is null)
         {
-            logger.LogWarning("Challenge {ChallengeId} does not exist in group {GroupId}", request.ChallengeId, request.GroupId);
             return ResultT<ChallengeDetailsDto>.Failure(Error.NotFound("404", "The challenge does not exist in the selected group"));
         }
 
@@ -41,16 +68,6 @@ public class GetChallengeByIdQueryHandler(
             return ResultT<ChallengeDetailsDto>.Failure(Error.Failure("403", "You must join the challenge before posting"));
         }
 
-        var challengeDetails = new ChallengeDetailsDto
-        (
-            challenge.Id,
-            challenge.Title,
-            challenge.Description,
-            challenge.Status,
-            challenge.CoverPhoto,
-            challenge.Duration
-        );
-        
         return ResultT<ChallengeDetailsDto>.Success(challengeDetails);
     }
 }

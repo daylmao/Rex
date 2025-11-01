@@ -36,8 +36,12 @@ public class GetChatsByUserIdQueryHandler(
         }
 
         var searchTerm = request.SearchTerm ?? "all";
+        var version = await cache.GetVersionAsync("chat", request.UserId, cancellationToken);
+        var cacheKey =
+            $"chats:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}:searchTerm:{searchTerm}:version:{version}";
+        
         var result = await cache.GetOrCreateAsync(
-            $"chats:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}:searchTerm:{searchTerm}",
+            cacheKey,
             async () => await chatRepository.GetChatsWithLastMessageByUserIdAsync(
                 request.UserId, request.PageNumber, request.PageSize, request.SearchTerm, cancellationToken),
             logger,

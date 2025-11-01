@@ -33,14 +33,12 @@ public class GetGroupsPaginatedQueryHandler(
                 Error.Failure("404", "We couldn't find your account."));
         }
 
+        var version = await distributedCache.GetVersionAsync("groups", request.UserId, cancellationToken);
+        var cacheKey = $"groups:available:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}:version:{version}";
         var groups = await distributedCache.GetOrCreateAsync(
-            $"groups:available:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}",
-            async () => await groupRepository.GetGroupsPaginatedAsync(
-                request.UserId,
-                page: request.PageNumber,
-                size: request.PageSize,
-                cancellationToken),
-            logger: logger,
+            cacheKey,
+            async () => await groupRepository.GetGroupsPaginatedAsync(request.UserId, request.PageNumber, request.PageSize, cancellationToken),
+            logger,
             cancellationToken: cancellationToken
         );
 

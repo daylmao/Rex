@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.File;
@@ -21,7 +23,8 @@ public class CreateCommentReplyCommandHandler(
     IPostRepository postRepository,
     IEntityFileRepository entityFileRepository,
     IFileRepository fileRepository,
-    ICloudinaryService cloudinaryService
+    ICloudinaryService cloudinaryService,
+    IDistributedCache cache
 ) : ICommandHandler<CreateCommentReplyCommand, ReplyDto>
 {
     public async Task<ResultT<ReplyDto>> Handle(CreateCommentReplyCommand request, CancellationToken cancellationToken)
@@ -36,8 +39,8 @@ public class CreateCommentReplyCommandHandler(
         var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.UserId, cancellationToken);
         if (!accountConfirmed)
         {
-            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.UserId);
-            return ResultT<ReplyDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+            logger.LogWarning("User with ID {UserId} tried to create a reply but the account is not confirmed.", request.UserId);
+            return ResultT<ReplyDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a reply."));
         }
 
         var post = await postRepository.GetByIdAsync(request.PostId, cancellationToken);
@@ -118,12 +121,26 @@ public class CreateCommentReplyCommandHandler(
             reply.Id, reply.ParentCommentId, reply.UserId, reply.PostId
         );
         
+        await cache.IncrementVersionAsync("comments", request.ParentCommentId, logger, cancellationToken);
+        logger.LogInformation("Cache invalidated for replies of ParentCommentId: {ParentCommentId}", request.ParentCommentId);
+        
+        var metadata = new
+        {
+            PostId = post.Id,
+            PostTitle = post.Title,
+            CommentId = reply.ParentCommentId,
+            ReplyId = reply.Id,
+            ReplyAuthor = $"{user.FirstName} {user.LastName}"
+        };
+
         var notification = new Notification
         {
             Title = "New Reply",
-            Description = $"{user.FirstName} {user.LastName} replied to your comment!",
+            Description = $"{user.FirstName} {user.LastName} replied to your comment on '{post.Title}'",
             UserId = user.Id,
+            RecipientType = "User",
             RecipientId = userComment.Id,
+            MetadataJson = JsonSerializer.Serialize(metadata),
             Read = false,
             CreatedAt = DateTime.UtcNow
         };

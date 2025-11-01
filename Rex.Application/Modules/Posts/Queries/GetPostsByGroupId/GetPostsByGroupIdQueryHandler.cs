@@ -16,6 +16,7 @@ public class GetPostsByGroupIdQueryHandler(
     IGroupRepository groupRepository,
     IFileRepository fileRepository,
     ICommentRepository commentRepository,
+    IUserRepository userRepository,
     IReactionRepository reactionRepository,
     IDistributedCache cache
 ) : IQueryHandler<GetPostsByGroupIdQuery, PagedResult<PostDetailsDto>>
@@ -30,9 +31,20 @@ public class GetPostsByGroupIdQueryHandler(
             return ResultT<PagedResult<PostDetailsDto>>.Failure(Error.NotFound("404",
                 "We couldn't find the group you're looking for."));
         }
+        
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (user is null)
+        {
+            logger.LogWarning("No user found with UserId: {UserId}.", request.UserId);
+            return ResultT<PagedResult<PostDetailsDto>>.Failure(Error.NotFound("404",
+                "We couldn't find the user."));
+        }
+        
+        var version = await cache.GetVersionAsync("group-posts", request.GroupId, cancellationToken);
+        var cacheKey = $"posts:group:{request.GroupId}:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}:version:{version}";
 
         var posts = await cache.GetOrCreateAsync(
-            $"posts:group:{request.GroupId}:user:{request.UserId}:page:{request.PageNumber}:size:{request.PageSize}",
+            cacheKey,
             async () => await postRepository.GetPostsByGroupIdAsync(
                 request.GroupId, request.PageNumber, request.PageSize, cancellationToken),
             logger,

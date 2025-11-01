@@ -58,6 +58,20 @@ namespace Rex.Application.Interfaces.Repository
         /// <returns>True if the user has already joined the challenge; otherwise false.</returns>
         Task<bool> UserAlreadyJoined(Guid userId, Guid challengeId, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Checks if a challenge belongs to a specific group.
+        /// </summary>
+        /// <param name="groupId">The group ID.</param>
+        /// <param name="challengeId">The challenge ID.</param>
+        /// <param name="cancellationToken">Token to cancel the operation.</param>
+        /// <returns>True if the challenge belongs to the group; otherwise false.</returns>
         Task<bool> ChallengeBelongsToGroup(Guid groupId, Guid challengeId, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Retrieves all active challenges that have passed their end date.
+        /// </summary>
+        /// <param name="cancellationToken">Token to cancel the operation.</param>
+        /// <returns>A collection of expired challenges with active status.</returns>
+        Task<IEnumerable<Challenge>> GetExpiredChallenges(CancellationToken cancellationToken);
     }
 }

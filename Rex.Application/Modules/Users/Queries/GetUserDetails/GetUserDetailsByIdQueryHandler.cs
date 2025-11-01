@@ -23,8 +23,11 @@ public class GetUserDetailsByIdQueryHandler(
                 "Oops! We didn't get the information needed to fetch your profile."));
         }
 
+        var version = await cache.GetVersionAsync("user", request.UserId, cancellationToken);
+        var cacheKey = $"get:user:details:{request.UserId.ToString().ToLower()}:version:{version}";
+        
         var userCache = await cache.GetOrCreateAsync(
-            $"get-user-details-{request.UserId.ToString().ToLower()}",
+            cacheKey,
             async () => await userRepository.GetUserDetailsAsync(request.UserId, cancellationToken),
             logger,
             cancellationToken: cancellationToken

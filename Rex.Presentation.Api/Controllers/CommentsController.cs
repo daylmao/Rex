@@ -19,6 +19,7 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class CommentsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
@@ -27,8 +28,8 @@ public class CommentsController(IMediator mediator, IUserClaimService userClaimS
         Summary = "Get paginated comments by post ID",
         Description = "Returns paginated comments for a given post, including first reply if any"
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<PagedResult<CommentDetailsDto>>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<PagedResult<CommentDetailsDto>>))]
     public async Task<ResultT<PagedResult<CommentDetailsDto>>> GetCommentsByPostIdAsync(
         [FromRoute] Guid postId, [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
@@ -36,15 +37,14 @@ public class CommentsController(IMediator mediator, IUserClaimService userClaimS
         return await mediator.Send(new GetCommentsByPostIdQuery(postId, pageNumber, pageSize), cancellationToken);
     }
 
-    [Authorize]
     [HttpPost]
     [SwaggerOperation(
         Summary = "Create a new comment",
         Description = "Creates a new comment for a specific post by a user"
     )]
-    [ProducesResponseType(typeof(ResultT<CommentDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<CommentDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<CommentDto>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<CommentDto>))]
     public async Task<ResultT<CommentDto>> CreateCommentAsync(
         [FromForm] CreateCommentDto createComment,
         CancellationToken cancellationToken)
@@ -55,15 +55,14 @@ public class CommentsController(IMediator mediator, IUserClaimService userClaimS
             cancellationToken);
     }
 
-    [Authorize]
     [HttpPost("reply")]
     [SwaggerOperation(
         Summary = "Create a new reply to a comment",
         Description = "Creates a new reply for a specific parent comment"
     )]
-    [ProducesResponseType(typeof(ResultT<ReplyDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<ReplyDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<ReplyDto>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<ReplyDto>))]
     public async Task<ResultT<ReplyDto>> CreateCommentReplyAsync(
         [FromForm] CreateCommentReplyDto createCommentReply,
         CancellationToken cancellationToken)
@@ -79,35 +78,29 @@ public class CommentsController(IMediator mediator, IUserClaimService userClaimS
         Summary = "Get replies for a specific comment",
         Description = "Returns paginated replies for a specific parent comment in a post"
     )]
-    [ProducesResponseType(typeof(ResultT<PagedResult<ReplyDto>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<PagedResult<ReplyDto>>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<PagedResult<ReplyDto>>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<PagedResult<ReplyDto>>))]
     public async Task<ResultT<PagedResult<ReplyDto>>> GetRepliesByCommentIdAsync(
         [FromRoute] Guid parentCommentId, [FromQuery] Guid postId,
         [FromQuery] int pageNumber, [FromQuery] int pageSize,
         CancellationToken cancellationToken)
     {
         return await mediator.Send(
-            new GetCommentRepliesQuery(
-                postId,
-                parentCommentId,
-                pageNumber,
-                pageSize
-            ),
+            new GetCommentRepliesQuery(postId, parentCommentId, pageNumber, pageSize),
             cancellationToken
         );
     }
 
-    [Authorize]
     [HttpPost("pin")]
     [SwaggerOperation(
         Summary = "Pin or unpin a comment",
         Description = "Pins or unpins a comment on a specific post by a user. Requires post ownership."
     )]
-    [ProducesResponseType(typeof(ResultT<CommentUpdatedDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<CommentUpdatedDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<CommentUpdatedDto>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ResultT<CommentUpdatedDto>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<CommentUpdatedDto>))]
     public async Task<ActionResult<ResultT<CommentUpdatedDto>>> PinCommentAsync(
         [FromBody] PinCommentDto pinComment, CancellationToken cancellationToken)
     {
@@ -121,9 +114,9 @@ public class CommentsController(IMediator mediator, IUserClaimService userClaimS
         Summary = "Update an existing comment",
         Description = "Update the description of a comment in a post."
     )]
-    [ProducesResponseType(typeof(ResultT<CommentUpdatedDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<CommentUpdatedDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<CommentUpdatedDto>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<CommentUpdatedDto>))]
     public async Task<ActionResult<ResultT<CommentUpdatedDto>>> UpdateCommentAsync(
         [FromForm] UpdateCommentCommand command, CancellationToken cancellationToken)
     {

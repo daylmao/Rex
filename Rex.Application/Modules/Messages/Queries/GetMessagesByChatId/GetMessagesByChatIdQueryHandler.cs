@@ -38,8 +38,11 @@ public class GetMessagesByChatIdQueryHandler(
             );
         }
 
+        var version = await cache.GetVersionAsync("chat-messages", request.ChatId, cancellationToken);
+        var cacheKey = $"files:chat:{request.ChatId}:v{version}:page:{request.PageNumber}:size:{request.PageSize}:version:{version}";
+        
         var files = await cache.GetOrCreateAsync(
-            $"files:chat:{request.ChatId}:page:{request.PageNumber}:size:{request.PageSize}",
+            cacheKey,
             async () => await fileRepository.GetFilesByTargetIdsAsync(result.Items.Select(m => m.Id).ToList(),
                 TargetType.Message, cancellationToken),
             logger,

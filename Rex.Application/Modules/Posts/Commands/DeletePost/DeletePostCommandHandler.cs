@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -11,7 +12,9 @@ public class DeletePostCommandHandler(
     ILogger<DeletePostCommandHandler> logger,
     IUserGroupRepository userGroupRepository,
     IUserRepository userRepository,
-    IPostRepository postRepository
+    IPostRepository postRepository,
+    IGroupRepository groupRepository,
+    IDistributedCache cache
 ) : ICommandHandler<DeletePostCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(DeletePostCommand request, CancellationToken cancellationToken)
@@ -30,13 +33,18 @@ public class DeletePostCommandHandler(
             return ResultT<ResponseDto>.Failure(Error.NotFound("404", "Post not found."));
         }
 
-        var groupId = post.GroupId;
+        var group = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
+        if (group is null)
+        {
+            logger.LogWarning("Group not found. GroupId: {GroupId}", request.GroupId);
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "Group not found."));
+        }
 
-        var userGroup = await userGroupRepository.GetMemberAsync(request.UserId, groupId, cancellationToken);
+        var userGroup = await userGroupRepository.GetMemberAsync(request.UserId, group.Id, cancellationToken);
         if (userGroup is null)
         {
             logger.LogWarning("User is not a member of the group. UserId: {UserId}, GroupId: {GroupId}",
-                request.UserId, groupId);
+                request.UserId, group.Id);
             return ResultT<ResponseDto>.Failure(Error.Failure("403", "You are not a member of this group."));
         }
 
@@ -51,6 +59,10 @@ public class DeletePostCommandHandler(
         }
 
         await postRepository.DeleteAsync(post, cancellationToken);
+
+        logger.LogInformation("Cache invalidated for posts of GroupId: {GroupId}", group.Id);
+        await cache.IncrementVersionAsync("group-posts", group.Id, logger, cancellationToken);
+
         logger.LogInformation("Post {PostId} deleted by User {UserId} with role {Role}", post.Id, request.UserId, role);
 
         return ResultT<ResponseDto>.Success(new ResponseDto("Post deleted successfully."));

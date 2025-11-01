@@ -18,14 +18,17 @@ public class ReactionNotifier(
         await notificationRepository.CreateAsync(notification, cancellationToken);
 
         var notificationDto = new NotificationDto(
+            Id: notification.Id,
             Title: notification.Title,
             Description: notification.Description,
             UserId: notification.UserId,
-            RecipientId: notification.RecipientId, 
+            RecipientType: notification.RecipientType,
+            RecipientId: notification.RecipientId,
+            MetadataJson: notification.MetadataJson,
             CreatedAt: notification.CreatedAt,
             IsRead: notification.Read
         );
-        
+
         await hubContext.Clients.User(notificationDto.RecipientId.ToString())
             .ReceiveReactionNotification(notificationDto);
     }

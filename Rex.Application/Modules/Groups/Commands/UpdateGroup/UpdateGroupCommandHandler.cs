@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -10,7 +11,8 @@ namespace Rex.Application.Modules.Groups.Commands.UpdateGroup;
 public class UpdateGroupCommandHandler(
     ILogger<UpdateGroupCommandHandler> logger,
     IGroupRepository groupRepository,
-    ICloudinaryService cloudinaryService
+    ICloudinaryService cloudinaryService,
+    IDistributedCache cache
 ) : ICommandHandler<UpdateGroupCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(UpdateGroupCommand request, CancellationToken cancellationToken)
@@ -56,6 +58,8 @@ public class UpdateGroupCommandHandler(
         group.UpdatedAt = DateTime.UtcNow;
 
         await groupRepository.UpdateAsync(group, cancellationToken);
+        
+        await cache.IncrementVersionAsync("group", group.Id, logger, cancellationToken);
 
         logger.LogInformation("Group with ID {GroupId} updated successfully.", request.GroupId);
         return ResultT<ResponseDto>.Success(

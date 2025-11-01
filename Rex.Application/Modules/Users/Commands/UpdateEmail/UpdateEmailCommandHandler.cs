@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.Configs;
@@ -13,7 +14,8 @@ public class UpdateEmailCommandHandler(
     ILogger<UpdateEmailCommandHandler> logger,
     IUserRepository userRepository,
     IEmailService emailService,
-    ICodeService codeService
+    ICodeService codeService,
+    IDistributedCache cache
 ) : ICommandHandler<UpdateEmailCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(UpdateEmailCommand request, CancellationToken cancellationToken)
@@ -69,6 +71,8 @@ public class UpdateEmailCommandHandler(
 
         await userRepository.UpdateAsync(user, cancellationToken);
 
+        await cache.IncrementVersionAsync("user", request.UserId, logger, cancellationToken);
+        
         logger.LogInformation("Confirmation email sent for new email.");
         return ResultT<ResponseDto>.Success(
             new ResponseDto("Great! A confirmation email has been sent to your new address."));

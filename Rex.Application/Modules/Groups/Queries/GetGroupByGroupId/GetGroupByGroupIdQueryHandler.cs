@@ -37,10 +37,12 @@ public class GetGroupByGroupIdQueryHandler(
         var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.UserId, cancellationToken);
         if (!accountConfirmed)
         {
-            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.UserId);
-            return ResultT<GroupDetailsDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+            logger.LogWarning("User with ID {UserId} tried to access group {GroupId} but the account is not confirmed.",
+                request.UserId, request.GroupId);
+            return ResultT<GroupDetailsDto>.Failure(
+                Error.Failure("403", "You need to confirm your account before accessing groups."));
         }
-        
+
         var isUserBanned =
             await userGroupRepository.IsUserBannedAsync(request.UserId, request.GroupId, cancellationToken);
         if (isUserBanned)
@@ -65,10 +67,13 @@ public class GetGroupByGroupIdQueryHandler(
         logger.LogInformation("Returning details for group {GroupId} to user {UserId}. Membership: {IsJoined}",
             request.GroupId, request.UserId, isUserInGroup);
 
+        var version = await distributedCache.GetVersionAsync("group", request.GroupId, cancellationToken);
+        var cacheKey = $"group:{request.GroupId}:version:{version}";
+
         var result = await distributedCache.GetOrCreateAsync(
-            $"group:{request.GroupId}",
+            cacheKey,
             async () => await groupRepository.GetGroupByIdAsync(request.GroupId, cancellationToken),
-            logger: logger,
+            logger,
             cancellationToken: cancellationToken
         );
 

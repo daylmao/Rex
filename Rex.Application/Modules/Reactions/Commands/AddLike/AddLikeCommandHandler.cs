@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -22,35 +23,51 @@ public class AddLikeCommandHandler(
 {
     public async Task<ResultT<ResponseDto>> Handle(AddLikeCommand request, CancellationToken cancellationToken)
     {
+        logger.LogInformation("Processing like for PostId: {PostId} by UserId: {UserId}", request.PostId, request.UserId);
+
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
-            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "User not found."));
-        
+        {
+            logger.LogWarning("User not found: {UserId}", request.UserId);
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "We couldn't find your account."));
+        }
+
         var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.UserId, cancellationToken);
         if (!accountConfirmed)
         {
-            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.UserId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+            logger.LogWarning("User {UserId} tried to react but account is not confirmed.", request.UserId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("403", "Please confirm your account to give an impulse."));
         }
 
         var post = await postRepository.GetByIdAsync(request.PostId, cancellationToken);
         if (post is null)
-            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "Post not found."));
+        {
+            logger.LogWarning("Post not found: {PostId}", request.PostId);
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "Oops! The post doesn't exist."));
+        }
 
         var group = await groupRepository.GetByIdAsync(post.GroupId, cancellationToken);
         if (group is null)
-            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "Group not found."));
+        {
+            logger.LogWarning("Group not found for PostId {PostId}", request.PostId);
+            return ResultT<ResponseDto>.Failure(Error.NotFound("404", "The group for this post doesn't exist."));
+        }
 
-        var isMember = await userGroupRepository.IsUserInGroupAsync(request.UserId, post.GroupId,
-            RequestStatus.Accepted, cancellationToken);
+        var isMember = await userGroupRepository.IsUserInGroupAsync(
+            request.UserId, post.GroupId, RequestStatus.Accepted, cancellationToken);
         if (!isMember)
-            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You don't have access to this group."));
+        {
+            logger.LogWarning("User {UserId} tried to react but is not a member of group {GroupId}", request.UserId, post.GroupId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You need to join the group to give an impulse."));
+        }
 
-        var existingReaction =
-            await reactionRepository.HasLikedAsync(request.PostId, request.UserId, cancellationToken);
+        var existingReaction = await reactionRepository.HasLikedAsync(request.PostId, request.UserId, cancellationToken);
 
         if (existingReaction is not null && existingReaction.Like)
-            return ResultT<ResponseDto>.Success(new("Impulse already added"));
+        {
+            logger.LogInformation("User {UserId} already liked PostId {PostId}", request.UserId, request.PostId);
+            return ResultT<ResponseDto>.Success(new ResponseDto("You already gave an impulse to this post."));
+        }
 
         if (existingReaction is not null)
         {
@@ -58,19 +75,17 @@ public class AddLikeCommandHandler(
             existingReaction.UpdatedAt = DateTime.UtcNow;
             await reactionRepository.UpdateAsync(existingReaction, cancellationToken);
 
-            logger.LogInformation("User {UserId} restored like on post {PostId}", request.UserId, request.PostId);
+            logger.LogInformation("User {UserId} restored like on PostId {PostId}", request.UserId, request.PostId);
 
-            var restoredTotalLikes =
-                await reactionRepository.CountLikesAsync(request.PostId, request.ReactionTargetType, cancellationToken);
-            var restoredLikeChangedDto = new LikeChangedDto(
+            var totalLikes = await reactionRepository.CountLikesAsync(request.PostId, request.ReactionTargetType, cancellationToken);
+            await reactionNotifier.LikeChangedNotificationAsync(new LikeChangedDto(
                 PostId: request.PostId,
-                TotalLikes: restoredTotalLikes,
+                TotalLikes: totalLikes,
                 UserId: request.UserId,
                 Liked: true
-            );
-            await reactionNotifier.LikeChangedNotificationAsync(restoredLikeChangedDto, cancellationToken);
+            ), cancellationToken);
 
-            return ResultT<ResponseDto>.Success(new("Impulse added successfully"));
+            return ResultT<ResponseDto>.Success(new ResponseDto("You just gave an impulse!"));
         }
 
         var reaction = new Reaction
@@ -84,33 +99,43 @@ public class AddLikeCommandHandler(
         };
 
         await reactionRepository.CreateAsync(reaction, cancellationToken);
-        logger.LogInformation("User {UserId} liked post {PostId}", request.UserId, request.PostId);
+        logger.LogInformation("User {UserId} liked PostId {PostId}", request.UserId, request.PostId);
 
         if (post.UserId != request.UserId)
         {
+            var metadata = new
+            {
+                GroupId = group.Id,
+                PostId = post.Id,
+                PostTitle = post.Title,
+                LikedBy = $"{user.FirstName} {user.LastName}"
+            };
+
             var notification = new Notification
             {
-                Title = "New Impulse on Your Post",
-                Description = $"{user.FirstName} {user.LastName} gave an impulse to your post in '{group.Title}'",
+                Title = "New Impulse!",
+                Description = $"{user.FirstName} {user.LastName} just gave an impulse to your post in '{group.Title}'",
                 UserId = user.Id,
+                RecipientType = TargetType.User.ToString(),
                 RecipientId = post.UserId,
+                MetadataJson = JsonSerializer.Serialize(metadata),
                 Read = false,
                 CreatedAt = DateTime.UtcNow
             };
+
             await reactionNotifier.ReactionPostNotificationAsync(notification, cancellationToken);
+            logger.LogInformation("Notification sent to UserId {RecipientId} for PostId {PostId}", post.UserId, request.PostId);
         }
 
-        var totalLikes =
-            await reactionRepository.CountLikesAsync(request.PostId, request.ReactionTargetType, cancellationToken);
-
-        var likeChangedDto = new LikeChangedDto(
+        var totalLikesFinal = await reactionRepository.CountLikesAsync(request.PostId, request.ReactionTargetType, cancellationToken);
+        await reactionNotifier.LikeChangedNotificationAsync(new LikeChangedDto(
             PostId: request.PostId,
-            TotalLikes: totalLikes,
+            TotalLikes: totalLikesFinal,
             UserId: request.UserId,
             Liked: true
-        );
-        await reactionNotifier.LikeChangedNotificationAsync(likeChangedDto, cancellationToken);
+        ), cancellationToken);
 
-        return ResultT<ResponseDto>.Success(new("Impulse added successfully"));
+        logger.LogInformation("Like process completed for PostId {PostId} by UserId {UserId}", request.PostId, request.UserId);
+        return ResultT<ResponseDto>.Success(new ResponseDto("You just gave an impulse!"));
     }
 }

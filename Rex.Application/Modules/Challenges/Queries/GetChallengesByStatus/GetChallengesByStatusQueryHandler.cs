@@ -13,7 +13,7 @@ public class GetChallengesByStatusQueryHandler(
     ILogger<GetChallengesByStatusQueryHandler> logger,
     IChallengeRepository challengeRepository,
     IGroupRepository groupRepository,
-    IDistributedCache distributedCache
+    IDistributedCache cache
 ) : IQueryHandler<GetChallengesByStatusQuery, PagedResult<ChallengeGroupDetailsDto>>
 {
     public async Task<ResultT<PagedResult<ChallengeGroupDetailsDto>>> Handle(GetChallengesByStatusQuery request,
@@ -25,7 +25,7 @@ public class GetChallengesByStatusQueryHandler(
             return ResultT<PagedResult<ChallengeGroupDetailsDto>>.Failure(Error.Failure("400",
                 "Oops! The request cannot be empty."));
         }
-
+        
         var group = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
         if (group is null)
         {
@@ -37,9 +37,13 @@ public class GetChallengesByStatusQueryHandler(
         logger.LogInformation(
             "Fetching challenges for group with status {Status}. Page {PageNumber}, PageSize {PageSize}.",
             request.Status, request.PageNumber, request.PageSize);
+        
+        var version = await cache.GetVersionAsync("challenge", request.GroupId, cancellationToken);
+        var cacheKey =
+            $"challenges:group:{request.GroupId}:status:{request.Status}:page:{request.PageNumber}:size:{request.PageSize}:version:{version}";
 
-        var result = await distributedCache.GetOrCreateAsync(
-            $"challenges:group:{request.GroupId}:status:{request.Status}:page:{request.PageNumber}:size:{request.PageSize}",
+        var result = await cache.GetOrCreateAsync(
+            cacheKey,
             async () => await challengeRepository.GetChallengesPaginatedByGroupIdAndStatusAsync(
                 request.GroupId,
                 request.PageNumber,

@@ -43,7 +43,6 @@ public class CommentRepository(RexContext context) : GenericRepository<Comment>(
         return new PagedResult<Comment>(comments, total, page, size);
     }
 
-
     public async Task<PagedResult<Comment>> GetCommentsRepliedPaginatedByParentCommentIdAsync(Guid postId, int page, int size,
         Guid parentCommentId, CancellationToken cancellationToken)
     {
@@ -84,12 +83,11 @@ public class CommentRepository(RexContext context) : GenericRepository<Comment>(
             .Where(f => f.PostId == postId)
             .CountAsync(cancellationToken);
 
-    public async Task<int>
-        GetCommentsCountByPostIdAsync(IEnumerable<Guid> postId, CancellationToken cancellationToken) =>
-        await context.Set<Comment>()
-            .AsNoTracking()
-            .Where(c => postId.Contains(c.PostId))
-            .CountAsync(cancellationToken);
+    public async Task<bool> CommentAlreadyPinned(Guid commentId, CancellationToken cancellationToken) =>
+        await ValidateAsync(c => c.Id == commentId && c.IsPinned, cancellationToken);
+
+    public async Task<bool> AnotherCommentIsPinned(Guid postId, CancellationToken cancellationToken) =>
+        await ValidateAsync(c => c.PostId == postId && c.IsPinned, cancellationToken);
 
     public async Task<Dictionary<Guid, int>> GetCommentsCountByPostIdsAsync(IEnumerable<Guid> postIds,
         CancellationToken cancellationToken) =>
