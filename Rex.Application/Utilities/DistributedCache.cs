@@ -42,4 +42,43 @@ public static class DistributedCache
 
         return data;
     }
+
+    public static async Task<int> GetVersionAsync(
+        this IDistributedCache cache,
+        string resourceType,
+        Guid resourceId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var versionKey = $"cache-version:{resourceType}:{resourceId}";
+        var versionStr = await cache.GetStringAsync(versionKey, cancellationToken);
+
+        if (string.IsNullOrEmpty(versionStr))
+        {
+            await cache.SetStringAsync(versionKey, "1", CacheExpiration, cancellationToken);
+            return 1;
+        }
+
+        return int.Parse(versionStr);
+    }
+
+    public static async Task IncrementVersionAsync(
+        this IDistributedCache cache,
+        string resourceType,
+        Guid resourceId,
+        ILogger logger,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var versionKey = $"cache-version:{resourceType}:{resourceId}";
+        var current = await cache.GetVersionAsync(resourceType, resourceId, cancellationToken);
+        var newVersion = current + 1;
+
+        await cache.SetStringAsync(versionKey, newVersion.ToString(), CacheExpiration, cancellationToken);
+
+        logger.LogInformation(
+            "Cache version incremented from {OldVersion} to {NewVersion} for {ResourceType}:{ResourceId}",
+            current, newVersion, resourceType, resourceId
+        );
+    }
 }

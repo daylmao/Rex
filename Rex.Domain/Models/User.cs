@@ -32,7 +32,6 @@ public sealed class User : AuditableEntity
     public ICollection<UserChat>? UserChats { get; set; }
     public ICollection<UserChallenge>? UserChallenges { get; set; }
     public ICollection<Notification>? SentNotifications { get; set; }
-    public ICollection<Notification>? ReceivedNotifications { get; set; }
     public ICollection<FriendShip>? SentFriendRequests { get; set; }
     public ICollection<FriendShip>? ReceivedFriendRequests { get; set; }
 }

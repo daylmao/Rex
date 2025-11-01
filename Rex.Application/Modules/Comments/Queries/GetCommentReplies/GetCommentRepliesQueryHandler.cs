@@ -26,8 +26,10 @@ public class GetCommentRepliesQueryHandler(
             request.ParentCommentId, request.PostId, request.PageNumber, request.PageSize
         );
 
+        var version = await cache.GetVersionAsync("comments", request.ParentCommentId, cancellationToken);
+
         var comments = await cache.GetOrCreateAsync(
-            $"Get:Comment:Replies:{request.ParentCommentId}:{request.PageNumber}:{request.PageSize}",
+            $"Get:Comment:Replies:{request.ParentCommentId}:{request.PageNumber}:{request.PageSize}:version:{version}:",
             async () => await commentRepository.GetCommentsRepliedPaginatedByParentCommentIdAsync(
                 request.PostId,
                 request.PageNumber,

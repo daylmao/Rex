@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -8,7 +9,8 @@ namespace Rex.Application.Modules.User.Commands.UpdateUsername;
 
 public class UpdateUsernameCommandHandler(
     ILogger<UpdateUsernameCommandHandler> logger,
-    IUserRepository userRepository
+    IUserRepository userRepository,
+    IDistributedCache cache
 ) : ICommandHandler<UpdateUsernameCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(UpdateUsernameCommand request, CancellationToken cancellationToken)
@@ -38,6 +40,8 @@ public class UpdateUsernameCommandHandler(
 
         user.UserName = request.Username;
         await userRepository.UpdateAsync(user, cancellationToken);
+        
+        await cache.IncrementVersionAsync("user", request.UserId, logger, cancellationToken);
 
         logger.LogInformation("Username updated successfully.");
         return ResultT<ResponseDto>.Success(new ResponseDto("Great! Your username has been updated successfully."));

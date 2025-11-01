@@ -1,7 +1,5 @@
-using System.Windows.Input;
 using Microsoft.AspNetCore.Http;
 using Rex.Application.Abstractions.Messages;
-using Rex.Application.DTOs;
 using Rex.Application.DTOs.JWT;
 using Rex.Enum;
 

@@ -37,8 +37,11 @@ public class GetGroupJoinRequestsCommandHandler(
         }
 
         var searchTerm = string.IsNullOrEmpty(request.SearchTerm) ? "all" : request.SearchTerm;
+        var version = await distributedCache.GetVersionAsync("group-requests", request.GroupId, cancellationToken);
+        var cacheKey = $"group-requests:group:{request.GroupId}:search:{searchTerm}:page:{request.PageNumber}:size:{request.PageSize}:version:{version}";
+
         var result = await distributedCache.GetOrCreateAsync(
-            $"group-requests:group:{request.GroupId}:search:{searchTerm}:page:{request.PageNumber}:size:{request.PageSize}",
+            cacheKey,
             async () => await userGroupRepository.GetGroupRequestsAsync(
                 request.GroupId, 
                 RequestStatus.Pending, 
@@ -50,6 +53,7 @@ public class GetGroupJoinRequestsCommandHandler(
             logger,
             cancellationToken: cancellationToken
         );
+
 
         if (!result.Items.Any())
         {

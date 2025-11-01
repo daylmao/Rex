@@ -41,6 +41,6 @@ namespace Rex.Application.Interfaces.Repository
 
         Task ResetWarningStatus(Guid userId, Guid groupId, CancellationToken cancellationToken);
 
-        Task MarkAsWarned(Guid userGroupId, CancellationToken cancellationToken);
+        Task MarkMultipleAsWarned(IEnumerable<Guid> userGroupIds, CancellationToken cancellationToken);
     }
 }

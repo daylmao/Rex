@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.Comment;
@@ -15,7 +16,8 @@ public class UpdateCommentCommandHandler(
     ICommentRepository commentRepository,
     IFileRepository fileRepository,
     IEntityFileRepository entityFileRepository,
-    ICloudinaryService cloudinaryService
+    ICloudinaryService cloudinaryService,
+    IDistributedCache cache
 ) : ICommandHandler<UpdateCommentCommand, CommentUpdatedDto>
 {
     public async Task<ResultT<CommentUpdatedDto>> Handle(UpdateCommentCommand request,
@@ -58,6 +60,9 @@ public class UpdateCommentCommandHandler(
         comment.Edited = true;
         await commentRepository.UpdateAsync(comment, cancellationToken);
 
+        await cache.IncrementVersionAsync("comments", comment.PostId, logger, cancellationToken);
+        logger.LogInformation("Cache invalidated for comments of PostId: {PostId}", comment.PostId);
+        
         var currentFiles =
             await fileRepository.GetFilesByTargetIdAsync(comment.Id, TargetType.Comment, cancellationToken);
 

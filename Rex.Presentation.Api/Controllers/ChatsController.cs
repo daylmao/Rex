@@ -13,19 +13,18 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class ChatsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
-    
-    [Authorize]
     [HttpGet] 
     [SwaggerOperation(
         Summary = "Get user chats",
         Description = "Retrieves a paginated list of chats for the authenticated user, optionally filtered by a search term."
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<PagedResult<ChatLastMessageDto>>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<PagedResult<ChatLastMessageDto>>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<PagedResult<ChatLastMessageDto>>))]
     public async Task<ResultT<PagedResult<ChatLastMessageDto>>> GetChats(
         [FromQuery] int page,
         [FromQuery] int pageSize,

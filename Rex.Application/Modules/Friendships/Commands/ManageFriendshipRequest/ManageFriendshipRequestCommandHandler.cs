@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -10,7 +11,8 @@ namespace Rex.Application.Modules.Friendships.Commands.ManageFriendshipRequest;
 public class ManageFriendshipRequestCommandHandler(
     ILogger<ManageFriendshipRequestCommandHandler> logger,
     IFriendShipRepository friendShipRepository,
-    IUserRepository userRepository
+    IUserRepository userRepository,
+    IDistributedCache cache
 ) : ICommandHandler<ManageFriendshipRequestCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(ManageFriendshipRequestCommand request,
@@ -47,8 +49,8 @@ public class ManageFriendshipRequestCommandHandler(
         var accountConfirmed = await userRepository.ConfirmedAccountAsync(request.RequesterId, cancellationToken);
         if (!accountConfirmed)
         {
-            logger.LogWarning("User with ID {UserId} tried to create a group but the account is not confirmed.", request.RequesterId);
-            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You need to confirm your account before creating a group."));
+            logger.LogWarning("User with ID {UserId} tried to respond but the account is not confirmed.", request.RequesterId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("403", "You need to confirm your account first."));
         }
         
         var friendship = await friendShipRepository.GetFriendShipInPendingAsync(request.RequesterId,
@@ -84,7 +86,11 @@ public class ManageFriendshipRequestCommandHandler(
             request.Status
         );
 
-        var message = request.Status == FriendshipStatus.Accepted
+        await cache.IncrementVersionAsync("friends", request.RequesterId, logger, cancellationToken);
+        await cache.IncrementVersionAsync("friends", request.TargetUserId, logger, cancellationToken);
+        logger.LogInformation("Cache invalidated for friends of UserIds: {RequesterId}, {TargetUserId}", request.RequesterId, request.TargetUserId);
+
+        var message = request.Status == ManageRequestStatus.Accepted
             ? "Friend request accepted successfully."
             : "Friend request rejected successfully.";
 

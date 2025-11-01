@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -11,7 +12,8 @@ public class DeleteGroupCommandHandler(
     ILogger<DeleteGroupCommandHandler> logger,
     IGroupRepository groupRepository,
     IUserRepository userRepository,
-    IUserGroupRepository userGroupRepository
+    IUserGroupRepository userGroupRepository,
+    IDistributedCache cache
 ) : ICommandHandler<DeleteGroupCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(DeleteGroupCommand request, CancellationToken cancellationToken)
@@ -49,6 +51,11 @@ public class DeleteGroupCommandHandler(
 
         logger.LogInformation("Deleting the group with ID {GroupId}.", request.GroupId);
         await groupRepository.DeleteAsync(group, cancellationToken);
+        
+        await cache.IncrementVersionAsync("groups", request.UserId, logger, cancellationToken);
+        await cache.IncrementVersionAsync("groups-user", request.UserId, logger, cancellationToken);
+        await cache.IncrementVersionAsync("group-members", request.GroupId, logger, cancellationToken);
+        await cache.IncrementVersionAsync("group-requests", request.GroupId, logger, cancellationToken);
 
         return ResultT<ResponseDto>.Success(new ResponseDto("The group has been successfully deleted!"));
     }

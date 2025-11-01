@@ -16,20 +16,21 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class PostsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
-    [Authorize]
     [HttpPost]
     [SwaggerOperation(
-        Summary = " Create a new post",
+        Summary = "Create a new post",
         Description = "Creates a new post in a specified group"
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ResultT<ResponseDto>> CreatePostAsync([FromForm] CreatePostDto createPost,
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ResultT<ResponseDto>))]
+    public async Task<ResultT<ResponseDto>> CreatePostAsync(
+        [FromForm] CreatePostDto createPost,
         CancellationToken cancellationToken)
     {
         var userId = userClaimService.GetUserId(User);
@@ -38,17 +39,18 @@ public class PostsController(IMediator mediator, IUserClaimService userClaimServ
                 createPost.Description, createPost.Files), cancellationToken);
     }
 
-    [Authorize]
-    [HttpGet("group/{groupId}/user")]
+    [HttpGet("group/{groupId}")]
     [SwaggerOperation(
         Summary = "Get posts by group ID",
         Description = "Retrieves a paginated list of posts for a specific group"
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<PagedResult<PostDetailsDto>>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<PagedResult<PostDetailsDto>>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<PagedResult<PostDetailsDto>>))]
     public async Task<ResultT<PagedResult<PostDetailsDto>>> GetPostsByGroupIdAsync(
-        [FromRoute] Guid groupId, [FromQuery] int pageNumber, [FromQuery] int pageSize,
+        [FromRoute] Guid groupId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
         CancellationToken cancellationToken = default)
     {
         var userId = userClaimService.GetUserId(User);
@@ -58,20 +60,21 @@ public class PostsController(IMediator mediator, IUserClaimService userClaimServ
         );
     }
 
-    [Authorize]
-    [HttpDelete("{postId}/user")]
+    [HttpDelete("{postId}")]
     [SwaggerOperation(
         Summary = "Delete a post",
         Description = "Deletes a post if the user has permission"
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ResultT<ResponseDto>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<ResponseDto>))]
     public async Task<ResultT<ResponseDto>> DeletePostAsync(
-        [FromRoute] Guid postId, CancellationToken cancellationToken)
+        [FromRoute] Guid postId,
+        [FromQuery] Guid groupId,
+        CancellationToken cancellationToken)
     {
         var userId = userClaimService.GetUserId(User);
-        return await mediator.Send(new DeletePostCommand(postId, userId), cancellationToken);
+        return await mediator.Send(new DeletePostCommand(postId, groupId, userId), cancellationToken);
     }
 }

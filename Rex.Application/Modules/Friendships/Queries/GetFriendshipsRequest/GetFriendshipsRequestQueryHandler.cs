@@ -34,21 +34,24 @@ public class GetFriendshipsRequestQueryHandler(
                 Error.NotFound("404", "We couldn't find your account. Please log in again."));
         }
 
+        var version = await cache.GetVersionAsync("friends", request.UserId, cancellationToken);
+        var cacheKey = $"get:friendships:by:{request.UserId}:{request.PageNumber}:{request.PageSize}:version:{version}";
+        
         var friendship = await cache.GetOrCreateAsync(
-            $"get:friendships:by:{request.UserId}:{request.PageNumber}:{request.PageSize}",
+            cacheKey,
             async () => await friendShipRepository.GetFriendShipRequestsByUserIdAsync(request.UserId,
                 request.PageNumber, request.PageSize, RequestStatus.Pending,
                 cancellationToken),
             logger,
             cancellationToken: cancellationToken
         );
-
+        
         if (!friendship.Items.Any())
         {
             logger.LogInformation("No pending friend requests found for user {UserId}", request.UserId);
             return ResultT<PagedResult<FriendshipRequestDto>>.Success(
                 new PagedResult<FriendshipRequestDto>([], friendship.TotalItems, friendship.ActualPage,
-                    friendship.TotalPages));
+                    request.PageSize));
         }
 
         var elements = friendship.Items.Select(c => new FriendshipRequestDto(
@@ -65,7 +68,7 @@ public class GetFriendshipsRequestQueryHandler(
             items: elements,
             totalItems: friendship.TotalItems,
             actualPage: friendship.ActualPage,
-            pageSize: friendship.TotalPages
+            pageSize: request.PageSize
         );
         
         logger.LogInformation("Successfully retrieved {Count} friend requests for user {UserId}", 

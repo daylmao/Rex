@@ -12,7 +12,11 @@ using Rex.Configurations;
 using Rex.Infrastructure.Shared.Services;
 using Rex.Infrastructure.Shared.Services.SignalR;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Rex.Application.Services;
+using Rex.Enum;
+using Rex.Infrastructure.Shared.Services.Authorization;
 using AuthenticationService = Rex.Infrastructure.Shared.Services.AuthenticationService;
 using IAuthenticationService = Rex.Application.Interfaces.IAuthenticationService;
 
@@ -37,14 +41,14 @@ public static class DependencyInjection
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
             .UsePostgreSqlStorage(configuration.GetConnectionString("HangfireConnection")));
-        
+
         services.AddHangfireServer(options =>
         {
             options.ServerName = $"Rex-{Environment.MachineName}";
-            options.WorkerCount = 3;
+            options.WorkerCount = 4;
             options.Queues = new[] { "critical", "default" };
         });
-        
+
         #endregion
 
         #region JWT
@@ -77,7 +81,7 @@ public static class DependencyInjection
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
                 };
 
-                options.Events = new JwtBearerEvents()
+                options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
                     {
@@ -95,7 +99,7 @@ public static class DependencyInjection
                     OnTokenValidated = context =>
                     {
                         var logger = context.HttpContext.RequestServices.GetService<ILogger<JwtBearerEvents>>();
-                        logger?.LogInformation("JWT validation successful for user: {UserId}",
+                        logger?.LogInformation("JWT validated successfully for user: {UserId}",
                             context.Principal?.FindFirst("sub")?.Value);
                         return Task.CompletedTask;
                     },
@@ -104,12 +108,16 @@ public static class DependencyInjection
                     {
                         var logger = context.HttpContext.RequestServices.GetService<ILogger<JwtBearerEvents>>();
                         logger?.LogWarning("JWT authentication failed: {Error}", context.Exception.Message);
+
                         return Task.CompletedTask;
                     },
 
                     OnChallenge = context =>
                     {
-                        context.HandleResponse();
+                        var logger = context.HttpContext.RequestServices.GetService<ILogger<JwtBearerEvents>>();
+                        logger?.LogWarning("JWT challenge triggered for path: {Path}",
+                            context.HttpContext.Request.Path);
+
                         return Task.CompletedTask;
                     },
 
@@ -117,6 +125,7 @@ public static class DependencyInjection
                     {
                         var logger = context.HttpContext.RequestServices.GetService<ILogger<JwtBearerEvents>>();
                         logger?.LogWarning("Access forbidden for path: {Path}", context.HttpContext.Request.Path);
+
                         return Task.CompletedTask;
                     }
                 };
@@ -124,7 +133,7 @@ public static class DependencyInjection
             .AddCookie("Cookies", options =>
             {
                 options.LoginPath = "/api/v1/auth/github-login";
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(5); 
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
             })
             .AddOAuth("GitHub", options =>
             {
@@ -228,6 +237,28 @@ public static class DependencyInjection
         services.AddScoped<IInactiveUserNotifier, InactiveUserNotifier>();
         services.AddScoped<IGithubAuthService, GitHubAuthService>();
         services.AddScoped<IUserClaimService, UserClaimService>();
+        services.AddScoped<IAuthorizationHandler, GroupRoleHandler>();
+
+        #endregion
+
+        #region Group Role Authorization
+
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("LeaderOnly", policy =>
+                policy.Requirements.Add(new GroupRoleRequirement(GroupRole.Leader)));
+
+            options.AddPolicy("LeaderOrModerator", policy =>
+                policy.Requirements.Add(new GroupRoleRequirement(GroupRole.Moderator,
+                    GroupRole.Leader)));
+
+            options.AddPolicy("StaffOnly", policy =>
+                policy.Requirements.Add(new GroupRoleRequirement(
+                    GroupRole.Leader,
+                    GroupRole.Moderator,
+                    GroupRole.Mentor
+                )));
+        });
 
         #endregion
 
@@ -240,22 +271,33 @@ public static class DependencyInjection
 
     public static void ConfigureHangfireJobs(this IApplicationBuilder app)
     {
-        RecurringJob.AddOrUpdate<IWarnUserService>(
+        RecurringJob.AddOrUpdate<WarnUserService>(
             recurringJobId: "warn-inactive-users",
             queue: "default",
             methodCall: service => service.ProcessWarning(CancellationToken.None),
-            cronExpression: Cron.Minutely,
+            cronExpression: Cron.Daily(1),
             options: new RecurringJobOptions
             {
                 TimeZone = TimeZoneInfo.Utc
             }
         );
 
-        RecurringJob.AddOrUpdate<IRemoveUserService>(
+        RecurringJob.AddOrUpdate<RemoveUserService>(
             recurringJobId: "remove-inactive-users",
             queue: "critical",
             methodCall: service => service.ProcessRemoval(CancellationToken.None),
             cronExpression: Cron.Daily(4),
+            options: new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            }
+        );
+
+        RecurringJob.AddOrUpdate<ChallengeExpirationService>(
+            recurringJobId: "expire-challenges",
+            queue: "default",
+            methodCall: service => service.MarkChallengeExpired(CancellationToken.None),
+            cronExpression: Cron.Hourly,
             options: new RecurringJobOptions
             {
                 TimeZone = TimeZoneInfo.Utc

@@ -88,7 +88,8 @@ public class UserGroupRepository(RexContext context) : GenericRepository<UserGro
             .Include(ug => ug.GroupRole)
             .FirstOrDefaultAsync(ug => ug.UserId == userId && ug.GroupId == groupId, cancellation);
 
-    public async Task<PagedResult<UserGroup>> GetGroupRequestsAsync(Guid groupId, RequestStatus status, string? searchTerm,
+    public async Task<PagedResult<UserGroup>> GetGroupRequestsAsync(Guid groupId, RequestStatus status,
+        string? searchTerm,
         int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
         var query = context.Set<UserGroup>()
@@ -137,7 +138,7 @@ public class UserGroupRepository(RexContext context) : GenericRepository<UserGro
             .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<bool> RequestExistsAsync(Guid userId, Guid groupId, CancellationToken cancellationToken) =>
-        await ValidateAsync(u => u.UserId == userId 
+        await ValidateAsync(u => u.UserId == userId
                                  && u.GroupId == groupId
                                  && u.Status == RequestStatus.Pending.ToString(), cancellationToken);
 
@@ -151,23 +152,25 @@ public class UserGroupRepository(RexContext context) : GenericRepository<UserGro
             .Include(ug => ug.User)
             .Include(ug => ug.Group)
             .Include(ug => ug.GroupRole)
-            .Where(ug => !ug.HasBeenWarned && ug.Status == RequestStatus.Accepted.ToString() && 
-                         ug.GroupRole.Role == GroupRole.Member.ToString() &&
-                         !context.Set<Post>().Any(p =>
-                             p.UserId == ug.UserId &&
-                             p.GroupId == ug.GroupId &&
-                             p.CreatedAt >= warningDate
-                         )
+            .Where(ug =>
+                !ug.HasBeenWarned &&
+                ug.Status == RequestStatus.Accepted.ToString() &&
+                ug.GroupRole.Role == GroupRole.Leader.ToString() &&
+                ug.CreatedAt <= warningDate && 
+                !context.Set<Post>().Any(p =>
+                    p.UserId == ug.UserId &&
+                    p.GroupId == ug.GroupId &&
+                    p.CreatedAt >= warningDate
+                )
             )
             .ToListAsync(cancellationToken);
     }
-
 
     public async Task<IEnumerable<UserGroup>> GetInactiveUserGroupsForRemoval(
         int inactiveDays,
         CancellationToken cancellationToken)
     {
-        var removalDate = DateTime.UtcNow.AddDays(-inactiveDays); 
+        var removalDate = DateTime.UtcNow.AddDays(-inactiveDays);
 
         return await context.Set<UserGroup>()
             .Include(ug => ug.User)
@@ -179,7 +182,7 @@ public class UserGroupRepository(RexContext context) : GenericRepository<UserGro
                 ug.GroupRole.Role == GroupRole.Member.ToString() &&
                 ug.LastWarningAt.HasValue &&
                 ug.LastWarningAt.Value <= removalDate &&
-            
+                ug.CreatedAt <= removalDate &&
                 !context.Set<Post>().Any(p =>
                     p.UserId == ug.UserId &&
                     p.GroupId == ug.GroupId &&
@@ -189,14 +192,17 @@ public class UserGroupRepository(RexContext context) : GenericRepository<UserGro
             .ToListAsync(cancellationToken);
     }
 
-    public async Task MarkAsWarned(Guid userGroupId, CancellationToken cancellationToken)
+
+    public async Task MarkMultipleAsWarned(IEnumerable<Guid> userGroupIds, CancellationToken cancellationToken)
     {
-        var userGroup = await context.Set<UserGroup>()
-            .FirstOrDefaultAsync(ug => ug.Id == userGroupId, cancellationToken);
-        
-        userGroup.HasBeenWarned = true;
-        userGroup.LastWarningAt = DateTime.UtcNow;
-        await context.SaveChangesAsync(cancellationToken);
+        await context.Set<UserGroup>()
+            .Where(ug => userGroupIds.Contains(ug.Id))
+            .ExecuteUpdateAsync(
+                s => s
+                    .SetProperty(ug => ug.HasBeenWarned, true)
+                    .SetProperty(ug => ug.LastWarningAt, DateTime.UtcNow)
+                    .SetProperty(ug => ug.UpdatedAt, DateTime.UtcNow),
+                cancellationToken);
     }
 
     public async Task ResetWarningStatus(Guid userId, Guid groupId, CancellationToken cancellationToken)

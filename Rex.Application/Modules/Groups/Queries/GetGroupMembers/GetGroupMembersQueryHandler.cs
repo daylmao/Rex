@@ -36,19 +36,16 @@ public class GetGroupMembersQueryHandler(
         var searchTerm = request.SearchTerm ?? "";
         var roleFilter = request.RoleFilter?.ToString() ?? "all";
 
+        var version = await cache.GetVersionAsync("group-members", request.GroupId, cancellationToken);
+        var cacheKey = $"group-members:group:{request.GroupId}:role:{roleFilter}:search:{searchTerm}:page:{request.PageNumber}:size:{request.PageSize}:version:{version}";
+        
         var result = await cache.GetOrCreateAsync(
-            $"group-members:group:{request.GroupId}:role:{roleFilter}:search:{searchTerm}:page:{request.PageNumber}:size:{request.PageSize}",
-            async () => await userGroupRepository.GetMembersAsync(
-                request.GroupId,
-                request.RoleFilter,
-                request.SearchTerm,
-                request.PageNumber,
-                request.PageSize,
-                cancellationToken
-            ),
+            cacheKey,
+            async () => await userGroupRepository.GetMembersAsync(request.GroupId, request.RoleFilter, request.SearchTerm, request.PageNumber, request.PageSize, cancellationToken),
             logger,
             cancellationToken: cancellationToken
         );
+
 
         if (!result.Items.Any())
         {

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -14,7 +15,8 @@ public class RequestToJoinGroupCommandHandler(
     IUserRepository userRepository,
     IGroupRepository groupRepository,
     IUserGroupRepository userGroupRepository,
-    IGroupRoleRepository groupRoleRepository
+    IGroupRoleRepository groupRoleRepository,
+    IDistributedCache cache
 ) : ICommandHandler<RequestToJoinGroupCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(RequestToJoinGroupCommand request,
@@ -90,7 +92,9 @@ public class RequestToJoinGroupCommandHandler(
 
         await userGroupRepository.CreateAsync(userGroup, cancellationToken);
         logger.LogInformation("User {UserId} requested to join group {GroupId}", request.UserId, request.GroupId);
-
+        
+        await cache.IncrementVersionAsync("group-requests", request.GroupId, logger, cancellationToken);
+        
         return ResultT<ResponseDto>.Success(
             new ResponseDto("Your request to join the group has been sent! The admin will review it shortly."));
     }

@@ -50,5 +50,7 @@ namespace Rex.Application.Interfaces.Repository
         /// <param name="cancellationToken">Token to cancel the operation.</param>
         /// <returns>True if the entity satisfies the condition; otherwise false.</returns>
         Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> validation, CancellationToken cancellationToken);
+        
+        Task UpdateRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken);
     }
 }

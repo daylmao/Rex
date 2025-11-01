@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -10,7 +11,8 @@ namespace Rex.Application.Modules.User.Commands.UpdateUserInformation;
 public class UpdateUserInformationCommandHandler(
     ILogger<UpdateUserInformationCommandHandler> logger,
     IUserRepository userRepository,
-    ICloudinaryService cloudinaryService
+    ICloudinaryService cloudinaryService,
+    IDistributedCache cache
 ) : ICommandHandler<UpdateUserInformationCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(UpdateUserInformationCommand request, CancellationToken cancellationToken)
@@ -42,6 +44,8 @@ public class UpdateUserInformationCommandHandler(
         user.Biography = request.Biography;
 
         await userRepository.UpdateAsync(user, cancellationToken);
+        
+        await cache.IncrementVersionAsync("user", request.UserId, logger, cancellationToken);
 
         logger.LogInformation("User information updated successfully.");
         return ResultT<ResponseDto>.Success(new ResponseDto("Great! Your profile has been updated successfully."));

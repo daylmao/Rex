@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -10,7 +11,8 @@ public class UpdateGroupRoleMemberCommandHandler(
     ILogger<UpdateGroupRoleMemberCommandHandler> logger,
     IUserGroupRepository userGroupRepository,
     IGroupRepository groupRepository,
-    IUserRepository userRepository
+    IUserRepository userRepository,
+    IDistributedCache cache
 ) : ICommandHandler<UpdateGroupRoleMemberCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(UpdateGroupRoleMemberCommand request, CancellationToken cancellationToken)
@@ -49,8 +51,11 @@ public class UpdateGroupRoleMemberCommandHandler(
         }
 
         member.GroupRole.Role = request.Role.ToString();
+        member.UpdatedAt = DateTime.UtcNow;
 
         await userGroupRepository.UpdateAsync(member, cancellationToken);
+        
+        await cache.IncrementVersionAsync("group-members", request.GroupId, logger, cancellationToken);
 
         logger.LogInformation("Successfully updated role of user {UserId} in group {GroupId} to {Role}.", request.UserId, request.GroupId, request.Role);
 

@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -19,7 +21,8 @@ public class CreateChallengeCommandHandler(
     IUserRepository userRepository,
     ICloudinaryService cloudinaryService,
     IGroupRepository groupRepository,
-    IChallengeNotifier challengeNotifier
+    IChallengeNotifier challengeNotifier,
+    IDistributedCache cache
 ) : ICommandHandler<CreateChallengeCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(CreateChallengeCommand request, CancellationToken cancellationToken)
@@ -92,18 +95,29 @@ public class CreateChallengeCommandHandler(
         logger.LogInformation("Cover photo linked successfully to challenge '{ChallengeTitle}'.", request.Title);
         await entityFileRepository.CreateAsync(entityFile, cancellationToken);
         
+        var metadata = new
+        {
+            GroupId = group.Id,
+            ChallengeId = challenge.Id,
+            ChallengeTitle = challenge.Title,
+            CreatedBy = $"{user.FirstName} {user.LastName}"
+        };
+
         var notification = new Notification
         {
             Title = "New Challenge",
             Description = $"{user.FirstName} {user.LastName} gave an impulse to your post in '{group.Title}'",
             UserId = user.Id,
-            RecipientId = group.Id,
-            Read = false,
+            RecipientType = TargetType.Group.ToString(),                  
+            RecipientId = group.Id,                     
+            MetadataJson = JsonSerializer.Serialize(metadata),
             CreatedAt = DateTime.UtcNow
         };
 
         await challengeNotifier.SendChallengeNotification(notification, cancellationToken);
-
+        
+        await cache.IncrementVersionAsync("challenge", request.GroupId, logger, cancellationToken);
+        
         logger.LogInformation("Challenge '{ChallengeTitle}' created successfully.", request.Title);
         return ResultT<ResponseDto>.Success(new ResponseDto("Your challenge has been created successfully!"));
     }

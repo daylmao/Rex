@@ -36,29 +36,51 @@ public class RexContext: DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         #region Indexes
-
-        modelBuilder.Entity<Reaction>(entity =>
-        {
-            entity.HasIndex(r => new { r.TargetId, r.UserId })
-                .IsUnique()
-                .HasDatabaseName("UQ_Reaction_TargetId_UserId");
-        });
-
+        
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasIndex(u => u.Email)
                 .IsUnique()
                 .HasDatabaseName("UQ_User_Email");
+        });
 
-            entity.HasIndex(u => u.UserName)
-                .IsUnique()
-                .HasDatabaseName("UQ_User_UserName");
+        modelBuilder.Entity<Post>(entity =>
+        {
+            entity.HasIndex(p => new { p.GroupId, p.CreatedAt })
+                .HasDatabaseName("IX_Post_GroupId_CreatedAt");
+        });
 
-            entity.HasIndex(u => u.GitHubId)
-                .IsUnique()
-                .HasDatabaseName("UQ_User_GitHubId");
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.HasIndex(m => new { m.ChatId, m.CreatedAt })
+                .HasDatabaseName("IX_Message_ChatId_CreatedAt");
+        });
+
+        modelBuilder.Entity<UserGroup>(entity =>
+        {
+            entity.HasIndex(ug => new { ug.UserId, ug.GroupId, ug.Status })
+                .HasDatabaseName("IX_UserGroup_UserId_GroupId_Status");
+        });
+
+        modelBuilder.Entity<Reaction>(entity =>
+        {
+            entity.HasIndex(r => new { r.TargetId, r.TargetType, r.Like })
+                .HasDatabaseName("IX_Reaction_TargetId_Type_Like")
+                .HasFilter("\"Like\" = true");
+        });
+
+        modelBuilder.Entity<FriendShip>(entity =>
+        {
+            entity.HasIndex(f => new { f.RequesterId, f.TargetUserId, f.Status })
+                .HasDatabaseName("IX_FriendShip_RequesterId_TargetUserId_Status");
+        });
+
+        modelBuilder.Entity<Code>(entity =>
+        {
+            entity.HasIndex(c => new { c.UserId, c.Type, c.Used, c.Revoked })
+                .HasDatabaseName("IX_Code_UserId_Type_Status");
         });
 
         #endregion
@@ -250,10 +272,6 @@ public class RexContext: DbContext
         modelBuilder.Entity<Notification>()
             .Property(c => c.UserId)
             .HasColumnName("FkUserId");
-        
-        modelBuilder.Entity<Notification>()
-            .Property(c => c.RecipientId)
-            .HasColumnName("FkRecipientId");
 
         modelBuilder.Entity<Post>()
             .Property(c => c.UserId)
@@ -350,12 +368,6 @@ public class RexContext: DbContext
             .WithOne(c => c.User)
             .HasForeignKey(c => c.UserId)
             .HasConstraintName("FkUserSentNotification");
-        
-        modelBuilder.Entity<User>()
-            .HasMany(c => c.ReceivedNotifications)
-            .WithOne(c => c.Recipient)
-            .HasForeignKey(c => c.RecipientId)
-            .HasConstraintName("FkUserReceivedNotification");
 
         modelBuilder.Entity<User>()
             .HasMany(c => c.SentFriendRequests)
@@ -672,7 +684,7 @@ public class RexContext: DbContext
             entity.Property(a => a.Id)
                 .HasColumnName("PkNotificationId")
                 .IsRequired();
-            
+
             entity.Property(n => n.Title)
                 .IsRequired()
                 .HasMaxLength(125);
@@ -682,7 +694,18 @@ public class RexContext: DbContext
 
             entity.Property(n => n.Read)
                 .HasDefaultValue(false);
+
+            entity.Property(n => n.RecipientType)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(n => n.RecipientId)
+                .IsRequired();
+
+            entity.Property(n => n.MetadataJson)
+                .HasColumnType("jsonb"); 
         });
+
 
         #endregion
 

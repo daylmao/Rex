@@ -39,6 +39,9 @@ namespace Rex.Application.Interfaces.Repository
         /// <returns>The total number of comments.</returns>
         Task<int> GetCommentsCountByPostIdAsync(Guid postId, CancellationToken cancellationToken);
 
+        Task<bool> CommentAlreadyPinned(Guid commentId, CancellationToken cancellationToken);
+        Task<bool> AnotherCommentIsPinned(Guid postId, CancellationToken cancellationToken);
+
         Task<Dictionary<Guid, int>> GetCommentsCountByPostIdsAsync(IEnumerable<Guid> postIds,
             CancellationToken cancellationToken);
     }

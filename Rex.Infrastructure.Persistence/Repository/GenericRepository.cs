@@ -6,7 +6,8 @@ using Rex.Models;
 
 namespace Rex.Infrastructure.Persistence.Repository;
 
-public class GenericRepository<TEntity>(RexContext context): IGenericRepository<TEntity> where TEntity : AuditableEntity
+public class GenericRepository<TEntity>(RexContext context)
+    : IGenericRepository<TEntity> where TEntity : AuditableEntity
 {
     public async Task<TEntity> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         await context.Set<TEntity>().FindAsync(id, cancellationToken);
@@ -38,8 +39,15 @@ public class GenericRepository<TEntity>(RexContext context): IGenericRepository<
     public async Task SaveAsync(CancellationToken cancellationToken) =>
         await context.SaveChangesAsync(cancellationToken);
 
-    public async Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> validation, CancellationToken cancellationToken) =>
+    public async Task<bool> ValidateAsync(Expression<Func<TEntity, bool>> validation,
+        CancellationToken cancellationToken) =>
         await context.Set<TEntity>()
             .AsNoTracking()
             .AnyAsync(validation, cancellationToken);
+
+    public async Task UpdateRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken)
+    {
+        context.Set<TEntity>().UpdateRange(entities);
+        await context.SaveChangesAsync(cancellationToken);
+    }
 }

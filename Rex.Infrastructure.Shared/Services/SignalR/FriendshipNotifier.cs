@@ -17,15 +17,18 @@ public class FriendshipNotifier(
         await notificationRepository.CreateAsync(notification, cancellationToken);
 
         var notificationDto = new NotificationDto(
+            Id: notification.Id,
             Title: notification.Title,
             Description: notification.Description,
             UserId: notification.UserId,
-            RecipientId: notification.RecipientId, 
+            RecipientType: notification.RecipientType,
+            RecipientId: notification.RecipientId,
+            MetadataJson: notification.MetadataJson,
             CreatedAt: notification.CreatedAt,
             IsRead: notification.Read
         );
 
-        await hubContext.Clients.Group(notification.RecipientId.ToString())
+        await hubContext.Clients.User(notification.RecipientId.ToString())
             .ReceiveFriendRequestNotification(notificationDto);
     }
 }

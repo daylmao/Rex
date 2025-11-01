@@ -5,6 +5,7 @@ using Rex.Enum;
 namespace Rex.Application.Modules.Challenges.Commands.UpdateChallenge;
 
 public record UpdateChallengeCommand(
+    Guid GroupId,
     Guid ChallengeId,
     string Title,
     string Description,

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -20,7 +21,8 @@ public class CreatePostCommandHandler(
     IChallengeRepository challengeRepository,
     IFileRepository fileRepository,
     IEntityFileRepository entityFileRepository,
-    ICloudinaryService cloudinaryService
+    ICloudinaryService cloudinaryService,
+    IDistributedCache cache
 ) : ICommandHandler<CreatePostCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(CreatePostCommand request, CancellationToken cancellationToken)
@@ -128,6 +130,9 @@ public class CreatePostCommandHandler(
             if (!filesResult.IsSuccess)
                 return filesResult;
         }
+        
+        await cache.IncrementVersionAsync("group-posts", request.GroupId, logger, cancellationToken);
+        logger.LogInformation("Cache invalidated for posts of GroupId: {GroupId}", request.GroupId);
         
         await userGroupRepository.ResetWarningStatus(post.UserId, post.GroupId, cancellationToken);
 

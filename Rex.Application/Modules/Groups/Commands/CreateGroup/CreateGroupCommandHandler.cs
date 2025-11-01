@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
@@ -16,7 +17,8 @@ public class CreateGroupCommandHandler(
     ICloudinaryService cloudinaryService,
     IGroupRoleRepository groupRoleRepository,
     IUserGroupRepository userGroupRepository,
-    IUserRepository userRepository
+    IUserRepository userRepository,
+    IDistributedCache cache
 ) : ICommandHandler<CreateGroupCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(CreateGroupCommand request, CancellationToken cancellationToken)
@@ -85,6 +87,8 @@ public class CreateGroupCommandHandler(
 
         await userGroupRepository.CreateAsync(userGroup, cancellationToken);
         logger.LogInformation("User with ID {UserId} assigned as Leader to group '{GroupTitle}'", request.UserId, group.Title);
+        
+        await cache.IncrementVersionAsync("groups", request.UserId, logger, cancellationToken);
 
         return ResultT<ResponseDto>.Success(new ResponseDto("Group created successfully! You are now the leader of the group."));
     }

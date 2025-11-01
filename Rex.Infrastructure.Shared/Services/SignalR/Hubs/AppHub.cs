@@ -5,6 +5,7 @@ using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.SignalR;
 using Rex.Application.Modules.Chats.Commands.CreatePrivateChat;
 using Rex.Application.Modules.Friendships.Commands;
+using Rex.Application.Modules.Friendships.Commands.CreateRequestFriendship;
 using Rex.Application.Modules.Messages.Commands.SendMessage;
 using Rex.Application.Modules.Reactions.Commands.AddLike;
 using Rex.Application.Modules.Reactions.Commands.RemoveLike;

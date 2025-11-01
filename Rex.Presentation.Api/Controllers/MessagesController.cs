@@ -22,9 +22,9 @@ public class MessagesController(IMediator mediator, IUserClaimService userClaimS
         Summary = "Get chat messages",
         Description = "Retrieves a paginated list of messages from a specific chat."
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<PagedResult<MessageDto>>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<PagedResult<MessageDto>>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<PagedResult<MessageDto>>))]
     public async Task<ResultT<PagedResult<MessageDto>>> GetMessageByChatIdAsync(
         [FromRoute] Guid chatId,
         [FromQuery] int pageNumber,
@@ -40,10 +40,10 @@ public class MessagesController(IMediator mediator, IUserClaimService userClaimS
         Summary = "Send file message",
         Description = "Sends a message that includes a file attachment within a specific chat."
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<MessageDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<MessageDto>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<MessageDto>))]
+    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType, Type = typeof(ResultT<MessageDto>))]
     public async Task<ResultT<MessageDto>> SendFileMessageAsync(
         [FromForm] SendFileMessageDto sendFileMessage,
         CancellationToken cancellationToken)
