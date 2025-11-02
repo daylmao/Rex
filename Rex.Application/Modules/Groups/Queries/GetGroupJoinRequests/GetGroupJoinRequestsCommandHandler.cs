@@ -65,6 +65,7 @@ public class GetGroupJoinRequestsCommandHandler(
 
         var elements = result.Items
             .Select(c => new UserGroupRequestDto(
+                c.UserId,
                 c.User.FirstName,
                 c.User.LastName,
                 c.User.ProfilePhoto,
