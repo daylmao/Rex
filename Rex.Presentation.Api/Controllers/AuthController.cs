@@ -29,24 +29,23 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultT<TokenResponseDto>))]
     [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ResultT<TokenResponseDto>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<TokenResponseDto>))]
-    public async Task<ResultT<TokenResponseDto>> LoginAsync([FromBody] LoginCommand command,
-        CancellationToken cancellationToken)
+    public async Task<ResultT<TokenResponseDto>> LoginAsync([FromBody] LoginCommand command, CancellationToken cancellationToken)
     {
         return await mediator.Send(command, cancellationToken);
+        
     }
 
     [HttpPost("refresh-token")]
     [SwaggerOperation(
-        Summary = "Refresh authentication token",
-        Description = "Refreshes the JWT token using the provided refresh token."
+        Summary = "Refresh access token",
+        Description = "Generates a new access token using the refresh token stored in the HTTP-only cookie."
     )]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<TokenResponseDto>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ResultT<TokenResponseDto>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ResultT<TokenResponseDto>))]
-    public async Task<ResultT<TokenResponseDto>> RefreshTokenAsync([FromBody] RefreshTokenDto refreshToken,
-        CancellationToken cancellationToken)
+    public async Task<ResultT<TokenResponseDto>> RefreshTokenAsync(CancellationToken cancellationToken)
     {
-        return await authenticationService.RefreshTokenAsync(refreshToken.refreshToken, cancellationToken);
+        return await authenticationService.RefreshTokenAsync(cancellationToken);
     }
 
     [HttpGet("github-login")]
@@ -94,7 +93,7 @@ public class AuthController(
             return BadRequest(new { error = result.Error });
         }
 
-        var redirectUrl = $"{returnUrl}?accessToken={result.Value!.AccessToken}&refreshToken={result.Value.RefreshToken}&userId={result.Value.UserId}";
+        var redirectUrl = $"{returnUrl}?accessToken={result.Value!.AccessToken}&userId={result.Value.UserId}";
         return Redirect(redirectUrl);
     }
 }

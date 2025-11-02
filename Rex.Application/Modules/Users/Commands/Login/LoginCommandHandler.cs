@@ -66,8 +66,8 @@ public class LoginCommandHandler(
         var accessToken = await authenticationService.GenerateTokenAsync(user, cancellationToken);
         var refreshToken = await authenticationService.GenerateRefreshTokenAsync(user, cancellationToken);
 
-        logger.LogInformation("User {UserId} logged in successfully.", user.Id);
+        logger.LogInformation("User {UserId} logged in successfully. Access token and refresh token generated.", user.Id);
 
-        return ResultT<TokenResponseDto>.Success(new TokenResponseDto(accessToken, refreshToken));
+        return ResultT<TokenResponseDto>.Success(new TokenResponseDto(accessToken));
     }
 }
