@@ -53,8 +53,8 @@ public class GetGroupByGroupIdQueryHandler(
         }
 
         var isGroupPrivate = await userGroupRepository.IsGroupPrivateAsync(request.GroupId, cancellationToken);
-        var isUserInGroup = await userGroupRepository.IsUserInGroupAsync(
-            request.UserId, request.GroupId, RequestStatus.Accepted, cancellationToken);
+        var isUserInGroup = await userGroupRepository.IsUserInGroupAsync(request.UserId, request.GroupId,
+            RequestStatus.Accepted, cancellationToken);
 
         if (isGroupPrivate && !isUserInGroup)
         {
@@ -92,7 +92,8 @@ public class GetGroupByGroupIdQueryHandler(
             Description: result.Description,
             Visibility: result.Visibility,
             MemberCount: result.UserGroups.Count,
-            IsJoined: isUserInGroup
+            IsJoined: isUserInGroup,
+            UserRole: result.UserGroups.FirstOrDefault(c => c.UserId == request.UserId)?.GroupRole.Role ?? "None"
         ));
     }
 }

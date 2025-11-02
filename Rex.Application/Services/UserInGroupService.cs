@@ -19,16 +19,14 @@ public class UserInGroupService(
         var version = await cache.GetVersionAsync("group-members", groupId, cancellationToken);
         var cacheKey = $"group-members:{userId}:{groupId}:version:{version}";
 
-        var userGroup = await cache.GetOrCreateAsync(
+        var role = await cache.GetOrCreateAsync(
             cacheKey, async () =>
             {
                 var user = await userRepository.GetByIdAsync(userId, cancellationToken);
                 if (user is null)
                 {
                     logger.LogWarning("User with ID {UserId} was not found in the system.", userId);
-                    return ResultT<string>.Failure(
-                        Error.NotFound("404", "The specified user does not exist.")
-                    );
+                    return null;
                 }
 
                 var userGroup = await userGroupRepository.GetMemberAsync(userId, groupId, cancellationToken);
@@ -39,10 +37,7 @@ public class UserInGroupService(
                         userId,
                         groupId
                     );
-
-                    return ResultT<string>.Failure(
-                        Error.NotFound("404", "The user is not a member of this group.")
-                    );
+                    return null;
                 }
 
                 return userGroup.GroupRole.Role;
@@ -51,6 +46,9 @@ public class UserInGroupService(
             cancellationToken: cancellationToken
         );
 
-        return ResultT<string>.Success(userGroup.Value);
+        if (role is null)
+            return ResultT<string>.Failure(Error.NotFound("404", "The user is not a member of this group."));
+
+        return ResultT<string>.Success(role);
     }
 }

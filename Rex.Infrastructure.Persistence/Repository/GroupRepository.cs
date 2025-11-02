@@ -96,7 +96,11 @@ public class GroupRepository(RexContext context) : GenericRepository<Group>(cont
                 UserGroups = c.UserGroups
                     .Select(ug => new UserGroup
                     {
-                        UserId = ug.UserId
+                        UserId = ug.UserId,
+                        GroupRole = new()
+                        {
+                            Role = ug.GroupRole.Role
+                        }
                     })
                     .ToList()
             }).FirstOrDefaultAsync(cancellationToken);

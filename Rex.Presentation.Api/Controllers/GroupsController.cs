@@ -159,11 +159,12 @@ public class GroupsController(IMediator mediator, IUserClaimService userClaimSer
         CancellationToken cancellationToken)
     {
         return await mediator.Send(
-            new ManageRequestCommand(groupId, targetUserId, statusDto.Status),
+            new ManageRequestCommand(targetUserId, groupId, statusDto.Status),
             cancellationToken
         );
     }
 
+    [Authorize("LeaderOrModerator")]
     [HttpPatch("{groupId}/members/{memberId}/role")]
     [SwaggerOperation(
         Summary = "Update group member role",
@@ -176,7 +177,7 @@ public class GroupsController(IMediator mediator, IUserClaimService userClaimSer
         [FromBody] UpdateRoleMemberdto dto,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(new UpdateGroupRoleMemberCommand(groupId, memberId, dto.Role), cancellationToken);
+        return await mediator.Send(new UpdateGroupRoleMemberCommand(memberId, groupId, dto.Role), cancellationToken);
     }
 
     [Authorize("LeaderOnly")]

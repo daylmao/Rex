@@ -40,12 +40,17 @@ public class DeleteGroupCommandHandler(
             return ResultT<ResponseDto>.Failure(Error.Failure("400", "It seems you're not part of this group."));
         }
 
-        var isUserGroupLeader =
-            await userGroupRepository.GetMemberAsync(request.UserId, request.GroupId, cancellationToken);
-        
-        if (isUserGroupLeader.GroupRole.Role == GroupRole.Leader.ToString())
+        var member = await userGroupRepository.GetMemberAsync(request.UserId, request.GroupId, cancellationToken);
+
+        if (member is null)
         {
-            logger.LogWarning("User with ID {UserId} does not have permission to delete group {GroupId}.", request.UserId, request.GroupId);
+            logger.LogWarning("User {UserId} is not associated with group {GroupId}.", request.UserId, request.GroupId);
+            return ResultT<ResponseDto>.Failure(Error.Failure("400", "You are not part of this group or your membership could not be verified."));
+        }
+
+        if (member.GroupRole.Role != GroupRole.Leader.ToString())
+        {
+            logger.LogWarning("User {UserId} does not have permission to delete group {GroupId}.", request.UserId, request.GroupId);
             return ResultT<ResponseDto>.Failure(Error.Failure("403", "Only the group leader can delete the group."));
         }
 
