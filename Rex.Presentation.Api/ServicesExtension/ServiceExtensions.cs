@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using Microsoft.OpenApi.Models;
+using Rex.Presentation.Api.Filters;
 using Rex.Presentation.Api.Middlewares;
-using Trivo.Presentation.API.Filters;
 
 namespace Rex.Presentation.Api.ServicesExtension;
 

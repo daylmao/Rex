@@ -5,9 +5,9 @@ using Rex.Application;
 using Rex.Infrastructure.Persistence;
 using Rex.Infrastructure.Shared;
 using Rex.Infrastructure.Shared.Services.SignalR.Hubs;
+using Rex.Presentation.Api.Filters;
 using Rex.Presentation.Api.ServicesExtension;
 using Serilog;
-using Trivo.Presentation.API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
