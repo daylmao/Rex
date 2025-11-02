@@ -6,6 +6,7 @@ using Rex.Application.DTOs.JWT;
 using Rex.Application.DTOs.Post;
 using Rex.Application.Interfaces;
 using Rex.Application.Modules.Posts.Commands;
+using Rex.Application.Modules.Posts.Commands.CreatePost;
 using Rex.Application.Modules.Posts.Commands.DeletePost;
 using Rex.Application.Modules.Posts.Queries.GetPostsByGroupId;
 using Rex.Application.Pagination;

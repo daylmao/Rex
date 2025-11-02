@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
 
-namespace Rex.Application.Modules.Posts.Commands;
+namespace Rex.Application.Modules.Posts.Commands.CreatePost;
 
 public record CreatePostCommand(
     Guid GroupId,

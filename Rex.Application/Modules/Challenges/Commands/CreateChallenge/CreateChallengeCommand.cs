@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Rex.Application.Abstractions.Messages;
 using Rex.Application.DTOs.JWT;
 
-namespace Rex.Application.Modules.Challenges.CreateChallenge;
+namespace Rex.Application.Modules.Challenges.Commands.CreateChallenge;
 
 public record CreateChallengeCommand(
     Guid UserId,

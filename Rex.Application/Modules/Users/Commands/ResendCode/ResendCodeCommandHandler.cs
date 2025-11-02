@@ -7,7 +7,7 @@ using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 using Rex.Enum;
 
-namespace Rex.Application.Modules.User.Commands.ResendCode;
+namespace Rex.Application.Modules.Users.Commands.ResendCode;
 
 public class ResendCodeCommandHandler(
     ILogger<ResendCodeCommandHandler> logger,

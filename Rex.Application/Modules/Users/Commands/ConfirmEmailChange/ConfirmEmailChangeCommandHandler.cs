@@ -5,7 +5,7 @@ using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 
-namespace Rex.Application.Modules.User.Commands.ConfirmEmailChange;
+namespace Rex.Application.Modules.Users.Commands.ConfirmEmailChange;
 
 public class ConfirmEmailChangeCommandHandler(
     ILogger<ConfirmEmailChangeCommandHandler> logger,

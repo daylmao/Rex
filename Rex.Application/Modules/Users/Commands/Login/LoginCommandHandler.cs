@@ -6,7 +6,7 @@ using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 using Rex.Enum;
 
-namespace Rex.Application.Modules.User.Commands.Login;
+namespace Rex.Application.Modules.Users.Commands.Login;
 
 public class LoginCommandHandler(
     ILogger<LoginCommandHandler> logger,

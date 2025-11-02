@@ -5,7 +5,7 @@ using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 using Rex.Enum;
 
-namespace Rex.Application.Modules.Groups.Commands.AproveRequest;
+namespace Rex.Application.Modules.Groups.Commands.ApproveRequest;
 
 public class ApproveRequestCommandHandler(
     ILogger<ApproveRequestCommandHandler> logger,

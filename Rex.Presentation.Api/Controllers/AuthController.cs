@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces;
-using Rex.Application.Modules.User.Commands.Login;
+using Rex.Application.Modules.Users.Commands.Login;
 using Rex.Application.Utilities;
 using IAuthenticationService = Rex.Application.Interfaces.IAuthenticationService;
 

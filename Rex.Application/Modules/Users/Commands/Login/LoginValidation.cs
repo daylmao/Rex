@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Rex.Application.Modules.User.Commands.Login;
+namespace Rex.Application.Modules.Users.Commands.Login;
 
 public class LoginValidation : AbstractValidator<LoginCommand>
 {

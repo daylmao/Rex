@@ -9,7 +9,7 @@ using Rex.Enum;
 using Rex.Models;
 using GroupRole = Rex.Enum.GroupRole;
 
-namespace Rex.Application.Modules.Groups.Commands;
+namespace Rex.Application.Modules.Groups.Commands.CreateGroup;
 
 public class CreateGroupCommandHandler(
     ILogger<CreateGroupCommandHandler> logger,

@@ -11,7 +11,7 @@ using Rex.Enum;
 using Rex.Models;
 using File = Rex.Models.File;
 
-namespace Rex.Application.Modules.Challenges.CreateChallenge;
+namespace Rex.Application.Modules.Challenges.Commands.CreateChallenge;
 
 public class CreateChallengeCommandHandler(
     ILogger<CreateChallengeCommandHandler> logger,

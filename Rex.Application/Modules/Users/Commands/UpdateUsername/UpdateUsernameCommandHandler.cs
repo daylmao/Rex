@@ -5,7 +5,7 @@ using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 
-namespace Rex.Application.Modules.User.Commands.UpdateUsername;
+namespace Rex.Application.Modules.Users.Commands.UpdateUsername;
 
 public class UpdateUsernameCommandHandler(
     ILogger<UpdateUsernameCommandHandler> logger,
