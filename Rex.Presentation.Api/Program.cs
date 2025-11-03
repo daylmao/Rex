@@ -1,5 +1,7 @@
+using System.Threading.RateLimiting;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi;
 using Rex.Application;
 using Rex.Infrastructure.Persistence;
@@ -32,7 +34,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddUserRateLimiting();
 
 builder.Services.AddCors(options =>
 {
@@ -56,17 +58,19 @@ if (app.Environment.IsDevelopment())
         c.RoutePrefix = "swagger";
     });
 }
-
+app.UseRateLimiter();
 app.UseWebSockets();
 app.UseRouting();
 
+app.UseRateLimiter();
 app.UseCors("AllowAllOrigins");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseEndpoints(endpoints =>
 {
-    endpoints.MapControllers();
+
+    app.MapControllers();
     endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions
     {
         Authorization = new[] { new HangfireAuthorizationFilter(builder.Environment.EnvironmentName) },

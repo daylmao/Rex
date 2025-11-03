@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Rex.Application.DTOs.Message;
 using Rex.Application.Interfaces;
 using Rex.Application.Modules.Messages.Commands.SendFileMessage;
@@ -14,6 +15,8 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
+[EnableRateLimiting("api-user")]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class MessagesController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
 {
@@ -34,7 +37,6 @@ public class MessagesController(IMediator mediator, IUserClaimService userClaimS
         return await mediator.Send(new GetMessagesByChatIdQuery(chatId, pageNumber, pageSize), cancellationToken);
     }
 
-    [Authorize]
     [HttpPost("file")]
     [SwaggerOperation(
         Summary = "Send file message",

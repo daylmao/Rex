@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Rex.Application.DTOs.Comment;
 using Rex.Application.DTOs.Reply;
 using Rex.Application.Interfaces;
@@ -19,6 +20,7 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
+[EnableRateLimiting("api-user")]
 [Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class CommentsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase

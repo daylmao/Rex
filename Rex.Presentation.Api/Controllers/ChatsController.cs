@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Rex.Application.DTOs.Challenge;
 using Rex.Application.Interfaces;
 using Rex.Application.Modules.Chats.Queries.GetChatsByUserId;
@@ -13,6 +14,7 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
+[EnableRateLimiting("api-user")]
 [Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class ChatsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
