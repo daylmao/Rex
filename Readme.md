@@ -138,8 +138,6 @@ Members explain not just *what* they did, but *how* they thought:
 | 🚀 **Caching / Messaging** | Redis | Fast data exchange |
 | 🔐 **Security** | JWT + Refresh Tokens | Authentication |
 | 📊 **Logging** | Serilog + Seq | Observability |
-| 🐳 **Containerization** | Docker Compose | Easy deployment |
-
 ---
 
 ## ⚙️ **Setup Guide**
