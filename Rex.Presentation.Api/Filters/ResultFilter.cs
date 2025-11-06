@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Rex.Application.Utilities;
 
-namespace Trivo.Presentation.API.Filters;
+namespace Rex.Presentation.Api.Filters;
 
 public class ResultFilter(ILogger<ResultFilter> logger) : IAsyncActionFilter
 {

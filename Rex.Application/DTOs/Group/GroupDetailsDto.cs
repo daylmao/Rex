@@ -8,5 +8,6 @@ public record GroupDetailsDto(
     string Description,
     string Visibility,
     int MemberCount,
-    bool IsJoined
+    bool IsJoined,
+    string? UserRole = null
     );

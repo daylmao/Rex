@@ -1,5 +1,6 @@
 using FluentValidation;
 using Rex.Application.DTOs.Configs;
+using Rex.Application.Utilities;
 
 
 namespace Rex.Presentation.Api.Middlewares;
@@ -18,7 +19,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
             {
                 context.Response.ContentType = "application/json";
-                await context.Response.WriteAsJsonAsync(ProblemDetailsDto.Fail(
+                await context.Response.WriteAsJsonAsync(ProblemDetails.Fail(
                     message: "Authentication required",
                     code: StatusCodes.Status401Unauthorized,
                     details: "You need to sign in to access this resource."
@@ -28,7 +29,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
             {
                 context.Response.ContentType = "application/json";
-                await context.Response.WriteAsJsonAsync(ProblemDetailsDto.Fail(
+                await context.Response.WriteAsJsonAsync(ProblemDetails.Fail(
                     message: "Access denied",
                     code: StatusCodes.Status403Forbidden,
                     details: "You do not have permission to perform this action."
@@ -51,7 +52,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsJsonAsync(ProblemDetailsDto.Fail(
+            await context.Response.WriteAsJsonAsync(ProblemDetails.Fail(
                 message: "Validation errors",
                 code: StatusCodes.Status400BadRequest,
                 details: "One or more validation errors occurred.",
@@ -65,7 +66,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsJsonAsync(ProblemDetailsDto.Fail(
+            await context.Response.WriteAsJsonAsync(ProblemDetails.Fail(
                 message: "Server error",
                 code: StatusCodes.Status500InternalServerError,
                 details: "An unexpected error occurred. Please try again later."

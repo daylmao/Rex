@@ -1,6 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Rex.Application.DTOs.JWT;
@@ -13,10 +15,12 @@ using Rex.Models;
 namespace Rex.Infrastructure.Shared.Services;
 
 public class AuthenticationService(
+    ILogger<AuthenticationService> logger,
     IOptions<JWTConfiguration> jwtConfiguration,
     IUserRoleService userRoleService,
     IRefreshTokenRepository refreshTokenRepository,
-    IUserRepository userRepository
+    IUserRepository userRepository,
+    IHttpContextAccessor httpContextAccessor
 ) : IAuthenticationService
 {
     private readonly JWTConfiguration _jwtConfiguration = jwtConfiguration.Value;
@@ -45,7 +49,10 @@ public class AuthenticationService(
             signingCredentials: credentials
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+        logger.LogInformation("Access token generated for user {UserId}", user.Id);
+
+        return tokenString;
     }
 
     public async Task<string> GenerateRefreshTokenAsync(User user, CancellationToken cancellationToken)
@@ -55,12 +62,12 @@ public class AuthenticationService(
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim("type", "refresh"),
-            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                ClaimValueTypes.Integer64)
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfiguration.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
         var expiration = DateTime.UtcNow.AddDays(7);
 
         var token = new JwtSecurityToken(
@@ -85,13 +92,33 @@ public class AuthenticationService(
         await refreshTokenRepository.CreateRefreshTokenAsync(refreshToken, cancellationToken);
         await refreshTokenRepository.RevokeOldRefreshTokensAsync(user.Id, refreshToken.Id, cancellationToken);
 
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = false, // true in production
+            SameSite = SameSiteMode.Strict,
+            Expires = expiration
+        };
+
+        httpContextAccessor.HttpContext?.Response.Cookies.Append("refreshToken", tokenString, cookieOptions);
+
+        logger.LogInformation("Refresh token generated and cookie set for user {UserId}", user.Id);
+
         return tokenString;
     }
 
-    public async Task<ResultT<TokenResponseDto>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
+    public async Task<ResultT<TokenResponseDto>> RefreshTokenAsync(CancellationToken cancellationToken)
     {
-        var handler = new JwtSecurityTokenHandler();
+        var refreshToken = httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
 
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            return ResultT<TokenResponseDto>.Failure(
+                Error.Unauthorized("401", "We couldn't find your refresh token. Try logging in again.")
+            );
+        }
+
+        var handler = new JwtSecurityTokenHandler();
         handler.ValidateToken(refreshToken, new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -108,28 +135,37 @@ public class AuthenticationService(
         var tokenUserId = Guid.Parse(jwt.Subject);
 
         if (jwt.Claims.FirstOrDefault(c => c.Type == "type")?.Value != "refresh")
-            return ResultT<TokenResponseDto>.Failure(Error.Unauthorized("401", "The provided token is not a refresh token"));
+        {
+            logger.LogWarning("Provided token is not a refresh token for user {UserId}", tokenUserId);
+            return ResultT<TokenResponseDto>.Failure(Error.Unauthorized("401",
+                "The provided token is not a refresh token"));
+        }
 
-        var tokenValid = await refreshTokenRepository.IsRefreshTokenValidAsync(tokenUserId, refreshToken, cancellationToken);
+        var tokenValid =
+            await refreshTokenRepository.IsRefreshTokenValidAsync(tokenUserId, refreshToken, cancellationToken);
 
         if (!tokenValid)
         {
-            return ResultT<TokenResponseDto>.Failure(Error.Unauthorized("401", "Refresh token is invalid, used, revoked, or expired"));
+            logger.LogWarning("Refresh token is invalid, used, revoked, or expired for user {UserId}", tokenUserId);
+            return ResultT<TokenResponseDto>.Failure(Error.Unauthorized("401",
+                "Refresh token is invalid, used, revoked, or expired"));
         }
-        
+
         var userExist = await userRepository.GetByIdAsync(tokenUserId, cancellationToken);
 
         if (userExist is null)
+        {
+            logger.LogWarning("User {UserId} not found when refreshing token", tokenUserId);
             return ResultT<TokenResponseDto>.Failure(Error.NotFound("404", "User not found"));
-            
-        var newToken = await GenerateTokenAsync(userExist, cancellationToken);
-        var newRefreshToken = await GenerateRefreshTokenAsync(userExist, cancellationToken);
+        }
 
+        var newAccessToken = await GenerateTokenAsync(userExist, cancellationToken);
+        await GenerateRefreshTokenAsync(userExist, cancellationToken);
         await refreshTokenRepository.MarkRefreshTokenAsUsedAsync(refreshToken, cancellationToken);
 
-        return ResultT<TokenResponseDto>.Success(new TokenResponseDto(
-            AccessToken: newToken,
-            RefreshToken: newRefreshToken
-            ));
+        logger.LogInformation("Refresh token successfully used and new access token issued for user {UserId}",
+            userExist.Id);
+
+        return ResultT<TokenResponseDto>.Success(new TokenResponseDto(AccessToken: newAccessToken));
     }
 }

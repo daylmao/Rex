@@ -2,10 +2,12 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.DTOs.Post;
 using Rex.Application.Interfaces;
 using Rex.Application.Modules.Posts.Commands;
+using Rex.Application.Modules.Posts.Commands.CreatePost;
 using Rex.Application.Modules.Posts.Commands.DeletePost;
 using Rex.Application.Modules.Posts.Queries.GetPostsByGroupId;
 using Rex.Application.Pagination;
@@ -16,6 +18,7 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
+[EnableRateLimiting("api-user")]
 [Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class PostsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase

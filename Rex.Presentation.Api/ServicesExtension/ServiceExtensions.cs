@@ -1,7 +1,9 @@
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using Asp.Versioning;
 using Microsoft.OpenApi.Models;
+using Rex.Presentation.Api.Filters;
 using Rex.Presentation.Api.Middlewares;
-using Trivo.Presentation.API.Filters;
 
 namespace Rex.Presentation.Api.ServicesExtension;
 
@@ -54,10 +56,10 @@ public static class ServiceExtensions
                         Scheme = "Bearer",
                         Name = "Bearer",
                         In = ParameterLocation.Header
-                    }, 
+                    },
                     new List<string>()
-                }     
-            }); 
+                }
+            });
         });
     }
 
@@ -76,4 +78,40 @@ public static class ServiceExtensions
             options.AssumeDefaultVersionWhenUnspecified = false;
         });
     }
+
+    public static void AddUserRateLimiting(this IServiceCollection services)
+    {
+        services.AddRateLimiter(options =>
+        {
+            options.AddPolicy("api-user", context =>
+            {
+                var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                return RateLimitPartition.GetSlidingWindowLimiter(
+                    partitionKey: $"user:{userId}",
+                    factory: _ => new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 30,
+                        Window = TimeSpan.FromMinutes(1),
+                        SegmentsPerWindow = 6,
+                        QueueLimit = 0
+                    });
+            });
+            
+            options.RejectionStatusCode = 429;
+            options.OnRejected = async (context, ct) =>
+            {
+                context.HttpContext.Response.StatusCode = 429;
+                context.HttpContext.Response.ContentType = "application/json";
+
+                await context.HttpContext.Response.WriteAsJsonAsync(new
+                {
+                    error = "429",
+                    message = "Too many requests. Please try again later.",
+                    timestamp = DateTime.UtcNow
+                }, ct);
+            };
+        });
+
+    }
+    
 }

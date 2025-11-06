@@ -6,7 +6,7 @@ using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 
-namespace Rex.Application.Modules.User.Commands.UpdateUserInformation;
+namespace Rex.Application.Modules.Users.Commands.UpdateUserInformation;
 
 public class UpdateUserInformationCommandHandler(
     ILogger<UpdateUserInformationCommandHandler> logger,

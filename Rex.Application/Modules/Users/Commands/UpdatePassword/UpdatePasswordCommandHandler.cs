@@ -4,7 +4,7 @@ using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 
-namespace Rex.Application.Modules.User.Commands.UpdatePassword;
+namespace Rex.Application.Modules.Users.Commands.UpdatePassword;
 
 public class UpdatePasswordCommandHandler(
     ILogger<UpdatePasswordCommandHandler> logger,

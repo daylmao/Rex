@@ -8,7 +8,7 @@ using Rex.Enum;
 using Rex.Models;
 using GroupRole = Rex.Enum.GroupRole;
 
-namespace Rex.Application.Modules.Groups.Commands.RequestToJoinGroupCommand;
+namespace Rex.Application.Modules.Groups.Commands.RequestToJoinGroup;
 
 public class RequestToJoinGroupCommandHandler(
     ILogger<RequestToJoinGroupCommandHandler> logger,
@@ -17,7 +17,7 @@ public class RequestToJoinGroupCommandHandler(
     IUserGroupRepository userGroupRepository,
     IGroupRoleRepository groupRoleRepository,
     IDistributedCache cache
-) : ICommandHandler<RequestToJoinGroupCommand, ResponseDto>
+) : ICommandHandler<RequestToJoinGroup.RequestToJoinGroupCommand, ResponseDto>
 {
     public async Task<ResultT<ResponseDto>> Handle(RequestToJoinGroupCommand request,
         CancellationToken cancellationToken)

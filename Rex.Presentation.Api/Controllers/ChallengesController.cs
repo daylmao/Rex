@@ -2,13 +2,14 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Rex.Application.DTOs.Challenge;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces;
+using Rex.Application.Modules.Challenges.Commands.CreateChallenge;
 using Rex.Application.Modules.Challenges.Commands.DeleteChallenge;
 using Rex.Application.Modules.Challenges.Commands.JoinChallenge;
 using Rex.Application.Modules.Challenges.Commands.UpdateChallenge;
-using Rex.Application.Modules.Challenges.CreateChallenge;
 using Rex.Application.Modules.Challenges.Queries.GetChallengesByStatus;
 using Rex.Application.Modules.Challenges.Queries.GetChallengesByUser;
 using Rex.Application.Pagination;
@@ -20,6 +21,7 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
+[EnableRateLimiting("api-user")]
 [Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class ChallengesController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase

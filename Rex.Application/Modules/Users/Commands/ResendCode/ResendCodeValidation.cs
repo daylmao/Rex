@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Rex.Application.Modules.User.Commands.ResendCode;
+namespace Rex.Application.Modules.Users.Commands.ResendCode;
 
 public class ResendCodeValidation : AbstractValidator<ResendCodeCommand>
 {

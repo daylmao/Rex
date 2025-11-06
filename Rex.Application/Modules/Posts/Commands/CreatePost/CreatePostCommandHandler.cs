@@ -5,6 +5,7 @@ using Rex.Application.DTOs.JWT;
 using Rex.Application.Helpers;
 using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
+using Rex.Application.Modules.Posts.Commands.CreatePost;
 using Rex.Application.Utilities;
 using Rex.Enum;
 using Rex.Models;

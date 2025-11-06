@@ -5,7 +5,7 @@ using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 
-namespace Rex.Application.Modules.User.Commands.ConfirmAccount;
+namespace Rex.Application.Modules.Users.Commands.ConfirmAccount;
 
 public class ConfirmAccountCommandHandler(
     ILogger<ConfirmAccountCommandHandler> logger,

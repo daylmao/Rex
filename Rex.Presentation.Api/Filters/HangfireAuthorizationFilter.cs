@@ -1,7 +1,7 @@
 using Hangfire.Dashboard;
 using Rex.Enum;
 
-namespace Trivo.Presentation.API.Filters;
+namespace Rex.Presentation.Api.Filters;
 
 public class HangfireAuthorizationFilter(string environment) : IDashboardAuthorizationFilter
 {

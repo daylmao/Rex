@@ -2,15 +2,17 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Rex.Application.DTOs.Group;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.DTOs.User;
 using Rex.Application.Interfaces;
 using Rex.Application.Modules.Groups.Commands;
+using Rex.Application.Modules.Groups.Commands.CreateGroup;
 using Rex.Application.Modules.Groups.Commands.DeleteGroup;
 using Rex.Application.Modules.Groups.Commands.GroupUserModeration;
 using Rex.Application.Modules.Groups.Commands.ManageRequest;
-using Rex.Application.Modules.Groups.Commands.RequestToJoinGroupCommand;
+using Rex.Application.Modules.Groups.Commands.RequestToJoinGroup;
 using Rex.Application.Modules.Groups.Commands.UpdateGroup;
 using Rex.Application.Modules.Groups.Commands.UpdateGroupRoleMember;
 using Rex.Application.Modules.Groups.Queries.GetGroupById;
@@ -26,6 +28,7 @@ namespace Rex.Presentation.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
+[EnableRateLimiting("api-user")]
 [Authorize]
 [Route("api/v{version:apiVersion}/groups")]
 public class GroupsController(IMediator mediator, IUserClaimService userClaimService) : ControllerBase
@@ -159,11 +162,12 @@ public class GroupsController(IMediator mediator, IUserClaimService userClaimSer
         CancellationToken cancellationToken)
     {
         return await mediator.Send(
-            new ManageRequestCommand(groupId, targetUserId, statusDto.Status),
+            new ManageRequestCommand(targetUserId, groupId, statusDto.Status),
             cancellationToken
         );
     }
 
+    [Authorize("LeaderOrModerator")]
     [HttpPatch("{groupId}/members/{memberId}/role")]
     [SwaggerOperation(
         Summary = "Update group member role",
@@ -176,7 +180,7 @@ public class GroupsController(IMediator mediator, IUserClaimService userClaimSer
         [FromBody] UpdateRoleMemberdto dto,
         CancellationToken cancellationToken)
     {
-        return await mediator.Send(new UpdateGroupRoleMemberCommand(groupId, memberId, dto.Role), cancellationToken);
+        return await mediator.Send(new UpdateGroupRoleMemberCommand(memberId, groupId, dto.Role), cancellationToken);
     }
 
     [Authorize("LeaderOnly")]

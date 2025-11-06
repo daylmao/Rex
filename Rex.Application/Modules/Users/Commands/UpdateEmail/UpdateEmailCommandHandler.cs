@@ -8,7 +8,7 @@ using Rex.Application.Interfaces.Repository;
 using Rex.Application.Utilities;
 using Rex.Enum;
 
-namespace Rex.Application.Modules.User.Commands.UpdateEmail;
+namespace Rex.Application.Modules.Users.Commands.UpdateEmail;
 
 public class UpdateEmailCommandHandler(
     ILogger<UpdateEmailCommandHandler> logger,

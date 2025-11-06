@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Rex.Application.DTOs.JWT;
 using Rex.Application.Interfaces;
 using Rex.Application.Interfaces.Repository;
@@ -11,7 +12,8 @@ namespace Rex.Infrastructure.Shared.Services;
 public class GitHubAuthService(
     IUserRepository userRepository,
     IAuthenticationService authenticationService,
-    IUserRoleRepository userRoleRepository
+    IUserRoleRepository userRoleRepository,
+    IHttpContextAccessor httpContextAccessor
 ) : IGithubAuthService
 {
     public async Task<ResultT<GithubResponseDto>> AuthenticateGitHubUserAsync(
@@ -36,11 +38,10 @@ public class GitHubAuthService(
         if (existingUser != null)
         {
             var existingAccessToken = await authenticationService.GenerateTokenAsync(existingUser, cancellationToken);
-            var existingRefreshToken = await authenticationService.GenerateRefreshTokenAsync(existingUser, cancellationToken);
+            await authenticationService.GenerateRefreshTokenAsync(existingUser, cancellationToken); 
 
             return ResultT<GithubResponseDto>.Success(new GithubResponseDto(
                 AccessToken: existingAccessToken,
-                RefreshToken: existingRefreshToken,
                 UserId: existingUser.Id
             ));
         }
@@ -79,11 +80,10 @@ public class GitHubAuthService(
         await userRepository.CreateAsync(user, cancellationToken);
 
         var accessToken = await authenticationService.GenerateTokenAsync(user, cancellationToken);
-        var refreshToken = await authenticationService.GenerateRefreshTokenAsync(user, cancellationToken);
+        await authenticationService.GenerateRefreshTokenAsync(user, cancellationToken); // cookie HttpOnly
 
         return ResultT<GithubResponseDto>.Success(new GithubResponseDto(
             AccessToken: accessToken,
-            RefreshToken: refreshToken,
             UserId: user.Id
         ));
     }
