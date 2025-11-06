@@ -44,32 +44,46 @@ Members don't just submit solutions - they **explain their thinking**:
 ```
 🦖 Rex Learning Platform/
 │
-├── 🧠 Rex.Domain/                    # Core Business Logic
-│   ├── 👥 Models/                   # Entities (User, Group, Challenge, Post, etc.)
-│   ├── 🎲 Enum/                     # Domain enumerations
-│   └── ⚙️ Configurations/          # Domain settings (JWT, Email)
+├── 🧠 Rex.Domain/                     # Core business logic and entities
+│   ├── ⚙️ Configurations/             # Entity configurations (EF Core)
+│   ├── 🎲 Enum/                      # Domain enumerations
+│   └── 👥 Models/                     # Entities (User, Group, Post, etc.)
 │
-├── 🎯 Rex.Application/              # Application Layer
-│   ├── 🔌 Interfaces/              # Repository & Service contracts
-│   │   ├── Repository/             # Data access interfaces
-│   │   └── Services/               # Business service interfaces
-│   ├── 🚀 Services/                # Business logic implementations
-│   ├── 📦 DTOs/                    # Data transfer objects
-│   ├── 🛠️ Utilities/              # Helper classes (Result pattern, Error handling)
-│   └── 🎭 Abstractions/           # CQRS patterns (Commands, Queries)
+├── 🎯 Rex.Application/                # Application logic (orchestration)
+│   ├── 🎭 Abstractions/              # Abstractions (e.g., IEmailService)
+│   ├── 🧠 Behavior/                  # Pipeline behaviors (MediatR)
+│   ├── 📦 DTOs/                      # Data Transfer Objects
+│   ├── 🤝 Helpers/                   # Helper classes
+│   ├── 🔌 Interfaces/                # Contracts (Repository Interfaces, etc.)
+│   ├── 🧩 Modules/                   # Logic by feature (Feature Sliced)
+│   │   ├── Users/                    # (e.g., Commands, Queries, Handlers)
+│   │   ├── Posts/                    # ...and so on for each module
+│   │   └── ...
+│   ├── 📄 Pagination/                # Pagination logic
+│   ├── 🚀 Services/                  # Generic application services
+│   ├── 🛠️ Utilities/                 # Utilities (Results, Errors)
+│   └── 💉 DependencyInjection.cs      # Dependency Injection setup
 │
-├── 🏗️ Rex.Infrastructure/          # External Concerns
-│   ├── 💾 Persistence/            # Data Access Layer
-│   │   ├── Repository/            # Repository implementations
-│   │   ├── Context/               # EF Core DbContext
-│   │   ├── Migrations/            # Database migrations
-│   │   └── Services/              # Persistence services
-│   └── 🌐 Shared/                 # Cross-cutting concerns
-│       └── Services/              # Authentication, Email services
+├── 🏗️ Infrastructure/                 # External concerns (Database, APIs)
+│   │
+│   ├── 💾 Rex.Infrastructure.Persistence/
+│   │   ├── 🗃️ Context/                 # EF Core DbContext
+│   │   ├── 🔄 Migrations/              # Database migrations
+│   │   ├── 📥 Repository/              # Repository implementations
+│   │   ├── ⚙️ Services/                 # Persistence-related services
+│   │   └── 💉 DependencyInjection.cs   # Injection setup
+│   │
+│   └── 🌐 Rex.Infrastructure.Shared/
+│       ├── ⚙️ Services/                 # Implementations (Email, Auth)
+│       └── 💉 DependencyInjection.cs   # Injection setup
 │
-└── 🌐 Rex.Presentation.Api/        # API Layer
-    ├── 🎮 Controllers/             # REST API endpoints
-    └── 🔧 ServicesExtension/       # Dependency injection setup
+└── 🌐 Rex.Presentation.Api/            # Presentation Layer (API)
+    ├── 🎮 Controllers/               # API Endpoints
+    ├── 🛡️ Filters/                    # Action filters (exceptions, etc.)
+    ├── 🚧 Middlewares/               # Custom middlewares
+    ├── 🔧 ServicesExtension/         # `IServiceCollection` extensions
+    ├── 📜 appsettings.json           # Application configuration
+    └── 🚀 Program.cs                 # Entry point and service registration
 ```
 
 ## 🛠️ **Tech Stack**
