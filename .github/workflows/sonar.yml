@@ -36,10 +36,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           dotnet sonarscanner begin \
-          /k:"daylmao_Rex" \
-          /o:"daylmao" \
-          /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-          /d:sonar.host.url="https://sonarcloud.io"
+            /k:"daylmao_Rex" \
+            /o:"daylmao" \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.coverage.exclusions="**"
 
       # 5. Build
       - name: Build Solution
