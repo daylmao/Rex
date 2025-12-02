@@ -21,10 +21,12 @@ out/
 *.temp
 
 # Environment / config local
-.env
+.env*
 
 # Git
 .git
 .gitignore
 
 README.md
+appsettings*.json
+

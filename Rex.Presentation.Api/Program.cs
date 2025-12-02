@@ -1,15 +1,15 @@
-using System.Threading.RateLimiting;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi;
 using Rex.Application;
 using Rex.Infrastructure.Persistence;
 using Rex.Infrastructure.Shared;
 using Rex.Infrastructure.Shared.Services.SignalR.Hubs;
-using Rex.Presentation.Api.Filters;
 using Rex.Presentation.Api.ServicesExtension;
 using Serilog;
+using Microsoft.EntityFrameworkCore;
+using Rex.Infrastructure.Persistence.Context;
+using Rex.Presentation.Api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +46,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<RexContext>();
+    db.Database.Migrate();
+}
+
 app.UseExceptionHandling();
 app.UseSerilogRequestLogging();
 
@@ -69,11 +75,10 @@ app.UseAuthorization();
 
 app.UseEndpoints(endpoints =>
 {
-
     app.MapControllers();
     endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions
     {
-        Authorization = new[] { new HangfireAuthorizationFilter(builder.Environment.EnvironmentName) },
+        Authorization = new[] { new HangfireAuthorizationFilter(builder.Environment.EnvironmentName) }, 
         DashboardTitle = "Rex - Background Jobs"
     });
 });
