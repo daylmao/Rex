@@ -1,0 +1,52 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  sonar:
+    name: Analyze
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Setup .NET y Java
+      - name: Setup Environment
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      # 3. Install SonarScanner
+      - run: dotnet tool install --global dotnet-sonarscanner
+
+      # 4. Begin Analysis
+      - name: Begin SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+          /k:"daylmao_Rex" \
+          /o:"daylmao" \
+          /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+          /d:sonar.host.url="https://sonarcloud.io"
+
+      # 5. Build
+      - name: Build Solution
+        run: dotnet build ./Rex.sln --configuration Release
+
+      # 6. End Analysis
+      - name: End SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.login="${SONAR_TOKEN}"
