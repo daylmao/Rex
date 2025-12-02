@@ -22,13 +22,13 @@ COPY . .
 RUN dotnet publish Rex.Presentation.Api/Rex.Presentation.Api.csproj \
     -c Release -o /app/publish
 
-
 # runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
 
 COPY --from=build /app/publish .
 
+ENV DOTNET_URLS=http://+:5286
 EXPOSE 5286
 
 RUN adduser --disabled-password --home /home/rexuser rexuser
