@@ -21,7 +21,7 @@ jobs:
       uses: paulhatch/semantic-version@v5.3.0
       with:
         major_pattern: "major:"
-        minor_pattern: "minor:"
+        minor_pattern: "feat:"
         version_format: "${major}.${minor}.${patch}"
 
     - name: Login to Docker Hub
