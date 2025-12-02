@@ -7,15 +7,16 @@ on:
     branches: [ "main", "dev" ]
 
 jobs:
-
   sonar:
     name: Analyze
     runs-on: ubuntu-latest
     steps:
+      # 1. Checkout
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # 2. Setup .NET y Java
       - name: Setup Environment
         uses: actions/setup-dotnet@v4
         with:
@@ -24,21 +25,28 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
+
+      # 3. Install SonarScanner
       - run: dotnet tool install --global dotnet-sonarscanner
 
-      - name: Run Analysis
+      # 4. Begin Analysis
+      - name: Begin SonarCloud Analysis
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-         dotnet sonarscanner begin \
-          /k:"daylmao_Rex" \
+          dotnet sonarscanner begin \
+          /k:"Rex" \
           /o:"daylmao" \
           /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-          /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml"
+          /d:sonar.host.url="https://sonarcloud.io"
 
-          
-          dotnet build ./Rex.sln -c Release
-          
-          dotnet sonarscanner end /d:sonar.login="${SONAR_TOKEN}"
+      # 5. Build
+      - name: Build Solution
+        run: dotnet build ./Rex.sln --configuration Release
+
+      # 6. End Analysis
+      - name: End SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.login="${SONAR_TOKEN}"
