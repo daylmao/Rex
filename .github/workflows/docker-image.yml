@@ -22,7 +22,7 @@ jobs:
       with:
         major_pattern: "major:"
         minor_pattern: "minor:"
-        format: "${major}.${minor}.${patch}"
+        version_format: "${major}.${minor}.${patch}"
 
     - name: Login to Docker Hub
       uses: docker/login-action@v3
