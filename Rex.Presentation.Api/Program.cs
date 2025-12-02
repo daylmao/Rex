@@ -9,6 +9,7 @@ using Rex.Presentation.Api.ServicesExtension;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
 using Rex.Infrastructure.Persistence.Context;
+using Rex.Presentation.Api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,7 +78,7 @@ app.UseEndpoints(endpoints =>
     app.MapControllers();
     endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions
     {
-        Authorization = Array.Empty<Hangfire.Dashboard.IDashboardAuthorizationFilter>(), // Sin auth
+        Authorization = new[] { new HangfireAuthorizationFilter(builder.Environment.EnvironmentName) }, 
         DashboardTitle = "Rex - Background Jobs"
     });
 });
