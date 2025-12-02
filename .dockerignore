@@ -1,0 +1,30 @@
+﻿# Build artifacts
+bin/
+obj/
+out/
+
+# Rider / IntelliJ
+.idea/
+*.iml
+
+# Usuario / IDE
+*.user
+*.suo
+*.userprefs
+*.pidb
+*.svd
+*.cache
+
+# Temp files
+*.log
+*.tmp
+*.temp
+
+# Environment / config local
+.env
+
+# Git
+.git
+.gitignore
+
+README.md

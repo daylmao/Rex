@@ -19,7 +19,7 @@ services:
   
   pgAdmin:
     image: ${PG_ADMIN_IMAGE}
-    container_name: PgAdmin
+    container_name: PgAdminR
     restart: always
     depends_on:
       postgres:
@@ -31,7 +31,7 @@ services:
       - ${PGADMIN_PORTS}:80
     volumes:
       - PgAdmin:/var/lib/pgadmin
-      
+  
   Seq:
     image: ${SEQ_IMAGE}
     container_name: SEQ
@@ -44,7 +44,7 @@ services:
       - ${SEQ_PORT_UI}:80
     volumes:
       - Seq:/data
-      
+  
   Redis:
     image: ${REDIS_IMAGE}
     container_name: RedisDB
@@ -56,8 +56,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-        
+    networks:
+      - redis_network
+
 volumes:
   PostgresDb:
   PgAdmin:
   Seq:
+
+networks:
+  redis_network:
+    driver: bridge

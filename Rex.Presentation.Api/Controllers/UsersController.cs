@@ -60,6 +60,7 @@ public class UsersController(IMediator mediator, IUserClaimService userClaimServ
         return await mediator.Send(command, cancellationToken);
     }
 
+    [AllowAnonymous]
     [HttpPost]
     [SwaggerOperation(Summary = "Register a new user", Description = "Registers a new user with the provided information")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultT<RegisterUserDto>))]

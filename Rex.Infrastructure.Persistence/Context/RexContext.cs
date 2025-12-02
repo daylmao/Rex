@@ -36,6 +36,48 @@ public class RexContext: DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        modelBuilder.Entity<UserRole>().HasData(
+            new UserRole
+            {
+                Id = Guid.NewGuid(),
+                Role = nameof(Rex.Enum.UserRole.Admin),
+                CreatedAt = DateTime.UtcNow
+            },
+            new UserRole
+            {
+                Id = Guid.NewGuid(),
+                Role = nameof(Rex.Enum.UserRole.User),
+                CreatedAt = DateTime.UtcNow
+            }
+        );
+        
+        modelBuilder.Entity<GroupRole>().HasData(
+            new GroupRole
+            {
+                Id = Guid.NewGuid(),
+                Role = nameof(Rex.Enum.GroupRole.Leader),
+                CreatedAt = DateTime.UtcNow
+            },
+            new GroupRole
+            {
+                Id = Guid.NewGuid(),
+                Role = nameof(Rex.Enum.GroupRole.Mentor),
+                CreatedAt = DateTime.UtcNow
+            },
+            new GroupRole
+            {
+                Id = Guid.NewGuid(),
+                Role = nameof(Rex.Enum.GroupRole.Moderator),
+                CreatedAt = DateTime.UtcNow
+            },
+            new GroupRole
+            {
+                Id = Guid.NewGuid(),
+                Role = nameof(Rex.Enum.GroupRole.Member),
+                CreatedAt = DateTime.UtcNow
+            }
+        );
 
         #region Indexes
         
