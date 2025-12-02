@@ -31,13 +31,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-
-          dotnet sonarscanner begin \
+         dotnet sonarscanner begin \
           /k:"daylmao_Rex" \
-          /o:"dayronlmao" \
+          /o:"daylmao" \
           /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
           /d:sonar.host.url="https://sonarcloud.io" \
           /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml"
+
           
           dotnet build ./Rex.sln -c Release
           
