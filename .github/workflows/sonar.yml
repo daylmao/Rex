@@ -38,7 +38,7 @@ jobs:
           dotnet sonarscanner begin \
             /k:"daylmao_Rex" \
             /o:"daylmao" \
-            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.login="$SONAR_TOKEN" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.coverage.exclusions="**"
 
@@ -50,4 +50,4 @@ jobs:
       - name: End SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: dotnet sonarscanner end /d:sonar.login="${SONAR_TOKEN}"
+        run: dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
