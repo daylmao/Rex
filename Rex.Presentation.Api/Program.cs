@@ -13,6 +13,9 @@ using Rex.Presentation.Api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5286";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 builder.Host.UseSerilog((context, loggerConfig) =>
 {
     loggerConfig.ReadFrom.Configuration(context.Configuration);
