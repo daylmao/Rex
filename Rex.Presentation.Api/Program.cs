@@ -13,10 +13,14 @@ using Rex.Presentation.Api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog((context, loggerConfig) =>
+var port = Environment.GetEnvironmentVariable("PORT");
+
+if (!string.IsNullOrEmpty(port))
 {
-    loggerConfig.ReadFrom.Configuration(context.Configuration);
-});
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
+builder.Host.UseSerilog((context, loggerConfig) => { loggerConfig.ReadFrom.Configuration(context.Configuration); });
 
 builder.Services.AddControllers().AddFilters();
 builder.Services.AddEndpointsApiExplorer();
@@ -38,10 +42,7 @@ builder.Services.AddUserRateLimiting();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins", policy =>
-    {
-        policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
-    });
+    options.AddPolicy("AllowAllOrigins", policy => { policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin(); });
 });
 
 var app = builder.Build();
@@ -64,6 +65,7 @@ if (app.Environment.IsDevelopment())
         c.RoutePrefix = "swagger";
     });
 }
+
 app.UseRateLimiter();
 app.UseWebSockets();
 app.UseRouting();
@@ -78,7 +80,7 @@ app.UseEndpoints(endpoints =>
     app.MapControllers();
     endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions
     {
-        Authorization = new[] { new HangfireAuthorizationFilter(builder.Environment.EnvironmentName) }, 
+        Authorization = new[] { new HangfireAuthorizationFilter(builder.Environment.EnvironmentName) },
         DashboardTitle = "Rex - Background Jobs"
     });
 });
